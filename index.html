@@ -72,53 +72,62 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        function playSound(freq, type = 'sine', duration = 0.1, vol = 0.1) {
+        function playSound(freq, type = 'sine', duration = 0.1, vol = 0.1, pan = 0) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
+            const panner = audioCtx.createStereoPanner();
+            
             osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             gain.gain.setValueAtTime(vol, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
+            panner.pan.setValueAtTime(pan, audioCtx.currentTime);
+
+            osc.connect(gain);
+            gain.connect(panner);
+            panner.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
         }
 
-        function initMap() {
-            map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
-            for(let i=0; i<5; i++) {
-                let rx = Math.floor(Math.random()*18)+1;
-                let ry = Math.floor(Math.random()*18)+1;
-                map[ry][rx] = 'P';
-            }
-            for(let i=0; i<3; i++) {
-                let rx = Math.floor(Math.random()*18)+1;
-                let ry = Math.floor(Math.random()*18)+1;
-                map[ry][rx] = '*';
-            }
-            draw();
-        }
+        function playEnvironmentSonar() {
+            const directions = [
+                { dx: 0, dy: -1, label: 'Norte' },
+                { dx: 0, dy: 1, label: 'Sul' },
+                { dx: -1, dy: 0, label: 'Oeste' },
+                { dx: 1, dy: 0, label: 'Leste' }
+            ];
 
-        function draw() {
-            container.innerHTML = '';
-            document.getElementById('hp').textContent = player.hp;
-            document.getElementById('o2').textContent = player.o2;
-            document.getElementById('parts').textContent = player.parts;
+            directions.forEach((dir, index) => {
+                const nx = player.x + dir.dx;
+                const ny = player.y + dir.dy;
+                const timeOffset = index * 0.15; // Sequenciamento dos sons (N, S, O, L)
+                
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                    const cell = map[ny][nx];
+                    let freq = 0;
+                    let type = 'sine';
+                    let pan = (dir.dx !== 0) ? dir.dx : 0; // Estéreo para Oeste (-1) e Leste (1)
 
-            for (let y = 0; y < GRID_SIZE; y++) {
-                for (let x = 0; x < GRID_SIZE; x++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    if (x === player.x && y === player.y) {
-                        cell.textContent = '@'; cell.classList.add('player');
-                    } else {
-                        cell.textContent = map[y][x];
-                        if(map[y][x] === 'P') cell.classList.add('part');
-                        if(map[y][x] === '*') cell.classList.add('air');
+                    if (cell === 'P') { // Peça: Brilhante e Agudo
+                        freq = 880; type = 'triangle';
+                    } else if (cell === '*') { // Ar: Suave e Médio
+                        freq = 440; type = 'sine';
+                    } else if (cell === '.') { // Vazio: Grave e curto
+                        freq = 200; type = 'sine';
+                    } else if (cell === '#') { // Arbusto: Ruído/Dirty
+                        freq = 150; type = 'square';
                     }
-                    container.appendChild(cell);
+
+                    if (freq > 0) {
+                        setTimeout(() => {
+                            playSound(freq, type, 0.1, 0.05, pan);
+                        }, timeOffset * 1000);
+                    }
                 }
-            }
+            });
         }
 
         function move(dx, dy) {
@@ -127,9 +136,12 @@
                 player.x = nx; player.y = ny;
                 player.o2--;
                 if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; addToLog("ALERTA: Sem O2!"); playSound(100, 'sawtooth'); }
-                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; addToLog("Peça coletada!"); playSound(880, 'sine', 0.3); }
-                if(map[player.y][player.x] === '*') { player.o2 = 50; addToLog("Tanque recarregado."); playSound(440, 'triangle'); }
-                playSound(150, 'square'); draw();
+                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; addToLog("Peça coletada!"); playSound(1200, 'sine', 0.4); }
+                if(map[player.y][player.x] === '*') { player.o2 = 50; addToLog("Tanque recarregado."); playSound(600, 'triangle', 0.5); }
+                
+                // Dispara o sonar de ambiente após o movimento
+                playEnvironmentSonar();
+                draw();
             }
         }
 
