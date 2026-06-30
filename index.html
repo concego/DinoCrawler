@@ -140,8 +140,15 @@
                 for(let y=0; y<GRID_SIZE; y++) {
                     for(let x=0; x<GRID_SIZE; x++) {
                         if(map[y][x] === 'P' || map[y][x] === '*') {
-                            let dist = Math.abs(x - player.x) + Math.abs(y - player.y);
-                            if(dist < 6) found.push(`${map[y][x] === 'P' ? 'Peça' : 'Ar'} a ${dist} passos`);
+                            let dx = x - player.x;
+                            let dy = y - player.y;
+                            let dist = Math.abs(dx) + Math.abs(dy);
+                            if(dist < 6) {
+                                let dirY = dy > 0 ? "Sul" : dy < 0 ? "Norte" : "";
+                                let dirX = dx > 0 ? "Leste" : dx < 0 ? "Oeste" : "";
+                                let direction = [dirY, dirX].filter(Boolean).join(" ");
+                                found.push(`${map[y][x] === 'P' ? 'Peça' : 'Ar'} a ${dist} passos ao ${direction}`);
+                            }
                         }
                     }
                 }
