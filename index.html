@@ -6,16 +6,28 @@
     <title>Dino Crawler - Roguelike</title>
     <style>
         body { background-color: #1a1a1a; color: #00ff00; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
-        #game-info { width: 400px; display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #00ffff; }
-        #game-container { display: grid; grid-template-columns: repeat(20, 20px); grid-template-rows: repeat(20, 20px); gap: 1px; border: 2px solid #333; background-color: #000; }
-        .cell { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #log { width: 400px; height: 80px; background: #000; border: 1px solid #333; margin-top: 10px; padding: 5px; font-size: 12px; overflow-y: auto; color: #aaa; }
-        #controls { margin-top: 20px; display: grid; grid-template-areas: ". up . action" "left . right ." ". down . inv"; gap: 10px; }
-        button { width: 55px; height: 55px; background-color: #333; color: #00ff00; border: 1px solid #00ff00; font-size: 18px; border-radius: 8px; touch-action: manipulation; }
+        #game-info { width: 320px; display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #00ffff; }
+        #game-container { display: grid; grid-template-columns: repeat(20, 16px); grid-template-rows: repeat(20, 16px); gap: 1px; border: 2px solid #333; background-color: #000; }
+        .cell { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+        #log { width: 320px; height: 100px; background: #000; border: 1px solid #333; margin-top: 10px; padding: 5px; font-size: 12px; overflow-y: auto; color: #aaa; }
+        
+        /* Layout de Controles para Mobile */
+        #controls-wrapper { margin-top: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; }
+        
+        #d-pad { display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 8px; }
+        #action-buttons { display: flex; gap: 10px; }
+        #weapon-selector { display: flex; flex-direction: column; gap: 5px; }
+
+        button { background-color: #333; color: #00ff00; border: 1px solid #00ff00; font-size: 16px; border-radius: 8px; touch-action: manipulation; }
+        .move-btn { width: 50px; height: 50px; font-size: 20px; }
+        .action-btn { width: 70px; height: 50px; background-color: #522; font-weight: bold; }
+        .weapon-btn { width: 90px; height: 40px; font-size: 12px; background-color: #225; }
+        .active-weapon { border: 2px solid #fff; background-color: #338; color: #fff; }
+
         #btn-up { grid-area: up; } #btn-left { grid-area: left; } #btn-right { grid-area: right; } #btn-down { grid-area: down; }
-        #btn-action { grid-area: action; background-color: #522; } #btn-inv { grid-area: inv; background-color: #225; }
+        
         .player { color: #00ffff; text-shadow: 0 0 5px #00ffff; }
-        .wall { color: #555; } .part { color: #ffff00; } .air { color: #00ff00; }
+        .part { color: #ffff00; } .air { color: #00ff00; }
     </style>
 </head>
 <body>
@@ -25,27 +37,38 @@
         <span>O2: <span id="o2">50</span></span>
         <span>Parts: <span id="parts">0</span>/5</span>
     </div>
-    <div id="game-container"></div>
-    <div id="log" aria-live="polite">Bem-vindo, Assistente. Colete as 5 peças da máquina e volte para @ para vencer.</div>
     
-    <div id="controls">
-        <button id="btn-up" onclick="move(0, -1)">↑</button>
-        <button id="btn-left" onclick="move(-1, 0)">←</button>
-        <button id="btn-right" onclick="move(1, 0)">→</button>
-        <button id="btn-down" onclick="move(0, 1)">↓</button>
-        <button id="btn-action" onclick="scan()">SCAN</button>
-        <button id="btn-inv" onclick="toggleWeapon()">WEAP</button>
+    <div id="game-container"></div>
+    
+    <div id="log" aria-live="polite">Pressione SCAN para localizar peças ou ar.</div>
+    
+    <div id="controls-wrapper">
+        <div id="action-buttons">
+            <button class="action-btn" onclick="scan()">SCAN</button>
+            <button class="action-btn" style="background-color: #252;" onclick="fire()">FIRE</button>
+        </div>
+
+        <div id="d-pad">
+            <button id="btn-up" class="move-btn" onclick="move(0, -1)">↑</button>
+            <button id="btn-left" class="move-btn" onclick="move(-1, 0)">←</button>
+            <button id="btn-right" class="move-btn" onclick="move(1, 0)">→</button>
+            <button id="btn-down" class="move-btn" onclick="move(0, 1)">↓</button>
+        </div>
+
+        <div id="weapon-selector">
+            <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
+            <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
+            <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. RIFLE</button>
+        </div>
     </div>
 
     <script>
         const container = document.getElementById('game-container');
         const log = document.getElementById('log');
         const GRID_SIZE = 20;
-        let player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weapon: 'Machete', ammo: 5 };
-        let entities = [];
-        let map = [];
+        let player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weaponIdx: 0, ammo: 5 };
         const weapons = ['Machete', 'Taser', 'Rifle'];
-        let weaponIdx = 0;
+        let map = [];
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -63,13 +86,11 @@
 
         function initMap() {
             map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
-            // Peças (P)
             for(let i=0; i<5; i++) {
                 let rx = Math.floor(Math.random()*18)+1;
                 let ry = Math.floor(Math.random()*18)+1;
                 map[ry][rx] = 'P';
             }
-            // Ar Fresco (*)
             for(let i=0; i<3; i++) {
                 let rx = Math.floor(Math.random()*18)+1;
                 let ry = Math.floor(Math.random()*18)+1;
@@ -105,15 +126,9 @@
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                 player.x = nx; player.y = ny;
                 player.o2--;
-                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; addToLog("ALERTA: Sem O2! HP caindo."); playSound(100, 'sawtooth'); }
-                
-                if(map[player.y][player.x] === 'P') {
-                    player.parts++; map[player.y][player.x] = '.';
-                    addToLog("Peça coletada!"); playSound(880, 'sine', 0.3, 0.2);
-                }
-                if(map[player.y][player.x] === '*') {
-                    player.o2 = 50; addToLog("Tanque de O2 recarregado."); playSound(440, 'triangle', 0.5);
-                }
+                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; addToLog("ALERTA: Sem O2!"); playSound(100, 'sawtooth'); }
+                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; addToLog("Peça coletada!"); playSound(880, 'sine', 0.3); }
+                if(map[player.y][player.x] === '*') { player.o2 = 50; addToLog("Tanque recarregado."); playSound(440, 'triangle'); }
                 playSound(150, 'square'); draw();
             }
         }
@@ -131,15 +146,33 @@
                     }
                 }
                 addToLog(found.length ? "Scan: " + found.join(", ") : "Scan: Nada próximo.");
-                playSound(600, 'sine', 0.2); draw();
+                playSound(600, 'sine'); draw();
             }
         }
 
-        function toggleWeapon() {
-            weaponIdx = (weaponIdx + 1) % weapons.length;
-            player.weapon = weapons[weaponIdx];
-            addToLog("Equipado: " + player.weapon);
+        function setWeapon(idx) {
+            player.weaponIdx = idx;
+            document.querySelectorAll('.weapon-btn').forEach((b, i) => {
+                b.classList.toggle('active-weapon', i === idx);
+            });
+            addToLog("Equipado: " + weapons[idx]);
             playSound(300, 'sine');
+        }
+
+        function fire() {
+            if(weapons[player.weaponIdx] === 'Rifle') {
+                if(player.ammo > 0) {
+                    player.ammo--;
+                    addToLog("POW! Rifle disparado. Barulho atrai dinos!");
+                    playSound(200, 'sawtooth', 0.4, 0.3);
+                } else {
+                    addToLog("Click... sem munição.");
+                    playSound(100, 'sine');
+                }
+            } else {
+                addToLog("Usando " + weapons[player.weaponIdx] + " em curta distância.");
+                playSound(400, 'square');
+            }
         }
 
         function addToLog(msg) {
@@ -154,7 +187,8 @@
             if (e.key === 'ArrowLeft') move(-1, 0);
             if (e.key === 'ArrowRight') move(1, 0);
             if (e.key === 's') scan();
-            if (e.key === 'w') toggleWeapon();
+            if (e.key === 'f') fire();
+            if (['1','2','3'].includes(e.key)) setWeapon(parseInt(e.key)-1);
         });
 
         initMap();
