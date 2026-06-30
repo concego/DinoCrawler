@@ -3,70 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dino Crawler</title>
+    <title>Dino Crawler - Roguelike</title>
     <style>
-        body { background-color: #1a1a1a; color: #00ff00; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        body { background-color: #1a1a1a; color: #00ff00; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
+        #game-info { width: 400px; display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #00ffff; }
         #game-container { display: grid; grid-template-columns: repeat(20, 20px); grid-template-rows: repeat(20, 20px); gap: 1px; border: 2px solid #333; background-color: #000; }
         .cell { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        #controls { margin-top: 20px; display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 10px; }
-        button { width: 60px; height: 60px; background-color: #333; color: #00ff00; border: 1px solid #00ff00; font-size: 20px; border-radius: 8px; touch-action: manipulation; }
+        #log { width: 400px; height: 80px; background: #000; border: 1px solid #333; margin-top: 10px; padding: 5px; font-size: 12px; overflow-y: auto; color: #aaa; }
+        #controls { margin-top: 20px; display: grid; grid-template-areas: ". up . action" "left . right ." ". down . inv"; gap: 10px; }
+        button { width: 55px; height: 55px; background-color: #333; color: #00ff00; border: 1px solid #00ff00; font-size: 18px; border-radius: 8px; touch-action: manipulation; }
         #btn-up { grid-area: up; } #btn-left { grid-area: left; } #btn-right { grid-area: right; } #btn-down { grid-area: down; }
+        #btn-action { grid-area: action; background-color: #522; } #btn-inv { grid-area: inv; background-color: #225; }
         .player { color: #00ffff; text-shadow: 0 0 5px #00ffff; }
+        .wall { color: #555; } .part { color: #ffff00; } .air { color: #00ff00; }
     </style>
 </head>
 <body>
     <h1>Dino Crawler</h1>
+    <div id="game-info">
+        <span>HP: <span id="hp">100</span>%</span>
+        <span>O2: <span id="o2">50</span></span>
+        <span>Parts: <span id="parts">0</span>/5</span>
+    </div>
     <div id="game-container"></div>
+    <div id="log" aria-live="polite">Bem-vindo, Assistente. Colete as 5 peças da máquina e volte para @ para vencer.</div>
+    
     <div id="controls">
         <button id="btn-up" onclick="move(0, -1)">↑</button>
         <button id="btn-left" onclick="move(-1, 0)">←</button>
         <button id="btn-right" onclick="move(1, 0)">→</button>
         <button id="btn-down" onclick="move(0, 1)">↓</button>
+        <button id="btn-action" onclick="scan()">SCAN</button>
+        <button id="btn-inv" onclick="toggleWeapon()">WEAP</button>
     </div>
+
     <script>
         const container = document.getElementById('game-container');
+        const log = document.getElementById('log');
         const GRID_SIZE = 20;
-        let playerPos = { x: 10, y: 10 };
+        let player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weapon: 'Machete', ammo: 5 };
+        let entities = [];
+        let map = [];
+        const weapons = ['Machete', 'Taser', 'Rifle'];
+        let weaponIdx = 0;
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playStepSound() {
+
+        function playSound(freq, type = 'sine', duration = 0.1, vol = 0.1) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
             osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + duration);
         }
-        function drawGrid() {
+
+        function initMap() {
+            map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
+            // Peças (P)
+            for(let i=0; i<5; i++) {
+                let rx = Math.floor(Math.random()*18)+1;
+                let ry = Math.floor(Math.random()*18)+1;
+                map[ry][rx] = 'P';
+            }
+            // Ar Fresco (*)
+            for(let i=0; i<3; i++) {
+                let rx = Math.floor(Math.random()*18)+1;
+                let ry = Math.floor(Math.random()*18)+1;
+                map[ry][rx] = '*';
+            }
+            draw();
+        }
+
+        function draw() {
             container.innerHTML = '';
+            document.getElementById('hp').textContent = player.hp;
+            document.getElementById('o2').textContent = player.o2;
+            document.getElementById('parts').textContent = player.parts;
+
             for (let y = 0; y < GRID_SIZE; y++) {
                 for (let x = 0; x < GRID_SIZE; x++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    if (x === playerPos.x && y === playerPos.y) {
+                    if (x === player.x && y === player.y) {
                         cell.textContent = '@'; cell.classList.add('player');
-                    } else { cell.textContent = '.'; }
+                    } else {
+                        cell.textContent = map[y][x];
+                        if(map[y][x] === 'P') cell.classList.add('part');
+                        if(map[y][x] === '*') cell.classList.add('air');
+                    }
                     container.appendChild(cell);
                 }
             }
         }
+
         function move(dx, dy) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const newX = playerPos.x + dx; const newY = playerPos.y + dy;
-            if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
-                playerPos.x = newX; playerPos.y = newY;
-                playStepSound(); drawGrid();
+            const nx = player.x + dx; const ny = player.y + dy;
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                player.x = nx; player.y = ny;
+                player.o2--;
+                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; addToLog("ALERTA: Sem O2! HP caindo."); playSound(100, 'sawtooth'); }
+                
+                if(map[player.y][player.x] === 'P') {
+                    player.parts++; map[player.y][player.x] = '.';
+                    addToLog("Peça coletada!"); playSound(880, 'sine', 0.3, 0.2);
+                }
+                if(map[player.y][player.x] === '*') {
+                    player.o2 = 50; addToLog("Tanque de O2 recarregado."); playSound(440, 'triangle', 0.5);
+                }
+                playSound(150, 'square'); draw();
             }
         }
+
+        function scan() {
+            if(player.o2 > 0) {
+                player.o2--;
+                let found = [];
+                for(let y=0; y<GRID_SIZE; y++) {
+                    for(let x=0; x<GRID_SIZE; x++) {
+                        if(map[y][x] === 'P' || map[y][x] === '*') {
+                            let dist = Math.abs(x - player.x) + Math.abs(y - player.y);
+                            if(dist < 6) found.push(`${map[y][x] === 'P' ? 'Peça' : 'Ar'} a ${dist} passos`);
+                        }
+                    }
+                }
+                addToLog(found.length ? "Scan: " + found.join(", ") : "Scan: Nada próximo.");
+                playSound(600, 'sine', 0.2); draw();
+            }
+        }
+
+        function toggleWeapon() {
+            weaponIdx = (weaponIdx + 1) % weapons.length;
+            player.weapon = weapons[weaponIdx];
+            addToLog("Equipado: " + player.weapon);
+            playSound(300, 'sine');
+        }
+
+        function addToLog(msg) {
+            const entry = document.createElement('div');
+            entry.textContent = `> ${msg}`;
+            log.prepend(entry);
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowUp') move(0, -1);
             if (e.key === 'ArrowDown') move(0, 1);
             if (e.key === 'ArrowLeft') move(-1, 0);
             if (e.key === 'ArrowRight') move(1, 0);
+            if (e.key === 's') scan();
+            if (e.key === 'w') toggleWeapon();
         });
-        drawGrid();
+
+        initMap();
     </script>
 </body>
 </html>
