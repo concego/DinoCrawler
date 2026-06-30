@@ -85,6 +85,28 @@
             draw();
         }
 
+        function draw() {
+            container.innerHTML = '';
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (x === player.x && y === player.y) {
+                        cell.textContent = '@';
+                        cell.classList.add('player');
+                    } else {
+                        cell.textContent = map[y][x];
+                        if (map[y][x] === 'P') cell.classList.add('part');
+                        if (map[y][x] === '*') cell.classList.add('air');
+                    }
+                    container.appendChild(cell);
+                }
+            }
+            document.getElementById('hp').textContent = player.hp;
+            document.getElementById('o2').textContent = player.o2;
+            document.getElementById('parts').textContent = player.parts;
+        }
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(freq, type = 'sine', duration = 0.1, vol = 0.1, pan = 0) {
@@ -130,11 +152,12 @@
                         freq = 880; type = 'triangle';
                     } else if (cell === '*') { // Ar: Suave e Médio
                         freq = 440; type = 'sine';
-                    } else if (cell === '.') { // Vazio: Grave e curto
-                        freq = 200; type = 'sine';
                     } else if (cell === '#') { // Arbusto: Ruído/Dirty
                         freq = 150; type = 'square';
+                    } else if (cell === 'T' || cell === 'V') { // Dino: Grave e Ameaçador
+                        freq = 100; type = 'sawtooth';
                     }
+                    // Omitimos o som para '.' (vazio) para criar o "Sonar de Exceção"
 
                     if (freq > 0) {
                         setTimeout(() => {
