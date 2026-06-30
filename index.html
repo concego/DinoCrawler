@@ -70,6 +70,21 @@
         const weapons = ['Machete', 'Taser', 'Rifle'];
         let map = [];
 
+        function initMap() {
+            map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
+            for(let i=0; i<5; i++) {
+                let rx = Math.floor(Math.random()*18)+1;
+                let ry = Math.floor(Math.random()*18)+1;
+                map[ry][rx] = 'P';
+            }
+            for(let i=0; i<3; i++) {
+                let rx = Math.floor(Math.random()*18)+1;
+                let ry = Math.floor(Math.random()*18)+1;
+                map[ry][rx] = '*';
+            }
+            draw();
+        }
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playSound(freq, type = 'sine', duration = 0.1, vol = 0.1, pan = 0) {
@@ -210,7 +225,7 @@
             if (['1','2','3'].includes(e.key)) setWeapon(parseInt(e.key)-1);
         });
 
-        initMap();
+        // initMap() removido daqui e colocado acima
     </script>
 </body>
 </html>
