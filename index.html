@@ -118,7 +118,7 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        function playSound(freq, type = 'sine', duration = 0.1, vol = 0.1, pan = 0) {
+        function playSound(freq, type = 'sine', duration = 0.1, vol = 0.2, pan = 0) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -172,7 +172,7 @@
 
                     if (freq > 0) {
                         setTimeout(() => {
-                            playSound(freq, type, 0.1, 0.05, pan);
+                            playSound(freq, type, 0.2, 0.15, pan);
                         }, timeOffset * 1000);
                     }
                 }
@@ -199,10 +199,10 @@
                 if(map[player.y][player.x] === 'M') { 
                     if(player.parts >= 5) {
                         logMsg += " MISSÃO CUMPRIDA! Você voltou para o futuro!";
-                        playSound(1500, 'triangle', 1.0);
+                        playSound(1500, 'triangle', 1.0, 0.4);
                     } else {
                         logMsg += " Aqui: Máquina do Tempo (faltam peças).";
-                        playSound(523, 'sine', 0.5);
+                        playSound(523.25, 'sine', 0.5, 0.3);
                     }
                 }
                 if(map[player.y][player.x] === '*') { player.o2 = 50; logMsg += " Aqui: Tanque recarregado."; playSound(600, 'triangle', 0.5); }
