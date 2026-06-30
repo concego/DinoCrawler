@@ -173,9 +173,14 @@
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                 player.x = nx; player.y = ny;
                 player.o2--;
-                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; addToLog("ALERTA: Sem O2!"); playSound(100, 'sawtooth'); }
-                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; addToLog("Peça coletada!"); playSound(1200, 'sine', 0.4); }
-                if(map[player.y][player.x] === '*') { player.o2 = 50; addToLog("Tanque recarregado."); playSound(600, 'triangle', 0.5); }
+                
+                let logMsg = `Moveu para ${player.x}, ${player.y}.`;
+                
+                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " ALERTA: Sem O2!"; playSound(100, 'sawtooth'); }
+                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; logMsg += " Peça coletada!"; playSound(1200, 'sine', 0.4); }
+                if(map[player.y][player.x] === '*') { player.o2 = 50; logMsg += " Tanque recarregado."; playSound(600, 'triangle', 0.5); }
+                
+                addToLog(logMsg);
                 
                 // Dispara o sonar de ambiente após o movimento
                 playEnvironmentSonar();
