@@ -72,6 +72,8 @@
 
         function initMap() {
             map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
+            // Máquina do Tempo na posição inicial do jogador
+            map[0][0] = 'M';
             for(let i=0; i<5; i++) {
                 let rx = Math.floor(Math.random()*18)+1;
                 let ry = Math.floor(Math.random()*18)+1;
@@ -98,6 +100,7 @@
                         cell.textContent = map[y][x];
                         if (map[y][x] === 'P') cell.classList.add('part');
                         if (map[y][x] === '*') cell.classList.add('air');
+                        if (map[y][x] === 'M') cell.style.color = '#ff00ff'; // Magenta para a máquina
                     }
                     container.appendChild(cell);
                 }
@@ -150,6 +153,8 @@
 
                     if (cell === 'P') { // Peça: Brilhante e Agudo
                         freq = 880; type = 'triangle';
+                    } else if (cell === 'M') { // Máquina: Melódico/Harmônico
+                        freq = 523.25; type = 'sine'; // Dó central, som limpo
                     } else if (cell === '*') { // Ar: Suave e Médio
                         freq = 440; type = 'sine';
                     } else if (cell === '#') { // Arbusto: Ruído/Dirty
@@ -178,6 +183,16 @@
                 
                 if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " ALERTA: Sem O2!"; playSound(100, 'sawtooth'); }
                 if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; logMsg += " Peça coletada!"; playSound(1200, 'sine', 0.4); }
+                if(map[player.y][player.x] === 'M') { 
+                    if(player.parts >= 5) {
+                        logMsg += " MISSÃO CUMPRIDA! Você voltou para o futuro!";
+                        playSound(1500, 'triangle', 1.0);
+                        // Aqui poderíamos resetar o jogo ou ir para tela de vitória
+                    } else {
+                        logMsg += " A Máquina do Tempo precisa de 5 peças.";
+                        playSound(523, 'sine', 0.5);
+                    }
+                }
                 if(map[player.y][player.x] === '*') { player.o2 = 50; logMsg += " Tanque recarregado."; playSound(600, 'triangle', 0.5); }
                 
                 addToLog(logMsg);
