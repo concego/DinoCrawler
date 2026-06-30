@@ -161,8 +161,8 @@
                         freq = 880; type = 'triangle';
                     } else if (cell === 'M') { // Máquina: Melódico/Harmônico
                         freq = 523.25; type = 'sine'; // Dó central, som limpo
-                    } else if (cell === '*') { // Ar: Suave e Médio
-                        freq = 440; type = 'sine';
+                    } else if (cell === '*') { // Ar: Som de "sopro" mais perceptível
+                        freq = 600; type = 'triangle';
                     } else if (cell === '#') { // Arbusto: Ruído/Dirty
                         freq = 150; type = 'square';
                     } else if (cell === 'T' || cell === 'V') { // Dino: Grave e Ameaçador
