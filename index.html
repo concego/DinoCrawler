@@ -192,21 +192,20 @@
                 player.x = nx; player.y = ny;
                 player.o2--;
                 
-                let logMsg = `Moveu para ${player.x}, ${player.y}.`;
+                let logMsg = `${player.x}, ${player.y}.`;
                 
                 if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " ALERTA: Sem O2!"; playSound(100, 'sawtooth'); }
-                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; logMsg += " Peça coletada!"; playSound(1200, 'sine', 0.4); }
+                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; logMsg += " Aqui: Peça coletada!"; playSound(1200, 'sine', 0.4); }
                 if(map[player.y][player.x] === 'M') { 
                     if(player.parts >= 5) {
                         logMsg += " MISSÃO CUMPRIDA! Você voltou para o futuro!";
                         playSound(1500, 'triangle', 1.0);
-                        // Aqui poderíamos resetar o jogo ou ir para tela de vitória
                     } else {
-                        logMsg += " A Máquina do Tempo precisa de 5 peças.";
+                        logMsg += " Aqui: Máquina do Tempo (faltam peças).";
                         playSound(523, 'sine', 0.5);
                     }
                 }
-                if(map[player.y][player.x] === '*') { player.o2 = 50; logMsg += " Tanque recarregado."; playSound(600, 'triangle', 0.5); }
+                if(map[player.y][player.x] === '*') { player.o2 = 50; logMsg += " Aqui: Tanque recarregado."; playSound(600, 'triangle', 0.5); }
                 
                 addToLog(logMsg);
                 
@@ -220,22 +219,24 @@
             if(player.o2 > 0) {
                 player.o2--;
                 let found = [];
+                addToLog(`Escaneando de ${player.x}, ${player.y}...`);
                 for(let y=0; y<GRID_SIZE; y++) {
                     for(let x=0; x<GRID_SIZE; x++) {
-                        if(map[y][x] === 'P' || map[y][x] === '*') {
+                        if(map[y][x] !== '.') {
                             let dx = x - player.x;
                             let dy = y - player.y;
                             let dist = Math.abs(dx) + Math.abs(dy);
-                            if(dist < 6) {
+                            if(dist > 0 && dist < 6) {
                                 let dirY = dy > 0 ? "Sul" : dy < 0 ? "Norte" : "";
                                 let dirX = dx > 0 ? "Leste" : dx < 0 ? "Oeste" : "";
                                 let direction = [dirY, dirX].filter(Boolean).join(" ");
-                                found.push(`${map[y][x] === 'P' ? 'Peça' : 'Ar'} a ${dist} passos ao ${direction}`);
+                                const names = { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'Dino', 'V': 'Dino' };
+                                found.push(`${names[map[y][x]] || map[y][x]} a ${dist} passos ao ${direction}`);
                             }
                         }
                     }
                 }
-                addToLog(found.length ? "Scan: " + found.join(", ") : "Scan: Nada próximo.");
+                addToLog(found.length ? found.join(", ") : "Nada próximo.");
                 playSound(600, 'sine'); draw();
             }
         }
