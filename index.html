@@ -398,6 +398,7 @@
             
             if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.' && (rx !== 0 || ry !== 0)) {
                 if(!dinos.some(d => d.x === rx && d.y === ry) && !corpses.some(c => c.x === rx && c.y === ry)) {
+                    // Impede spawn de dinos fantasmas em cima de cadáveres
                     let type = (canSpawnTRex && Math.random() > 0.8) ? 'T' : 'V';
                     if (type === 'T' && (!canSpawnTRex)) type = 'V';
                     dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
@@ -561,6 +562,12 @@
                 directions.forEach(dir => {
                     const nx = player.x + dir.x; const ny = player.y + dir.y;
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                        const corpseIdx = corpses.findIndex(c => c.x === nx && c.y === ny);
+                        if (corpseIdx !== -1) {
+                            corpses.splice(corpseIdx, 1);
+                            addToLog(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
+                            playSound(300, 'square', 0.2);
+                        }
                         if(map[ny][nx] === '#') map[ny][nx] = '.';
                         checkHit(nx, ny, 10);
                     }
