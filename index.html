@@ -156,9 +156,17 @@
         <div id="screen-menu" class="screen">
             <h1 id="menu-title">DINO CRAWLER</h1>
             <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
+            <button class="menu-btn" onclick="showScreen('screen-how-to')" id="btn-how-to">Como Jogar</button>
             <button class="menu-btn" onclick="showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
             <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
             <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
+        </div>
+
+        <!-- Tela de Como Jogar -->
+        <div id="screen-how-to" class="screen">
+            <h1 id="how-to-title">Como Jogar</h1>
+            <div id="how-to-content" class="lore-text"></div>
+            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-how-to-back">Voltar</button>
         </div>
 
         <!-- Tela de Lore -->
@@ -223,6 +231,8 @@
                 credits: "Créditos",
                 back: "Voltar",
                 changeLang: "Mudar Idioma",
+                howTo: "Como Jogar",
+                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Use as setas ou botões de direção. Cada passo consome Oxigênio (O2).<br><br><strong>Combate:</strong><br>1. Machete: Curto alcance, limpa arbustos (#).<br>2. Taser: Atordoa dinos próximos.<br>3. Rifle: Longo alcance, munição limitada.<br><br><strong>Estratégia:</strong> Dinos (V, T) são atraídos por cadáveres (X). Use-os como isca! O SCAN (S) localiza itens próximos.",
                 feedback: "Feedback",
                 loreText: "Ano 2150. A humanidade esgotou os recursos da Terra. Você é o Dr. Aris, um cientista enviado 65 milhões de anos ao passado para coletar peças de uma tecnologia experimental deixada por uma expedição perdida. Sua Máquina do Tempo quebrou no impacto. Encontre as 5 peças, recupere oxigênio e tome cuidado: você não está sozinho no Cretáceo.",
                 creditsText: "<p><strong>Equipe:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Enredo:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
@@ -249,6 +259,8 @@
                 credits: "Credits",
                 back: "Back",
                 changeLang: "Change Language",
+                howTo: "How to Play",
+                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Use arrows or direction buttons. Each step consumes Oxygen (O2).<br><br><strong>Combat:</strong><br>1. Machete: Short range, clears bushes (#).<br>2. Taser: Stuns nearby dinos.<br>3. Rifle: Long range, limited ammo.<br><br><strong>Strategy:</strong> Dinos (V, T) are attracted to corpses (X). Use them as bait! SCAN (S) locates nearby items.",
                 feedback: "Feedback",
                 loreText: "Year 2150. Humanity has depleted Earth's resources. You are Dr. Aris, a scientist sent 65 million years into the past to collect pieces of experimental technology left by a lost expedition. Your Time Machine broke on impact. Find the 5 parts, recover oxygen, and beware: you are not alone in the Cretaceous.",
                 creditsText: "<p><strong>Team:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Plot:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
@@ -287,6 +299,10 @@
             lang = l;
             const t = i18n[lang];
             document.getElementById('btn-start').textContent = t.start;
+            document.getElementById('btn-how-to').textContent = t.howTo;
+            document.getElementById('how-to-title').textContent = t.howTo;
+            document.getElementById('how-to-content').innerHTML = `<p>${t.howToText}</p>`;
+            document.getElementById('btn-how-to-back').textContent = t.back;
             document.getElementById('btn-lore').textContent = t.lore;
             document.getElementById('btn-credits').textContent = t.credits;
             document.getElementById('btn-back-lang').textContent = t.changeLang;
