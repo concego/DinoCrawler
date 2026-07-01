@@ -362,18 +362,19 @@
 
         function checkHit(x, y, dmg) {
             let hit = false;
-            dinos.forEach((d, idx) => {
+            for (let i = dinos.length - 1; i >= 0; i--) {
+                const d = dinos[i];
                 if(d.x === x && d.y === y) {
                     d.hp -= dmg;
                     addToLog(`Acertou ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! HP: ${d.hp}`);
                     if(d.hp <= 0) {
                         addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} caiu!`);
-                        map[d.y][d.x] = '.';
-                        dinos.splice(idx, 1);
+                        if(map[d.y][d.x] === d.type) map[d.y][d.x] = '.';
+                        dinos.splice(i, 1);
                     }
                     hit = true;
                 }
-            });
+            }
             return hit;
         }
 
