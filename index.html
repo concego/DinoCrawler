@@ -566,9 +566,13 @@
                         if (corpseIdx !== -1) {
                             corpses.splice(corpseIdx, 1);
                             addToLog(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
-                            playSound(300, 'square', 0.2);
+                            playSound(150, 'square', 0.4, 0.4); // Som mais pesado para o cadáver
                         }
-                        if(map[ny][nx] === '#') map[ny][nx] = '.';
+                        if(map[ny][nx] === '#') {
+                            map[ny][nx] = '.';
+                            addToLog(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
+                            playSound(300, 'square', 0.2, 0.15); // Som mais curto e agudo para arbusto
+                        }
                         checkHit(nx, ny, 10);
                     }
                 });
