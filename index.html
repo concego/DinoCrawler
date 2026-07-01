@@ -387,6 +387,12 @@
                         dinos.splice(i, 1);
                     } else {
                         addToLog(`Acertou o ${dName}! (HP: ${d.hp})`);
+                        // O dino reage ao ataque: aproxima-se imediatamente do jogador
+                        let rdx = player.x - d.x;
+                        let rdy = player.y - d.y;
+                        if(Math.abs(rdx) > Math.abs(rdy)) d.x += rdx > 0 ? 1 : -1;
+                        else d.y += rdy > 0 ? 1 : -1;
+                        playSound(120, 'sawtooth', 0.2, 0.3); // Som de reação/dor
                     }
                     hit = true;
                 }
