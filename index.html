@@ -519,18 +519,31 @@
                     if (dino) cell = dino.type; else if (corpse) cell = 'X';
                     if(cell !== '.') {
                         let dx = x - player.x; let dy = y - player.y; let dist = Math.abs(dx) + Math.abs(dy);
-                        if(dist >= 0 && dist < 15) {
-                            let dirY = dy > 0 ? (lang === 'pt' ? "Sul" : "South") : dy < 0 ? (lang === 'pt' ? "Norte" : "North") : "";
-                            let dirX = dx > 0 ? (lang === 'pt' ? "Leste" : "East") : dx < 0 ? (lang === 'pt' ? "Oeste" : "West") : "";
-                            let direction = [dirY, dirX].filter(Boolean).join(" ");
+                        if(dist >= 0 && dist < 12) {
+                            let dirY = dy > 0 ? "S" : dy < 0 ? "N" : "";
+                            let dirX = dx > 0 ? (lang === 'pt' ? "L" : "E") : dx < 0 ? (lang === 'pt' ? "O" : "W") : "";
+                            let direction = [dirY, dirX].filter(Boolean).join("");
                             const names = i18n[lang].names;
-                            let loc = dist === 0 ? i18n[lang].here : `${dist} ${i18n[lang].steps} ${direction}`;
+                            let loc = dist === 0 ? i18n[lang].here : `${dist}${direction}`;
                             found.push(`${names[cell] || cell} ${loc}`);
                         }
                     }
                 }
             }
-            addToLog(found.length ? found.join(", ") : i18n[lang].nothingNear);
+            if (found.length) {
+                // Agrupa por tipo para diminuir spam
+                let summary = found.reduce((acc, curr) => {
+                    let [name, loc] = curr.split(" ");
+                    if (!acc[name]) acc[name] = [];
+                    acc[name].push(loc);
+                    return acc;
+                }, {});
+                for (let name in summary) {
+                    addToLog(`${name}: ${summary[name].join(", ")}`);
+                }
+            } else {
+                addToLog(i18n[lang].nothingNear);
+            }
             playSound(600, 'sine'); draw();
         }
 
