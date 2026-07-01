@@ -2,63 +2,188 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dino Crawler - Roguelike</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Crawler</title>
     <style>
-        body { background-color: #1a1a1a; color: #00ff00; font-family: 'Courier New', Courier, monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; overflow-x: hidden; }
-        #game-info { width: 320px; display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #00ffff; }
-        #game-container { display: grid; grid-template-columns: repeat(20, 16px); grid-template-rows: repeat(20, 16px); gap: 1px; border: 2px solid #333; background-color: #000; }
-        .cell { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
-        #log { width: 320px; height: 100px; background: #000; border: 1px solid #333; margin-top: 10px; padding: 5px; font-size: 12px; overflow-y: auto; color: #aaa; }
-        
-        /* Layout de Controles para Mobile */
-        #controls-wrapper { margin-top: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        
-        #d-pad { display: grid; grid-template-areas: ". up ." "left . right" ". down ."; gap: 8px; }
-        #action-buttons { display: flex; gap: 10px; }
-        #weapon-selector { display: flex; flex-direction: column; gap: 5px; }
+        body {
+            background-color: #121212;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
 
-        button { background-color: #333; color: #00ff00; border: 1px solid #00ff00; font-size: 16px; border-radius: 8px; touch-action: manipulation; }
-        .move-btn { width: 50px; height: 50px; font-size: 20px; }
-        .action-btn { width: 70px; height: 50px; background-color: #522; font-weight: bold; }
-        .weapon-btn { width: 90px; height: 40px; font-size: 12px; background-color: #225; }
-        .active-weapon { border: 2px solid #fff; background-color: #338; color: #fff; }
+        #ui-layer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+        }
 
-        #btn-up { grid-area: up; } #btn-left { grid-area: left; } #btn-right { grid-area: right; } #btn-down { grid-area: down; }
+        .screen {
+            display: none;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #00ff00;
+            background: #000;
+        }
+
+        .active-screen {
+            display: block;
+        }
+
+        h1 { font-size: 2em; margin-bottom: 20px; color: #ff0000; }
+        .menu-btn {
+            background: #222;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin: 10px 0;
+            width: 100%;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-family: inherit;
+        }
+        .menu-btn:hover { background: #004400; }
+
+        #game-container {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 1px;
+            background-color: #333;
+            border: 4px solid #555;
+            width: 90vw;
+            max-width: 500px;
+            aspect-ratio: 1/1;
+        }
+        .cell {
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .player { color: #fff; text-shadow: 0 0 5px #fff; }
+        .part { color: #ffcc00; }
+        .air { color: #00ffff; }
         
-        .player { color: #00ffff; text-shadow: 0 0 5px #00ffff; }
-        .part { color: #ffff00; } .air { color: #00ff00; }
+        #hud, #controls {
+            width: 90vw;
+            max-width: 500px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2em;
+        }
+
+        #log {
+            width: 90vw;
+            max-width: 500px;
+            height: 120px;
+            overflow-y: auto;
+            background: #111;
+            border: 1px solid #444;
+            margin-top: 10px;
+            padding: 5px;
+            font-size: 0.9em;
+            text-align: left;
+        }
+
+        .move-btn, .weapon-btn, #action-btn {
+            padding: 15px;
+            font-size: 1em;
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            cursor: pointer;
+        }
+
+        .active-weapon { background: #00ff00; color: #000; }
+
+        .lore-text {
+            text-align: left;
+            font-size: 0.9em;
+            line-height: 1.4;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Dino Crawler</h1>
-    <div id="game-info">
-        <span>HP: <span id="hp">100</span>%</span>
-        <span>O2: <span id="o2">50</span></span>
-        <span>Parts: <span id="parts">0</span>/5</span>
-    </div>
-    
-    <div id="game-container"></div>
-    
-    <div id="log" aria-live="polite">Pressione SCAN para localizar peças ou ar.</div>
-    
-    <div id="controls-wrapper">
-        <div id="action-buttons">
-            <button class="action-btn" onclick="scan()">SCAN</button>
-            <button class="action-btn" style="background-color: #252;" onclick="fire()">FIRE</button>
+
+    <div id="ui-layer">
+        <!-- Tela de Idioma -->
+        <div id="screen-lang" class="screen active-screen">
+            <h1>DINO CRAWLER</h1>
+            <button class="menu-btn" onclick="setLang('pt')">Português (Brasil)</button>
+            <button class="menu-btn" onclick="setLang('en')">English</button>
         </div>
 
-        <div id="d-pad">
-            <button id="btn-up" class="move-btn" onclick="move(0, -1)">↑</button>
-            <button id="btn-left" class="move-btn" onclick="move(-1, 0)">←</button>
-            <button id="btn-right" class="move-btn" onclick="move(1, 0)">→</button>
-            <button id="btn-down" class="move-btn" onclick="move(0, 1)">↓</button>
+        <!-- Menu Principal -->
+        <div id="screen-menu" class="screen">
+            <h1 id="menu-title">DINO CRAWLER</h1>
+            <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
+            <button class="menu-btn" onclick="showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
+            <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
+            <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
         </div>
 
-        <div id="weapon-selector">
-            <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
-            <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
-            <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. RIFLE</button>
+        <!-- Tela de Lore -->
+        <div id="screen-lore" class="screen">
+            <h1 id="lore-title">A Lore</h1>
+            <div id="lore-content" class="lore-text"></div>
+            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-lore-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Créditos -->
+        <div id="screen-credits" class="screen">
+            <h1 id="credits-title">Créditos</h1>
+            <div id="credits-content" class="lore-text">
+            </div>
+            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-credits-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Jogo -->
+        <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none;">
+            <div id="hud">
+                <span>HP: <span id="hp">100</span></span>
+                <span>O2: <span id="o2">50</span></span>
+                <span>📦: <span id="parts">0</span>/5</span>
+                <span>🔫: <span id="ammo">5</span></span>
+            </div>
+
+            <div id="game-container"></div>
+
+            <div id="controls">
+                <div id="d-pad">
+                    <button id="btn-up" class="move-btn" onclick="move(0, -1)">↑</button>
+                    <button id="btn-left" class="move-btn" onclick="move(-1, 0)">←</button>
+                    <button id="btn-right" class="move-btn" onclick="move(1, 0)">→</button>
+                    <button id="btn-down" class="move-btn" onclick="move(0, 1)">↓</button>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <button id="action-btn" onclick="scan()">SCAN</button>
+                    <button id="action-btn" onclick="fire()" style="background:#ff0000; color:#fff;">FIRE</button>
+                </div>
+            </div>
+
+            <div id="weapon-selector">
+                <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
+                <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
+                <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. RIFLE</button>
+            </div>
+
+            <div id="log"></div>
         </div>
     </div>
 
@@ -66,36 +191,139 @@
         const container = document.getElementById('game-container');
         const log = document.getElementById('log');
         const GRID_SIZE = 20;
+        
+        let lang = 'pt';
+        const i18n = {
+            pt: {
+                start: "Iniciar Jogo",
+                lore: "Lore (História)",
+                credits: "Créditos",
+                back: "Voltar",
+                changeLang: "Mudar Idioma",
+                feedback: "Feedback",
+                loreText: "Ano 2150. A humanidade esgotou os recursos da Terra. Você é o Dr. Aris, um cientista enviado 65 milhões de anos ao passado para coletar peças de uma tecnologia experimental deixada por uma expedição perdida. Sua Máquina do Tempo quebrou no impacto. Encontre as 5 peças, recupere oxigênio e tome cuidado: você não está sozinho no Cretáceo.",
+                creditsText: "<p><strong>Equipe:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Enredo:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
+                win: "MISSÃO CUMPRIDA! Você voltou para o futuro!",
+                gameOver: "VOCÊ VIROU COMIDA DE DINOSSAURO. FIM DE JOGO.",
+                roarRex: "UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou faminto!",
+                roarVelo: "Você ouve um rugido distante... um Velociraptor entrou na área!",
+                partFound: "Aqui: Peça coletada!",
+                machineMissing: "Aqui: Máquina do Tempo (faltam peças).",
+                o2Found: "Aqui: Oxigênio recuperado!",
+                bushBlock: "Arbusto denso bloqueia o caminho! Use o Machete.",
+                noAmmo: "Click... sem munição.",
+                scanned: "Escaneando de",
+                nothingNear: "Nada próximo.",
+                steps: "passos ao",
+                here: "Aqui",
+                eating: "está devorando um cadáver! Ele ficará distraído.",
+                attack: "ALERTA: Ataque de",
+                names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver' }
+            },
+            en: {
+                start: "Start Game",
+                lore: "Lore (Story)",
+                credits: "Credits",
+                back: "Back",
+                changeLang: "Change Language",
+                feedback: "Feedback",
+                loreText: "Year 2150. Humanity has depleted Earth's resources. You are Dr. Aris, a scientist sent 65 million years into the past to collect pieces of experimental technology left by a lost expedition. Your Time Machine broke on impact. Find the 5 parts, recover oxygen, and beware: you are not alone in the Cretaceous.",
+                creditsText: "<p><strong>Team:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Plot:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
+                win: "MISSION ACCOMPLISHED! You returned to the future!",
+                gameOver: "YOU BECAME DINOSAUR FOOD. GAME OVER.",
+                roarRex: "A DEAFENING ROAR ECHOES! The T-Rex woke up hungry!",
+                roarVelo: "You hear a distant roar... a Velociraptor has entered the area!",
+                partFound: "Here: Part collected!",
+                machineMissing: "Here: Time Machine (parts missing).",
+                o2Found: "Here: Oxygen recovered!",
+                bushBlock: "Dense bush blocks the way! Use Machete.",
+                noAmmo: "Click... out of ammo.",
+                scanned: "Scanning from",
+                nothingNear: "Nothing nearby.",
+                steps: "steps to the",
+                here: "Here",
+                eating: "is devouring a corpse! He will be distracted.",
+                attack: "ALERT: Attack from",
+                names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse' }
+            }
+        };
+
         let player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weaponIdx: 0, ammo: 5 };
         const weapons = ['Machete', 'Taser', 'Rifle'];
         let map = [];
-
         let dinos = [];
         let corpses = [];
+        let audioCtx = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+        }
+
+        function setLang(l) {
+            lang = l;
+            const t = i18n[lang];
+            document.getElementById('btn-start').textContent = t.start;
+            document.getElementById('btn-lore').textContent = t.lore;
+            document.getElementById('btn-credits').textContent = t.credits;
+            document.getElementById('btn-back-lang').textContent = t.changeLang;
+            document.getElementById('lore-title').textContent = t.lore;
+            document.getElementById('lore-content').innerHTML = `<p>${t.loreText}</p>`;
+            document.getElementById('btn-lore-back').textContent = t.back;
+            document.getElementById('credits-title').textContent = t.credits;
+            document.getElementById('credits-content').innerHTML = t.creditsText;
+            document.getElementById('btn-credits-back').textContent = t.back;
+            showScreen('screen-menu');
+        }
+
+        function startGame() {
+            player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weaponIdx: 0, ammo: 5 };
+            initMap();
+            showScreen('screen-game');
+        }
+
+        function playSound(freq, type = 'sine', volume = 0.3, duration = 0.2, pan = 0) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const panner = audioCtx.createStereoPanner();
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            panner.pan.setValueAtTime(pan, audioCtx.currentTime);
+
+            osc.connect(gain);
+            gain.connect(panner);
+            panner.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
 
         function initMap() {
             map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
             dinos = [];
             corpses = [];
-            // Máquina do Tempo na posição inicial do jogador
             map[0][0] = 'M';
             for(let i=0; i<5; i++) {
-                let rx = Math.floor(Math.random()*18)+1;
-                let ry = Math.floor(Math.random()*18)+1;
-                if(map[ry][rx] === '.') map[ry][rx] = 'P';
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
+                map[ry][rx] = 'P';
             }
             for(let i=0; i<3; i++) {
-                let rx = Math.floor(Math.random()*18)+1;
-                let ry = Math.floor(Math.random()*18)+1;
-                if(map[ry][rx] === '.') map[ry][rx] = '*';
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
+                map[ry][rx] = '*';
             }
-            // Adicionando Arbustos (#) para densidade do mapa
             for(let i=0; i<15; i++) {
-                let rx = Math.floor(Math.random()*18)+1;
-                let ry = Math.floor(Math.random()*18)+1;
-                if(map[ry][rx] === '.') map[ry][rx] = '#';
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
+                map[ry][rx] = '#';
             }
-            // Inicializa Velociraptors (V) - o perigo inicial
             for(let i=0; i<5; i++) {
                 let rx = Math.floor(Math.random()*15)+4;
                 let ry = Math.floor(Math.random()*15)+4;
@@ -103,13 +331,13 @@
                     dinos.push({x: rx, y: ry, type: 'V', hp: 30, eatingTurns: 0});
                 }
             }
+            log.innerHTML = '';
             draw();
         }
 
         function spawnTRex() {
-            addToLog("UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou faminto!");
+            addToLog(i18n[lang].roarRex);
             playSound(60, 'sawtooth', 1.5, 0.5);
-            // Spawn em um dos cantos distantes da máquina
             let corners = [[18, 18], [18, 0], [0, 18]];
             let pick = corners[Math.floor(Math.random() * corners.length)];
             dinos.push({x: pick[0], y: pick[1], type: 'T', hp: 120, eatingTurns: 0});
@@ -119,23 +347,15 @@
         function spawnNewDino() {
             let rx = Math.floor(Math.random() * GRID_SIZE);
             let ry = Math.floor(Math.random() * GRID_SIZE);
-            
-            // Regra: T-Rex só pode existir 1 por vez e só depois de coletar 5 peças
             const hasTRex = dinos.some(d => d.type === 'T');
             const canSpawnTRex = player.parts >= 5 && !hasTRex;
             
-            // Spawn longe do jogador e em lugar vazio (incluindo não ser a máquina (0,0))
             if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.' && (rx !== 0 || ry !== 0)) {
-                // Checa se já não tem um dino ou cadáver lá
                 if(!dinos.some(d => d.x === rx && d.y === ry) && !corpses.some(c => c.x === rx && c.y === ry)) {
-                    // Decide o tipo respeitando as regras de peças e limite do Rex
                     let type = (canSpawnTRex && Math.random() > 0.8) ? 'T' : 'V';
-                    
-                    // Se for tentar spawnar Rex mas já tiver um ou não tiver peças, força Velociraptor
                     if (type === 'T' && (!canSpawnTRex)) type = 'V';
-
                     dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
-                    addToLog(`Você ouve um rugido distante... um ${type === 'T' ? 'T-Rex' : 'Velociraptor'} entrou na área!`);
+                    addToLog(type === 'T' ? i18n[lang].roarRex : i18n[lang].roarVelo);
                 }
             }
         }
@@ -146,20 +366,15 @@
                 for (let x = 0; x < GRID_SIZE; x++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    
-                    // Prioridade de Desenho: Jogador > Dino > Cadáver > Mapa
                     if (x === player.x && y === player.y) {
                         cell.textContent = '@';
                         cell.classList.add('player');
                     } else {
                         const dino = dinos.find(d => d.x === x && d.y === y);
                         const corpse = corpses.find(c => c.x === x && c.y === y);
-                        
-                        if (dino) {
-                            cell.textContent = dino.type;
-                        } else if (corpse) {
-                            cell.textContent = 'X';
-                        } else {
+                        if (dino) cell.textContent = dino.type;
+                        else if (corpse) cell.textContent = 'X';
+                        else {
                             cell.textContent = map[y][x];
                             if (map[y][x] === 'P') cell.classList.add('part');
                             if (map[y][x] === '*') cell.classList.add('air');
@@ -172,223 +387,102 @@
             document.getElementById('hp').textContent = player.hp;
             document.getElementById('o2').textContent = player.o2;
             document.getElementById('parts').textContent = player.parts;
-        }
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playSound(freq, type = 'sine', duration = 0.1, vol = 0.2, pan = 0) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            const panner = audioCtx.createStereoPanner();
-            
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            panner.pan.setValueAtTime(pan, audioCtx.currentTime);
-
-            osc.connect(gain);
-            gain.connect(panner);
-            panner.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-
-        function playEnvironmentSonar() {
-            const directions = [
-                { dx: 0, dy: -1, label: 'Norte' },
-                { dx: 0, dy: 1, label: 'Sul' },
-                { dx: -1, dy: 0, label: 'Oeste' },
-                { dx: 1, dy: 0, label: 'Leste' }
-            ];
-
-            directions.forEach((dir, index) => {
-                const nx = player.x + dir.dx;
-                const ny = player.y + dir.dy;
-                const timeOffset = index * 0.15; 
-                
-                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                    let cell = map[ny][nx];
-                    // Prioridade do Sonar: Dino > Cadáver > Mapa
-                    const dino = dinos.find(d => d.x === nx && d.y === ny);
-                    const corpse = corpses.find(c => c.x === nx && c.y === ny);
-                    
-                    if (dino) cell = dino.type;
-                    else if (corpse) cell = 'X';
-
-                    let freq = 0;
-                    let type = 'sine';
-                    let pan = (dir.dx !== 0) ? dir.dx : 0; 
-
-                    if (cell === 'P') { 
-                        freq = 880; type = 'triangle';
-                    } else if (cell === 'M') { 
-                        freq = 523.25; type = 'sine'; 
-                    } else if (cell === '*') { 
-                        freq = 600; type = 'triangle';
-                    } else if (cell === '#') { 
-                        freq = 150; type = 'square';
-                    } else if (cell === 'T' || cell === 'V') { 
-                        freq = 100; type = 'sawtooth';
-                    } else if (cell === 'X') { 
-                        freq = 200; type = 'square';
-                    }
-
-                    if (freq > 0) {
-                        setTimeout(() => {
-                            playSound(freq, type, 0.2, 0.15, pan);
-                        }, timeOffset * 1000);
-                    }
-                }
-            });
+            document.getElementById('ammo').textContent = player.ammo;
         }
 
         function move(dx, dy) {
             const nx = player.x + dx; const ny = player.y + dy;
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                // Bloqueio por Arbusto
                 if(map[ny][nx] === '#') {
-                    addToLog("Arbusto denso bloqueia o caminho! Use o Machete.");
+                    addToLog(i18n[lang].bushBlock);
                     playSound(150, 'square', 0.2);
                     return;
                 }
-                
                 player.x = nx; player.y = ny;
                 player.o2--;
-                
                 let logMsg = `${player.x}, ${player.y}.`;
-                
-                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " ALERTA: Sem O2!"; playSound(100, 'sawtooth'); }
+                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " O2!"; playSound(100, 'sawtooth'); }
                 if(map[player.y][player.x] === 'P') { 
-                    player.parts++; 
-                    map[player.y][player.x] = '.'; 
-                    logMsg += " Aqui: Peça coletada!"; 
-                    playSound(1200, 'sine', 0.4); 
-                    if(player.parts === 5) spawnTRex();
+                    player.parts++; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].partFound; 
+                    playSound(1200, 'sine', 0.4); if(player.parts === 5) spawnTRex();
                 }
                 if(map[player.y][player.x] === 'M') { 
                     if(player.parts >= 5) {
-                        logMsg += " MISSÃO CUMPRIDA! Você voltou para o futuro!";
-                        playSound(1500, 'triangle', 1.0, 0.4);
-                    } else {
-                        logMsg += " Aqui: Máquina do Tempo (faltam peças).";
-                        playSound(523.25, 'sine', 0.5, 0.3);
-                    }
+                        addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
+                        setTimeout(() => showScreen('screen-menu'), 4000); return;
+                    } else { logMsg += " " + i18n[lang].machineMissing; playSound(523.25, 'sine', 0.5, 0.3); }
                 }
-                if(map[player.y][player.x] === '*') { player.o2 = 50; logMsg += " Aqui: Tanque recarregado."; playSound(600, 'triangle', 0.5); }
-                
+                if(map[player.y][player.x] === '*') { 
+                    player.o2 += 25; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found; 
+                    playSound(600, 'triangle', 0.5); 
+                }
                 addToLog(logMsg);
-                
-                // Dispara o sonar de ambiente após o movimento
                 playEnvironmentSonar();
                 moveDinos();
-                if(Math.random() < 0.05) spawnNewDino(); // 5% de chance de spawnar novo dino a cada passo
+                let spawnChance = 0.05 + (player.parts * 0.02);
+                if(Math.random() < spawnChance) spawnNewDino(); 
                 draw();
             }
         }
 
         function moveDinos() {
-            // Cria uma cópia da posição do jogador para referência constante nesta rodada
-            const px = player.x;
-            const py = player.y;
-
+            const px = player.x; const py = player.y;
             dinos.forEach(d => {
-                if(d.eatingTurns > 0) {
-                    d.eatingTurns--;
-                    return;
-                }
-
+                if(d.eatingTurns > 0) { d.eatingTurns--; return; }
                 let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) <= 1 && Math.abs(c.y - d.y) <= 1);
                 if(corpseIdx !== -1) {
-                    d.eatingTurns = 5; 
-                    const corpse = corpses[corpseIdx];
-                    d.x = corpse.x; d.y = corpse.y; 
+                    d.eatingTurns = 5; const corpse = corpses[corpseIdx]; d.x = corpse.x; d.y = corpse.y; 
                     corpses.splice(corpseIdx, 1);
-                    addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} está devorando um cadáver! Ele ficará distraído por um tempo.`);
-                    playSound(100, 'square', 0.8, 0.3);
-                    return;
+                    addToLog(`${i18n[lang].names[d.type]} ${i18n[lang].eating}`);
+                    playSound(100, 'square', 0.8, 0.3); return;
                 }
-
-                let dx = px - d.x;
-                let dy = py - d.y;
-                let dist = Math.abs(dx) + Math.abs(dy);
-
-                // IA: T-Rex é implacável e te persegue de muito longe (25 passos), Velociraptor tem alcance 12
+                let dx = px - d.x; let dy = py - d.y; let dist = Math.abs(dx) + Math.abs(dy);
                 let chaseDist = d.type === 'T' ? 25 : 12;
                 if(dist <= chaseDist && dist > 0) {
-                    // T-Rex se move 2 vezes por turno do jogador para ser uma ameaça real
                     let moves = d.type === 'T' ? 2 : 1;
                     for(let m=0; m < moves; m++) {
-                        let curDx = px - d.x;
-                        let curDy = py - d.y;
-                        if(Math.abs(curDx) > Math.abs(curDy)) d.x += curDx > 0 ? 1 : -1;
-                        else d.y += curDy > 0 ? 1 : -1;
-                        
-                        // Checa colisão a cada passo do movimento duplo
+                        let curDx = px - d.x; let curDy = py - d.y;
+                        if(Math.abs(curDx) > Math.abs(curDy)) d.x += curDx > 0 ? 1 : -1; else d.y += curDy > 0 ? 1 : -1;
                         if(d.x === px && d.y === py) {
-                            let dmg = d.type === 'T' ? 25 : 10;
-                            player.hp -= dmg;
-                            addToLog(`ALERTA: Ataque de ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! -${dmg} HP.`);
-                            playSound(80, 'sawtooth', 0.5, 0.4);
-                            break; // Para de mover se já mordeu
+                            let dmg = d.type === 'T' ? 25 : 10; player.hp -= dmg;
+                            addToLog(`${i18n[lang].attack} ${i18n[lang].names[d.type]}! -${dmg} HP.`);
+                            playSound(80, 'sawtooth', 0.5, 0.4); break;
                         }
                     }
                 } else {
                     let r = Math.random();
-                    if(r < 0.25) d.x++;
-                    else if(r < 0.5) d.x--;
-                    else if(r < 0.75) d.y++;
-                    else d.y--;
+                    if(r < 0.25) d.x++; else if(r < 0.5) d.x--; else if(r < 0.75) d.y++; else d.y--;
                 }
-
-                d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x));
-                d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
-
-                if(d.x === px && d.y === py) {
-                    let dmg = d.type === 'T' ? 20 : 10;
-                    player.hp -= dmg;
-                    addToLog(`ALERTA: Ataque de ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! -${dmg} HP.`);
-                    playSound(80, 'sawtooth', 0.5, 0.4);
-                }
+                d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
             });
-            
             if(player.hp <= 0) {
-                addToLog("VOCÊ VIROU COMIDA DE DINOSSAURO. FIM DE JOGO.");
-                playSound(50, 'sawtooth', 2.0, 0.5);
-                setTimeout(() => location.reload(), 3000);
+                addToLog(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
+                setTimeout(() => showScreen('screen-menu'), 3000);
             }
         }
 
         function scan() {
             let found = [];
-            addToLog(`Escaneando de ${player.x}, ${player.y}...`);
+            addToLog(`${i18n[lang].scanned} ${player.x}, ${player.y}...`);
             for(let y=0; y<GRID_SIZE; y++) {
                 for(let x=0; x<GRID_SIZE; x++) {
                     let cell = map[y][x];
                     const dino = dinos.find(d => d.x === x && d.y === y);
                     const corpse = corpses.find(c => c.x === x && c.y === y);
-                    
-                    if (dino) cell = dino.type;
-                    else if (corpse) cell = 'X';
-
+                    if (dino) cell = dino.type; else if (corpse) cell = 'X';
                     if(cell !== '.') {
-                        let dx = x - player.x;
-                        let dy = y - player.y;
-                        let dist = Math.abs(dx) + Math.abs(dy);
+                        let dx = x - player.x; let dy = y - player.y; let dist = Math.abs(dx) + Math.abs(dy);
                         if(dist >= 0 && dist < 6) {
-                            let dirY = dy > 0 ? "Sul" : dy < 0 ? "Norte" : "";
-                            let dirX = dx > 0 ? "Leste" : dx < 0 ? "Oeste" : "";
+                            let dirY = dy > 0 ? (lang === 'pt' ? "Sul" : "South") : dy < 0 ? (lang === 'pt' ? "Norte" : "North") : "";
+                            let dirX = dx > 0 ? (lang === 'pt' ? "Leste" : "East") : dx < 0 ? (lang === 'pt' ? "Oeste" : "West") : "";
                             let direction = [dirY, dirX].filter(Boolean).join(" ");
-                            const names = { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'Dino', 'V': 'Dino', 'X': 'Cadáver' };
-                            let loc = dist === 0 ? "Aqui" : `a ${dist} passos ao ${direction}`;
-                            found.push(`${names[cell] || cell} ${loc}`);
+                            let loc = dist === 0 ? i18n[lang].here : `${dist} ${i18n[lang].steps} ${direction}`;
+                            found.push(`${i18n[lang].names[cell] || cell} ${loc}`);
                         }
                     }
                 }
             }
-            addToLog(found.length ? found.join(", ") : "Nada próximo.");
+            addToLog(found.length ? found.join(", ") : i18n[lang].nothingNear);
             playSound(600, 'sine'); draw();
         }
 
@@ -397,89 +491,86 @@
             document.querySelectorAll('.weapon-btn').forEach((b, i) => {
                 b.classList.toggle('active-weapon', i === idx);
             });
-            addToLog("Equipado: " + weapons[idx]);
-            playSound(300, 'sine');
+            playSound(400, 'sine', 0.2);
         }
 
         function fire() {
-            const directions = [
-                {x: 0, y: -1}, {x: 0, y: 1}, {x: -1, y: 0}, {x: 1, y: 0}
-            ];
-
+            const directions = [{x:0, y:-1}, {x:0, y:1}, {x:-1, y:0}, {x:1, y:0}];
             if(weapons[player.weaponIdx] === 'Machete') {
-                addToLog("Limpando arbustos e atacando curto...");
-                // Ataca na própria posição (caso o dino esteja em cima)
-                checkHit(player.x, player.y, 15);
                 directions.forEach(dir => {
-                    const nx = player.x + dir.x;
-                    const ny = player.y + dir.y;
+                    const nx = player.x + dir.x; const ny = player.y + dir.y;
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                         if(map[ny][nx] === '#') map[ny][nx] = '.';
                         checkHit(nx, ny, 10);
                     }
                 });
-                playSound(400, 'square', 0.3);
-                draw();
-                return;
+                playSound(400, 'square', 0.3); draw(); return;
             }
-
+            if(weapons[player.weaponIdx] === 'Taser') {
+                checkHit(player.x, player.y, 15);
+                directions.forEach(dir => {
+                    const nx = player.x + dir.x; const ny = player.y + dir.y;
+                    if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) checkHit(nx, ny, 15);
+                });
+                playSound(800, 'sawtooth', 0.3); draw(); return;
+            }
             if(weapons[player.weaponIdx] === 'Rifle') {
                 if(player.ammo > 0) {
-                    player.ammo--;
-                    addToLog("POW! Rifle disparado.");
-                    // Primeiro checa se há algo na própria posição
-                    checkHit(player.x, player.y, 25);
-                    // Ataca na linha de visão (simples: 4 direções, alcance 5)
+                    player.ammo--; checkHit(player.x, player.y, 25);
                     directions.forEach(dir => {
                         for(let i=1; i<=5; i++) {
-                            const nx = player.x + dir.x * i;
-                            const ny = player.y + dir.y * i;
+                            const nx = player.x + dir.x * i; const ny = player.y + dir.y * i;
                             if(checkHit(nx, ny, 20)) break;
                         }
                     });
                     playSound(200, 'sawtooth', 0.4, 0.3);
-                } else {
-                    addToLog("Click... sem munição.");
-                    playSound(100, 'sine');
-                }
-            } else if(weapons[player.weaponIdx] === 'Taser') {
-                addToLog("BZZZT! Taser disparado.");
-                // Ataca na própria posição
-                checkHit(player.x, player.y, 20);
-                directions.forEach(dir => {
-                    const nx = player.x + dir.x;
-                    const ny = player.y + dir.y;
-                    checkHit(nx, ny, 15);
-                });
-                playSound(800, 'sawtooth', 0.2, 0.2);
+                } else { addToLog(i18n[lang].noAmmo); }
             }
             draw();
         }
 
         function checkHit(x, y, dmg) {
             let hit = false;
-            for (let i = dinos.length - 1; i >= 0; i--) {
+            for(let i = dinos.length - 1; i >= 0; i--) {
                 const d = dinos[i];
                 if(d.x === x && d.y === y) {
                     d.hp -= dmg;
-                    const dName = d.type === 'T' ? 'T-Rex' : 'Velociraptor';
+                    const dName = i18n[lang].names[d.type];
                     if(d.hp <= 0) {
-                        addToLog(`Derrubou o ${dName}!`);
-                        corpses.push({x: d.x, y: d.y});
-                        dinos.splice(i, 1);
+                        addToLog(`Kill: ${dName}!`); corpses.push({x: d.x, y: d.y}); dinos.splice(i, 1);
                     } else {
-                        addToLog(`Acertou o ${dName}! (HP: ${d.hp})`);
-                        // O dino reage ao ataque: aproxima-se imediatamente do jogador
-                        let rdx = player.x - d.x;
-                        let rdy = player.y - d.y;
-                        if(Math.abs(rdx) > Math.abs(rdy)) d.x += rdx > 0 ? 1 : -1;
-                        else d.y += rdy > 0 ? 1 : -1;
-                        playSound(120, 'sawtooth', 0.2, 0.3); // Som de reação/dor
+                        addToLog(`Hit: ${dName}! (HP: ${d.hp})`);
+                        let rdx = player.x - d.x; let rdy = player.y - d.y;
+                        if(Math.abs(rdx) > Math.abs(rdy)) d.x += rdx > 0 ? 1 : -1; else d.y += rdy > 0 ? 1 : -1;
+                        playSound(120, 'sawtooth', 0.2, 0.3);
                     }
                     hit = true;
                 }
             }
             return hit;
+        }
+
+        function playEnvironmentSonar() {
+            const directions = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
+            directions.forEach((dir, index) => {
+                const nx = player.x + dir.dx; const ny = player.y + dir.dy;
+                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                    let cell = map[ny][nx];
+                    const dino = dinos.find(d => d.x === nx && d.y === ny);
+                    const corpse = corpses.find(c => c.x === nx && c.y === ny);
+                    if (dino) cell = dino.type; else if (corpse) cell = 'X';
+                    let freq = 0; let type = 'sine';
+                    if (cell === 'P') { freq = 880; type = 'triangle'; }
+                    else if (cell === 'M') { freq = 523.25; type = 'sine'; }
+                    else if (cell === '*') { freq = 600; type = 'triangle'; }
+                    else if (cell === '#') { freq = 150; type = 'square'; }
+                    else if (cell === 'T' || cell === 'V') { freq = 100; type = 'sawtooth'; }
+                    else if (cell === 'X') { freq = 200; type = 'square'; }
+                    if (freq > 0) {
+                        setTimeout(() => playSound(freq, type, 0.2, 0.15, dir.dx !== 0 ? dir.dx : 0), index * 150);
+                    }
+                }
+            });
         }
 
         function addToLog(msg) {
@@ -489,16 +580,16 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp') move(0, -1);
-            if (e.key === 'ArrowDown') move(0, 1);
-            if (e.key === 'ArrowLeft') move(-1, 0);
-            if (e.key === 'ArrowRight') move(1, 0);
-            if (e.key === 's') scan();
-            if (e.key === 'f') fire();
-            if (['1','2','3'].includes(e.key)) setWeapon(parseInt(e.key)-1);
+            if (document.getElementById('screen-game').classList.contains('active-screen')) {
+                if (e.key === 'ArrowUp') move(0, -1);
+                if (e.key === 'ArrowDown') move(0, 1);
+                if (e.key === 'ArrowLeft') move(-1, 0);
+                if (e.key === 'ArrowRight') move(1, 0);
+                if (e.key === 's') scan();
+                if (e.key === 'f') fire();
+                if (['1','2','3'].includes(e.key)) setWeapon(parseInt(e.key)-1);
+            }
         });
-
-        initMap();
     </script>
 </body>
 </html>
