@@ -313,31 +313,28 @@
         }
 
         function scan() {
-            if(player.o2 > 0) {
-                player.o2--;
-                let found = [];
-                addToLog(`Escaneando de ${player.x}, ${player.y}...`);
-                for(let y=0; y<GRID_SIZE; y++) {
-                    for(let x=0; x<GRID_SIZE; x++) {
-                        const cell = map[y][x];
-                        if(cell !== '.') {
-                            let dx = x - player.x;
-                            let dy = y - player.y;
-                            let dist = Math.abs(dx) + Math.abs(dy);
-                            if(dist >= 0 && dist < 6) {
-                                let dirY = dy > 0 ? "Sul" : dy < 0 ? "Norte" : "";
-                                let dirX = dx > 0 ? "Leste" : dx < 0 ? "Oeste" : "";
-                                let direction = [dirY, dirX].filter(Boolean).join(" ");
-                                const names = { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'Dino', 'V': 'Dino', 'X': 'Cadáver' };
-                                let loc = dist === 0 ? "Aqui" : `a ${dist} passos ao ${direction}`;
-                                found.push(`${names[cell] || cell} ${loc}`);
-                            }
+            let found = [];
+            addToLog(`Escaneando de ${player.x}, ${player.y}...`);
+            for(let y=0; y<GRID_SIZE; y++) {
+                for(let x=0; x<GRID_SIZE; x++) {
+                    const cell = map[y][x];
+                    if(cell !== '.') {
+                        let dx = x - player.x;
+                        let dy = y - player.y;
+                        let dist = Math.abs(dx) + Math.abs(dy);
+                        if(dist >= 0 && dist < 6) {
+                            let dirY = dy > 0 ? "Sul" : dy < 0 ? "Norte" : "";
+                            let dirX = dx > 0 ? "Leste" : dx < 0 ? "Oeste" : "";
+                            let direction = [dirY, dirX].filter(Boolean).join(" ");
+                            const names = { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'Dino', 'V': 'Dino', 'X': 'Cadáver' };
+                            let loc = dist === 0 ? "Aqui" : `a ${dist} passos ao ${direction}`;
+                            found.push(`${names[cell] || cell} ${loc}`);
                         }
                     }
                 }
-                addToLog(found.length ? found.join(", ") : "Nada próximo.");
-                playSound(600, 'sine'); draw();
             }
+            addToLog(found.length ? found.join(", ") : "Nada próximo.");
+            playSound(600, 'sine'); draw();
         }
 
         function setWeapon(idx) {
