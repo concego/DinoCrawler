@@ -561,7 +561,9 @@
 
         function fire() {
             const directions = [{x:0, y:-1}, {x:0, y:1}, {x:-1, y:0}, {x:1, y:0}];
+            // Sempre checa se há algo na mesma posição do jogador
             checkHit(player.x, player.y, weapons[player.weaponIdx] === 'Rifle' ? 25 : (weapons[player.weaponIdx] === 'Taser' ? 15 : 10));
+
             if(weapons[player.weaponIdx] === 'Machete') {
                 directions.forEach(dir => {
                     const nx = player.x + dir.x; const ny = player.y + dir.y;
@@ -571,26 +573,24 @@
                         if (corpseIdx !== -1) {
                             corpses.splice(corpseIdx, 1);
                             addToLog(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
-                            playSound(150, 'square', 0.4, 0.4); // Som mais pesado para o cadáver
+                            playSound(150, 'square', 0.4, 0.4);
                         }
                         if(cell === '#') {
                             map[ny][nx] = '.';
                             addToLog(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
-                            playSound(300, 'square', 0.2, 0.15); // Som mais curto e agudo para arbusto
+                            playSound(300, 'square', 0.2, 0.15);
                         }
                         checkHit(nx, ny, 10);
                     }
                 });
-                playSound(400, 'square', 0.3); draw(); return;
-            }
-            if(weapons[player.weaponIdx] === 'Taser') {
+                playSound(400, 'square', 0.3);
+            } else if(weapons[player.weaponIdx] === 'Taser') {
                 directions.forEach(dir => {
                     const nx = player.x + dir.x; const ny = player.y + dir.y;
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) checkHit(nx, ny, 15);
                 });
-                playSound(800, 'sawtooth', 0.3); draw(); return;
-            }
-            if(weapons[player.weaponIdx] === 'Rifle') {
+                playSound(800, 'sawtooth', 0.3);
+            } else if(weapons[player.weaponIdx] === 'Rifle') {
                 if(player.ammo > 0) {
                     player.ammo--; 
                     directions.forEach(dir => {
@@ -600,7 +600,10 @@
                         }
                     });
                     playSound(200, 'sawtooth', 0.4, 0.3);
-                } else { addToLog(i18n[lang].noAmmo); return; } // Não consome turno se não tiver bala
+                } else { 
+                    addToLog(i18n[lang].noAmmo); 
+                    return; // Sai sem gastar turno
+                }
             }
             moveDinos();
             draw();
