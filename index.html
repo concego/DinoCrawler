@@ -117,13 +117,23 @@
         function spawnNewDino() {
             let rx = Math.floor(Math.random() * GRID_SIZE);
             let ry = Math.floor(Math.random() * GRID_SIZE);
+            
+            // Regra: T-Rex só pode existir 1 por vez e só depois de coletar 5 peças
+            const hasTRex = dinos.some(d => d.type === 'T');
+            const canSpawnTRex = player.parts >= 5 && !hasTRex;
+            
             // Spawn longe do jogador e em lugar vazio (incluindo não ser a máquina (0,0))
             if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.' && (rx !== 0 || ry !== 0)) {
                 // Checa se já não tem um dino ou cadáver lá
                 if(!dinos.some(d => d.x === rx && d.y === ry) && !corpses.some(c => c.x === rx && c.y === ry)) {
-                    let type = Math.random() > 0.8 ? 'T' : 'V';
+                    // Decide o tipo respeitando as regras de peças e limite do Rex
+                    let type = (canSpawnTRex && Math.random() > 0.8) ? 'T' : 'V';
+                    
+                    // Se for tentar spawnar Rex mas já tiver um ou não tiver peças, força Velociraptor
+                    if (type === 'T' && (!canSpawnTRex)) type = 'V';
+
                     dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
-                    addToLog(`Você ouve um rugido distante... mais um ${type === 'T' ? 'T-Rex' : 'Velociraptor'} entrou na área!`);
+                    addToLog(`Você ouve um rugido distante... um ${type === 'T' ? 'T-Rex' : 'Velociraptor'} entrou na área!`);
                 }
             }
         }
