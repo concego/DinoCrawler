@@ -71,10 +71,12 @@
         let map = [];
 
         let dinos = [];
+        let corpses = [];
 
         function initMap() {
             map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
             dinos = [];
+            corpses = [];
             // Máquina do Tempo na posição inicial do jogador
             map[0][0] = 'M';
             for(let i=0; i<5; i++) {
@@ -98,7 +100,7 @@
                 let rx = Math.floor(Math.random()*15)+4;
                 let ry = Math.floor(Math.random()*15)+4;
                 if(map[ry][rx] === '.') {
-                    dinos.push({x: rx, y: ry, type: 'V', hp: 15});
+                    dinos.push({x: rx, y: ry, type: 'V', hp: 15, eatingTurns: 0});
                     map[ry][rx] = 'V';
                 }
             }
@@ -109,7 +111,7 @@
             addToLog("UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou!");
             playSound(60, 'sawtooth', 1.5, 0.5);
             let rx = 18, ry = 18; // Longe da máquina
-            dinos.push({x: rx, y: ry, type: 'T', hp: 50});
+            dinos.push({x: rx, y: ry, type: 'T', hp: 50, eatingTurns: 0});
             map[ry][rx] = 'T';
             draw();
         }
@@ -188,6 +190,8 @@
                         freq = 150; type = 'square';
                     } else if (cell === 'T' || cell === 'V') { // Dino: Grave e Ameaçador
                         freq = 100; type = 'sawtooth';
+                    } else if (cell === 'X') { // Cadáver: Som opaco
+                        freq = 200; type = 'square';
                     }
                     // Omitimos o som para '.' (vazio) para criar o "Sonar de Exceção"
 
@@ -245,8 +249,28 @@
 
         function moveDinos() {
             dinos.forEach(d => {
+                // Se estiver distraído comendo, decrementa os turnos e pula o movimento
+                if(d.eatingTurns > 0) {
+                    d.eatingTurns--;
+                    if(map[d.y][d.x] === d.type) map[d.y][d.x] = d.type; // Mantém no mapa
+                    return;
+                }
+
                 // Remove do mapa atual para mover
                 if(map[d.y][d.x] === d.type) map[d.y][d.x] = '.';
+
+                // Verifica se há um corpo por perto para comer (distância 1)
+                let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) + Math.abs(c.y - d.y) <= 1);
+                if(corpseIdx !== -1) {
+                    d.eatingTurns = 2;
+                    const corpse = corpses[corpseIdx];
+                    d.x = corpse.x; d.y = corpse.y; // Move para o corpo
+                    corpses.splice(corpseIdx, 1);
+                    addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} parou para comer um cadáver!`);
+                    playSound(100, 'square', 0.5, 0.2);
+                    if(map[d.y][d.x] === '.') map[d.y][d.x] = d.type;
+                    return;
+                }
 
                 let dx = player.x - d.x;
                 let dy = player.y - d.y;
@@ -304,7 +328,7 @@
                                 let dirY = dy > 0 ? "Sul" : dy < 0 ? "Norte" : "";
                                 let dirX = dx > 0 ? "Leste" : dx < 0 ? "Oeste" : "";
                                 let direction = [dirY, dirX].filter(Boolean).join(" ");
-                                const names = { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'Dino', 'V': 'Dino' };
+                                const names = { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'Dino', 'V': 'Dino', 'X': 'Cadáver' };
                                 let loc = dist === 0 ? "Aqui" : `a ${dist} passos ao ${direction}`;
                                 found.push(`${names[cell] || cell} ${loc}`);
                             }
@@ -389,7 +413,8 @@
                     const dName = d.type === 'T' ? 'T-Rex' : 'Velociraptor';
                     if(d.hp <= 0) {
                         addToLog(`Derrubou o ${dName}!`);
-                        if(map[d.y][d.x] === d.type) map[d.y][d.x] = '.';
+                        corpses.push({x: d.x, y: d.y});
+                        if(map[d.y][d.x] === d.type) map[d.y][d.x] = 'X'; // X marca o cadáver
                         dinos.splice(i, 1);
                     } else {
                         addToLog(`Acertou o ${dName}! (HP: ${d.hp})`);
