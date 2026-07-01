@@ -96,11 +96,11 @@
                 if(map[ry][rx] === '.') map[ry][rx] = '#';
             }
             // Inicializa Velociraptors (V) - o perigo inicial
-            for(let i=0; i<3; i++) {
+            for(let i=0; i<5; i++) {
                 let rx = Math.floor(Math.random()*15)+4;
                 let ry = Math.floor(Math.random()*15)+4;
                 if(map[ry][rx] === '.') {
-                    dinos.push({x: rx, y: ry, type: 'V', hp: 15, eatingTurns: 0});
+                    dinos.push({x: rx, y: ry, type: 'V', hp: 30, eatingTurns: 0});
                     map[ry][rx] = 'V';
                 }
             }
@@ -110,10 +110,22 @@
         function spawnTRex() {
             addToLog("UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou!");
             playSound(60, 'sawtooth', 1.5, 0.5);
-            let rx = 18, ry = 18; // Longe da máquina
-            dinos.push({x: rx, y: ry, type: 'T', hp: 50, eatingTurns: 0});
+            let rx = 18, ry = 18; 
+            dinos.push({x: rx, y: ry, type: 'T', hp: 100, eatingTurns: 0});
             map[ry][rx] = 'T';
             draw();
+        }
+
+        function spawnNewDino() {
+            let rx = Math.floor(Math.random() * GRID_SIZE);
+            let ry = Math.floor(Math.random() * GRID_SIZE);
+            // Spawn longe do jogador
+            if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.') {
+                let type = Math.random() > 0.8 ? 'T' : 'V';
+                dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
+                map[ry][rx] = type;
+                addToLog(`Você ouve um rugido distante... mais um ${type === 'T' ? 'T-Rex' : 'Velociraptor'} entrou na área!`);
+            }
         }
 
         function draw() {
@@ -243,6 +255,7 @@
                 // Dispara o sonar de ambiente após o movimento
                 playEnvironmentSonar();
                 moveDinos();
+                if(Math.random() < 0.05) spawnNewDino(); // 5% de chance de spawnar novo dino a cada passo
                 draw();
             }
         }
@@ -259,16 +272,16 @@
                 // Remove do mapa atual para mover
                 if(map[d.y][d.x] === d.type) map[d.y][d.x] = '.';
 
-                // Verifica se há um corpo por perto para comer (distância 1)
-                let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) + Math.abs(c.y - d.y) <= 1);
+                // Verifica se há um corpo por perto para comer (distância 1 ou na mesma casa)
+                let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) <= 1 && Math.abs(c.y - d.y) <= 1);
                 if(corpseIdx !== -1) {
-                    d.eatingTurns = 2;
+                    d.eatingTurns = 5; // Aumentado para 5 turnos de distração
                     const corpse = corpses[corpseIdx];
-                    d.x = corpse.x; d.y = corpse.y; // Move para o corpo
+                    d.x = corpse.x; d.y = corpse.y; 
                     corpses.splice(corpseIdx, 1);
-                    addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} parou para comer um cadáver!`);
-                    playSound(100, 'square', 0.5, 0.2);
-                    if(map[d.y][d.x] === '.') map[d.y][d.x] = d.type;
+                    addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} está devorando um cadáver! Ele ficará distraído por um tempo.`);
+                    playSound(100, 'square', 0.8, 0.3);
+                    if(map[d.y][d.x] === 'X' || map[d.y][d.x] === '.') map[d.y][d.x] = d.type;
                     return;
                 }
 
