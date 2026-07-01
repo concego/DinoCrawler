@@ -563,13 +563,14 @@
                 directions.forEach(dir => {
                     const nx = player.x + dir.x; const ny = player.y + dir.y;
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                        const cell = map[ny][nx];
                         const corpseIdx = corpses.findIndex(c => c.x === nx && c.y === ny);
                         if (corpseIdx !== -1) {
                             corpses.splice(corpseIdx, 1);
                             addToLog(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
                             playSound(150, 'square', 0.4, 0.4); // Som mais pesado para o cadáver
                         }
-                        if(map[ny][nx] === '#') {
+                        if(cell === '#') {
                             map[ny][nx] = '.';
                             addToLog(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
                             playSound(300, 'square', 0.2, 0.15); // Som mais curto e agudo para arbusto
@@ -643,6 +644,9 @@
                     if (cell === 'P') { freq = 880; type = 'triangle'; }
                     else if (cell === 'M') { freq = 523.25; type = 'sine'; }
                     else if (cell === '*') { freq = 600; type = 'triangle'; }
+                    else if (cell === '#') { freq = 150; type = 'square'; }
+                    else if (cell === 'T' || cell === 'V') { freq = 100; type = 'sawtooth'; }
+                    else if (cell === 'X') { freq = 200; type = 'square'; }
                     else if (cell === '#') { freq = 150; type = 'square'; }
                     else if (cell === 'T' || cell === 'V') { freq = 100; type = 'sawtooth'; }
                     else if (cell === 'X') { freq = 200; type = 'square'; }
