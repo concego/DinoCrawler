@@ -70,8 +70,11 @@
         const weapons = ['Machete', 'Taser', 'Rifle'];
         let map = [];
 
+        let dinos = [];
+
         function initMap() {
             map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
+            dinos = [];
             // Máquina do Tempo na posição inicial do jogador
             map[0][0] = 'M';
             for(let i=0; i<5; i++) {
@@ -89,6 +92,16 @@
                 let rx = Math.floor(Math.random()*18)+1;
                 let ry = Math.floor(Math.random()*18)+1;
                 if(map[ry][rx] === '.') map[ry][rx] = '#';
+            }
+            // Soltar os Dinos (T = T-Rex lento/forte, V = Velociraptor rápido/fraco)
+            for(let i=0; i<3; i++) {
+                let rx = Math.floor(Math.random()*15)+4;
+                let ry = Math.floor(Math.random()*15)+4;
+                if(map[ry][rx] === '.') {
+                    let type = Math.random() > 0.5 ? 'T' : 'V';
+                    dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 30 : 15});
+                    map[ry][rx] = type;
+                }
             }
             draw();
         }
@@ -211,7 +224,53 @@
                 
                 // Dispara o sonar de ambiente após o movimento
                 playEnvironmentSonar();
+                moveDinos();
                 draw();
+            }
+        }
+
+        function moveDinos() {
+            dinos.forEach(d => {
+                // Remove do mapa atual para mover
+                if(map[d.y][d.x] === d.type) map[d.y][d.x] = '.';
+
+                let dx = player.x - d.x;
+                let dy = player.y - d.y;
+                let dist = Math.abs(dx) + Math.abs(dy);
+
+                // IA Simples: persegue se estiver perto (dist < 8)
+                if(dist < 8 && dist > 0) {
+                    if(Math.abs(dx) > Math.abs(dy)) d.x += dx > 0 ? 1 : -1;
+                    else d.y += dy > 0 ? 1 : -1;
+                } else {
+                    // Movimento aleatório se longe
+                    let r = Math.random();
+                    if(r < 0.25) d.x++;
+                    else if(r < 0.5) d.x--;
+                    else if(r < 0.75) d.y++;
+                    else d.y--;
+                }
+
+                // Limites do mapa
+                d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x));
+                d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
+
+                // Se pisar no jogador
+                if(d.x === player.x && d.y === player.y) {
+                    let dmg = d.type === 'T' ? 20 : 10;
+                    player.hp -= dmg;
+                    addToLog(`ALERTA: Ataque de ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! -${dmg} HP.`);
+                    playSound(80, 'sawtooth', 0.5, 0.4);
+                }
+
+                // Garante que não sobreponha itens importantes
+                if(map[d.y][d.x] === '.') map[d.y][d.x] = d.type;
+            });
+            
+            if(player.hp <= 0) {
+                addToLog("VOCÊ VIROU COMIDA DE DINOSSAURO. FIM DE JOGO.");
+                playSound(50, 'sawtooth', 2.0, 0.5);
+                setTimeout(() => location.reload(), 3000);
             }
         }
 
@@ -258,14 +317,13 @@
             ];
 
             if(weapons[player.weaponIdx] === 'Machete') {
-                addToLog("Limpando arbustos próximos...");
+                addToLog("Limpando arbustos e atacando curto...");
                 directions.forEach(dir => {
                     const nx = player.x + dir.x;
                     const ny = player.y + dir.y;
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                        if(map[ny][nx] === '#') {
-                            map[ny][nx] = '.';
-                        }
+                        if(map[ny][nx] === '#') map[ny][nx] = '.';
+                        checkHit(nx, ny, 10);
                     }
                 });
                 playSound(400, 'square', 0.3);
@@ -276,16 +334,47 @@
             if(weapons[player.weaponIdx] === 'Rifle') {
                 if(player.ammo > 0) {
                     player.ammo--;
-                    addToLog("POW! Rifle disparado. Barulho atrai dinos!");
+                    addToLog("POW! Rifle disparado.");
+                    // Ataca na linha de visão (simples: 4 direções, alcance 5)
+                    directions.forEach(dir => {
+                        for(let i=1; i<=5; i++) {
+                            const nx = player.x + dir.x * i;
+                            const ny = player.y + dir.y * i;
+                            if(checkHit(nx, ny, 20)) break;
+                        }
+                    });
                     playSound(200, 'sawtooth', 0.4, 0.3);
                 } else {
                     addToLog("Click... sem munição.");
                     playSound(100, 'sine');
                 }
-            } else {
-                addToLog("Usando " + weapons[player.weaponIdx] + " em curta distância.");
-                playSound(400, 'square');
+            } else if(weapons[player.weaponIdx] === 'Taser') {
+                addToLog("BZZZT! Taser disparado.");
+                directions.forEach(dir => {
+                    const nx = player.x + dir.x;
+                    const ny = player.y + dir.y;
+                    checkHit(nx, ny, 15);
+                });
+                playSound(800, 'sawtooth', 0.2, 0.2);
             }
+            draw();
+        }
+
+        function checkHit(x, y, dmg) {
+            let hit = false;
+            dinos.forEach((d, idx) => {
+                if(d.x === x && d.y === y) {
+                    d.hp -= dmg;
+                    addToLog(`Acertou ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! HP: ${d.hp}`);
+                    if(d.hp <= 0) {
+                        addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} caiu!`);
+                        map[d.y][d.x] = '.';
+                        dinos.splice(idx, 1);
+                    }
+                    hit = true;
+                }
+            });
+            return hit;
         }
 
         function addToLog(msg) {
