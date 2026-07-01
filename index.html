@@ -332,6 +332,8 @@
 
             if(weapons[player.weaponIdx] === 'Machete') {
                 addToLog("Limpando arbustos e atacando curto...");
+                // Ataca na própria posição (caso o dino esteja em cima)
+                checkHit(player.x, player.y, 15);
                 directions.forEach(dir => {
                     const nx = player.x + dir.x;
                     const ny = player.y + dir.y;
@@ -349,6 +351,8 @@
                 if(player.ammo > 0) {
                     player.ammo--;
                     addToLog("POW! Rifle disparado.");
+                    // Primeiro checa se há algo na própria posição
+                    checkHit(player.x, player.y, 25);
                     // Ataca na linha de visão (simples: 4 direções, alcance 5)
                     directions.forEach(dir => {
                         for(let i=1; i<=5; i++) {
@@ -364,6 +368,8 @@
                 }
             } else if(weapons[player.weaponIdx] === 'Taser') {
                 addToLog("BZZZT! Taser disparado.");
+                // Ataca na própria posição
+                checkHit(player.x, player.y, 20);
                 directions.forEach(dir => {
                     const nx = player.x + dir.x;
                     const ny = player.y + dir.y;
