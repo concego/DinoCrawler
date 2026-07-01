@@ -121,7 +121,7 @@
             min-width: 80px;
         }
 
-        .weapon-btn, #action-btn {
+        .weapon-btn, .action-btn {
             padding: 15px;
             font-size: 1em;
             background: #333;
@@ -203,8 +203,8 @@
                     <button id="btn-down" class="move-btn" onclick="move(0, 1)">SUL (↓)</button>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:5px;">
-                    <button id="action-btn" onclick="scan()">SCAN</button>
-                    <button id="action-btn" onclick="fire()" style="background:#ff0000; color:#fff;">FIRE</button>
+                    <button id="btn-scan" class="action-btn" onclick="scan()">SCAN</button>
+                    <button id="btn-fire" class="action-btn" onclick="fire()" style="background:#ff0000; color:#fff;">FIRE</button>
                 </div>
             </div>
 
