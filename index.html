@@ -559,6 +559,7 @@
 
         function fire() {
             const directions = [{x:0, y:-1}, {x:0, y:1}, {x:-1, y:0}, {x:1, y:0}];
+            checkHit(player.x, player.y, weapons[player.weaponIdx] === 'Rifle' ? 25 : (weapons[player.weaponIdx] === 'Taser' ? 15 : 10));
             if(weapons[player.weaponIdx] === 'Machete') {
                 directions.forEach(dir => {
                     const nx = player.x + dir.x; const ny = player.y + dir.y;
@@ -581,7 +582,6 @@
                 playSound(400, 'square', 0.3); draw(); return;
             }
             if(weapons[player.weaponIdx] === 'Taser') {
-                checkHit(player.x, player.y, 15);
                 directions.forEach(dir => {
                     const nx = player.x + dir.x; const ny = player.y + dir.y;
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) checkHit(nx, ny, 15);
@@ -590,7 +590,7 @@
             }
             if(weapons[player.weaponIdx] === 'Rifle') {
                 if(player.ammo > 0) {
-                    player.ammo--; checkHit(player.x, player.y, 25);
+                    player.ammo--; 
                     directions.forEach(dir => {
                         for(let i=1; i<=5; i++) {
                             const nx = player.x + dir.x * i; const ny = player.y + dir.y * i;
