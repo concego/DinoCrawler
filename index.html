@@ -117,8 +117,8 @@
         function spawnNewDino() {
             let rx = Math.floor(Math.random() * GRID_SIZE);
             let ry = Math.floor(Math.random() * GRID_SIZE);
-            // Spawn longe do jogador e em lugar vazio
-            if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.') {
+            // Spawn longe do jogador e em lugar vazio (incluindo não ser a máquina (0,0))
+            if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.' && (rx !== 0 || ry !== 0)) {
                 // Checa se já não tem um dino ou cadáver lá
                 if(!dinos.some(d => d.x === rx && d.y === ry) && !corpses.some(c => c.x === rx && c.y === ry)) {
                     let type = Math.random() > 0.8 ? 'T' : 'V';
@@ -278,6 +278,10 @@
         }
 
         function moveDinos() {
+            // Cria uma cópia da posição do jogador para referência constante nesta rodada
+            const px = player.x;
+            const py = player.y;
+
             dinos.forEach(d => {
                 if(d.eatingTurns > 0) {
                     d.eatingTurns--;
@@ -295,11 +299,12 @@
                     return;
                 }
 
-                let dx = player.x - d.x;
-                let dy = player.y - d.y;
+                let dx = px - d.x;
+                let dy = py - d.y;
                 let dist = Math.abs(dx) + Math.abs(dy);
 
-                if(dist < 8 && dist > 0) {
+                // IA: Persegue agressivamente se estiver a até 10 passos (antes era 8)
+                if(dist <= 10 && dist > 0) {
                     if(Math.abs(dx) > Math.abs(dy)) d.x += dx > 0 ? 1 : -1;
                     else d.y += dy > 0 ? 1 : -1;
                 } else {
@@ -313,7 +318,7 @@
                 d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x));
                 d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
 
-                if(d.x === player.x && d.y === player.y) {
+                if(d.x === px && d.y === py) {
                     let dmg = d.type === 'T' ? 20 : 10;
                     player.hp -= dmg;
                     addToLog(`ALERTA: Ataque de ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! -${dmg} HP.`);
