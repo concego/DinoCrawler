@@ -519,7 +519,7 @@
                     if (dino) cell = dino.type; else if (corpse) cell = 'X';
                     if(cell !== '.') {
                         let dx = x - player.x; let dy = y - player.y; let dist = Math.abs(dx) + Math.abs(dy);
-                        if(dist >= 0 && dist < 12) {
+                        if(dist >= 0 && dist < 6) {
                             let dirY = dy > 0 ? "S" : dy < 0 ? "N" : "";
                             let dirX = dx > 0 ? (lang === 'pt' ? "L" : "E") : dx < 0 ? (lang === 'pt' ? "O" : "W") : "";
                             let direction = [dirY, dirX].filter(Boolean).join("");
