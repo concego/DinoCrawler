@@ -93,16 +93,24 @@
                 let ry = Math.floor(Math.random()*18)+1;
                 if(map[ry][rx] === '.') map[ry][rx] = '#';
             }
-            // Soltar os Dinos (T = T-Rex lento/forte, V = Velociraptor rápido/fraco)
+            // Inicializa Velociraptors (V) - o perigo inicial
             for(let i=0; i<3; i++) {
                 let rx = Math.floor(Math.random()*15)+4;
                 let ry = Math.floor(Math.random()*15)+4;
                 if(map[ry][rx] === '.') {
-                    let type = Math.random() > 0.5 ? 'T' : 'V';
-                    dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 30 : 15});
-                    map[ry][rx] = type;
+                    dinos.push({x: rx, y: ry, type: 'V', hp: 15});
+                    map[ry][rx] = 'V';
                 }
             }
+            draw();
+        }
+
+        function spawnTRex() {
+            addToLog("UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou!");
+            playSound(60, 'sawtooth', 1.5, 0.5);
+            let rx = 18, ry = 18; // Longe da máquina
+            dinos.push({x: rx, y: ry, type: 'T', hp: 50});
+            map[ry][rx] = 'T';
             draw();
         }
 
@@ -208,7 +216,13 @@
                 let logMsg = `${player.x}, ${player.y}.`;
                 
                 if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " ALERTA: Sem O2!"; playSound(100, 'sawtooth'); }
-                if(map[player.y][player.x] === 'P') { player.parts++; map[player.y][player.x] = '.'; logMsg += " Aqui: Peça coletada!"; playSound(1200, 'sine', 0.4); }
+                if(map[player.y][player.x] === 'P') { 
+                    player.parts++; 
+                    map[player.y][player.x] = '.'; 
+                    logMsg += " Aqui: Peça coletada!"; 
+                    playSound(1200, 'sine', 0.4); 
+                    if(player.parts === 5) spawnTRex();
+                }
                 if(map[player.y][player.x] === 'M') { 
                     if(player.parts >= 5) {
                         logMsg += " MISSÃO CUMPRIDA! Você voltou para o futuro!";
@@ -366,11 +380,13 @@
                 const d = dinos[i];
                 if(d.x === x && d.y === y) {
                     d.hp -= dmg;
-                    addToLog(`Acertou ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! HP: ${d.hp}`);
+                    const dName = d.type === 'T' ? 'T-Rex' : 'Velociraptor';
                     if(d.hp <= 0) {
-                        addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} caiu!`);
+                        addToLog(`Derrubou o ${dName}!`);
                         if(map[d.y][d.x] === d.type) map[d.y][d.x] = '.';
                         dinos.splice(i, 1);
+                    } else {
+                        addToLog(`Acertou o ${dName}! (HP: ${d.hp})`);
                     }
                     hit = true;
                 }
