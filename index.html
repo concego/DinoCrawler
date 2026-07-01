@@ -107,10 +107,12 @@
         }
 
         function spawnTRex() {
-            addToLog("UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou!");
+            addToLog("UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou faminto!");
             playSound(60, 'sawtooth', 1.5, 0.5);
-            let rx = 18, ry = 18; 
-            dinos.push({x: rx, y: ry, type: 'T', hp: 100, eatingTurns: 0});
+            // Spawn em um dos cantos distantes da máquina
+            let corners = [[18, 18], [18, 0], [0, 18]];
+            let pick = corners[Math.floor(Math.random() * corners.length)];
+            dinos.push({x: pick[0], y: pick[1], type: 'T', hp: 120, eatingTurns: 0});
             draw();
         }
 
@@ -313,10 +315,26 @@
                 let dy = py - d.y;
                 let dist = Math.abs(dx) + Math.abs(dy);
 
-                // IA: Persegue agressivamente se estiver a até 10 passos (antes era 8)
-                if(dist <= 10 && dist > 0) {
-                    if(Math.abs(dx) > Math.abs(dy)) d.x += dx > 0 ? 1 : -1;
-                    else d.y += dy > 0 ? 1 : -1;
+                // IA: T-Rex é implacável e te persegue de muito longe (25 passos), Velociraptor tem alcance 12
+                let chaseDist = d.type === 'T' ? 25 : 12;
+                if(dist <= chaseDist && dist > 0) {
+                    // T-Rex se move 2 vezes por turno do jogador para ser uma ameaça real
+                    let moves = d.type === 'T' ? 2 : 1;
+                    for(let m=0; m < moves; m++) {
+                        let curDx = px - d.x;
+                        let curDy = py - d.y;
+                        if(Math.abs(curDx) > Math.abs(curDy)) d.x += curDx > 0 ? 1 : -1;
+                        else d.y += curDy > 0 ? 1 : -1;
+                        
+                        // Checa colisão a cada passo do movimento duplo
+                        if(d.x === px && d.y === py) {
+                            let dmg = d.type === 'T' ? 25 : 10;
+                            player.hp -= dmg;
+                            addToLog(`ALERTA: Ataque de ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! -${dmg} HP.`);
+                            playSound(80, 'sawtooth', 0.5, 0.4);
+                            break; // Para de mover se já mordeu
+                        }
+                    }
                 } else {
                     let r = Math.random();
                     if(r < 0.25) d.x++;
