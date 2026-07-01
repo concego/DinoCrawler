@@ -98,7 +98,30 @@
             text-align: left;
         }
 
-        .move-btn, .weapon-btn, #action-btn {
+        #d-pad {
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 5px;
+        }
+        #btn-up { grid-area: up; }
+        #btn-down { grid-area: down; }
+        #btn-left { grid-area: left; }
+        #btn-right { grid-area: right; }
+
+        .move-btn {
+            padding: 10px;
+            font-size: 0.8em;
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            cursor: pointer;
+            min-width: 80px;
+        }
+
+        .weapon-btn, #action-btn {
             padding: 15px;
             font-size: 1em;
             background: #333;
@@ -166,10 +189,10 @@
 
             <div id="controls">
                 <div id="d-pad">
-                    <button id="btn-up" class="move-btn" onclick="move(0, -1)">↑</button>
-                    <button id="btn-left" class="move-btn" onclick="move(-1, 0)">←</button>
-                    <button id="btn-right" class="move-btn" onclick="move(1, 0)">→</button>
-                    <button id="btn-down" class="move-btn" onclick="move(0, 1)">↓</button>
+                    <button id="btn-up" class="move-btn" onclick="move(0, -1)">NORTE (↑)</button>
+                    <button id="btn-left" class="move-btn" onclick="move(-1, 0)">OESTE (←)</button>
+                    <button id="btn-right" class="move-btn" onclick="move(1, 0)">LESTE (→)</button>
+                    <button id="btn-down" class="move-btn" onclick="move(0, 1)">SUL (↓)</button>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <button id="action-btn" onclick="scan()">SCAN</button>
@@ -273,6 +296,13 @@
             document.getElementById('credits-title').textContent = t.credits;
             document.getElementById('credits-content').innerHTML = t.creditsText;
             document.getElementById('btn-credits-back').textContent = t.back;
+
+            // Tradução dos controles de acessibilidade
+            document.getElementById('btn-up').textContent = lang === 'pt' ? 'NORTE (↑)' : 'NORTH (↑)';
+            document.getElementById('btn-down').textContent = lang === 'pt' ? 'SUL (↓)' : 'SOUTH (↓)';
+            document.getElementById('btn-left').textContent = lang === 'pt' ? 'OESTE (←)' : 'WEST (←)';
+            document.getElementById('btn-right').textContent = lang === 'pt' ? 'LESTE (→)' : 'EAST (→)';
+            
             showScreen('screen-menu');
         }
 
