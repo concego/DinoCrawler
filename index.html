@@ -297,6 +297,7 @@
 
         function setLang(l) {
             lang = l;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const t = i18n[lang];
             document.getElementById('btn-start').textContent = t.start;
             document.getElementById('btn-how-to').textContent = t.howTo;
