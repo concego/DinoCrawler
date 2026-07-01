@@ -511,6 +511,7 @@
         }
 
         function scan() {
+            moveDinos();
             let found = [];
             addToLog(`${i18n[lang].scanned} ${player.x}, ${player.y}...`);
             for(let y=0; y<GRID_SIZE; y++) {
@@ -550,6 +551,7 @@
         }
 
         function setWeapon(idx) {
+            moveDinos();
             player.weaponIdx = idx;
             document.querySelectorAll('.weapon-btn').forEach((b, i) => {
                 b.classList.toggle('active-weapon', i === idx);
