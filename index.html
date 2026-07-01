@@ -475,9 +475,9 @@
                         if(dist >= 0 && dist < 6) {
                             let dirY = dy > 0 ? (lang === 'pt' ? "Sul" : "South") : dy < 0 ? (lang === 'pt' ? "Norte" : "North") : "";
                             let dirX = dx > 0 ? (lang === 'pt' ? "Leste" : "East") : dx < 0 ? (lang === 'pt' ? "Oeste" : "West") : "";
-                            let direction = [dirY, dirX].filter(Boolean).join(" ");
+                            const names = i18n[lang].names;
                             let loc = dist === 0 ? i18n[lang].here : `${dist} ${i18n[lang].steps} ${direction}`;
-                            found.push(`${i18n[lang].names[cell] || cell} ${loc}`);
+                            found.push(`${names[cell] || cell} ${loc}`);
                         }
                     }
                 }
