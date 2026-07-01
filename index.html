@@ -214,7 +214,7 @@
                 <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. RIFLE</button>
             </div>
 
-            <div id="log"></div>
+            <div id="log" aria-live="polite" aria-atomic="false"></div>
         </div>
     </div>
 
@@ -631,7 +631,9 @@
         function addToLog(msg) {
             const entry = document.createElement('div');
             entry.textContent = `> ${msg}`;
-            log.prepend(entry);
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            if (log.childNodes.length > 50) log.removeChild(log.firstChild);
         }
 
         document.addEventListener('keydown', (e) => {
