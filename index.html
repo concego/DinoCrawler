@@ -600,8 +600,9 @@
                         }
                     });
                     playSound(200, 'sawtooth', 0.4, 0.3);
-                } else { addToLog(i18n[lang].noAmmo); }
+                } else { addToLog(i18n[lang].noAmmo); return; } // Não consome turno se não tiver bala
             }
+            moveDinos();
             draw();
         }
 
