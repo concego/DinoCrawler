@@ -82,12 +82,12 @@
             for(let i=0; i<5; i++) {
                 let rx = Math.floor(Math.random()*18)+1;
                 let ry = Math.floor(Math.random()*18)+1;
-                map[ry][rx] = 'P';
+                if(map[ry][rx] === '.') map[ry][rx] = 'P';
             }
             for(let i=0; i<3; i++) {
                 let rx = Math.floor(Math.random()*18)+1;
                 let ry = Math.floor(Math.random()*18)+1;
-                map[ry][rx] = '*';
+                if(map[ry][rx] === '.') map[ry][rx] = '*';
             }
             // Adicionando Arbustos (#) para densidade do mapa
             for(let i=0; i<15; i++) {
@@ -101,7 +101,6 @@
                 let ry = Math.floor(Math.random()*15)+4;
                 if(map[ry][rx] === '.') {
                     dinos.push({x: rx, y: ry, type: 'V', hp: 30, eatingTurns: 0});
-                    map[ry][rx] = 'V';
                 }
             }
             draw();
@@ -112,19 +111,20 @@
             playSound(60, 'sawtooth', 1.5, 0.5);
             let rx = 18, ry = 18; 
             dinos.push({x: rx, y: ry, type: 'T', hp: 100, eatingTurns: 0});
-            map[ry][rx] = 'T';
             draw();
         }
 
         function spawnNewDino() {
             let rx = Math.floor(Math.random() * GRID_SIZE);
             let ry = Math.floor(Math.random() * GRID_SIZE);
-            // Spawn longe do jogador
+            // Spawn longe do jogador e em lugar vazio
             if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.') {
-                let type = Math.random() > 0.8 ? 'T' : 'V';
-                dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
-                map[ry][rx] = type;
-                addToLog(`Você ouve um rugido distante... mais um ${type === 'T' ? 'T-Rex' : 'Velociraptor'} entrou na área!`);
+                // Checa se já não tem um dino ou cadáver lá
+                if(!dinos.some(d => d.x === rx && d.y === ry) && !corpses.some(c => c.x === rx && c.y === ry)) {
+                    let type = Math.random() > 0.8 ? 'T' : 'V';
+                    dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
+                    addToLog(`Você ouve um rugido distante... mais um ${type === 'T' ? 'T-Rex' : 'Velociraptor'} entrou na área!`);
+                }
             }
         }
 
@@ -134,14 +134,25 @@
                 for (let x = 0; x < GRID_SIZE; x++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
+                    
+                    // Prioridade de Desenho: Jogador > Dino > Cadáver > Mapa
                     if (x === player.x && y === player.y) {
                         cell.textContent = '@';
                         cell.classList.add('player');
                     } else {
-                        cell.textContent = map[y][x];
-                        if (map[y][x] === 'P') cell.classList.add('part');
-                        if (map[y][x] === '*') cell.classList.add('air');
-                        if (map[y][x] === 'M') cell.style.color = '#ff00ff'; // Magenta para a máquina
+                        const dino = dinos.find(d => d.x === x && d.y === y);
+                        const corpse = corpses.find(c => c.x === x && c.y === y);
+                        
+                        if (dino) {
+                            cell.textContent = dino.type;
+                        } else if (corpse) {
+                            cell.textContent = 'X';
+                        } else {
+                            cell.textContent = map[y][x];
+                            if (map[y][x] === 'P') cell.classList.add('part');
+                            if (map[y][x] === '*') cell.classList.add('air');
+                            if (map[y][x] === 'M') cell.style.color = '#ff00ff'; 
+                        }
                     }
                     container.appendChild(cell);
                 }
@@ -184,28 +195,34 @@
             directions.forEach((dir, index) => {
                 const nx = player.x + dir.dx;
                 const ny = player.y + dir.dy;
-                const timeOffset = index * 0.15; // Sequenciamento dos sons (N, S, O, L)
+                const timeOffset = index * 0.15; 
                 
                 if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                    const cell = map[ny][nx];
+                    let cell = map[ny][nx];
+                    // Prioridade do Sonar: Dino > Cadáver > Mapa
+                    const dino = dinos.find(d => d.x === nx && d.y === ny);
+                    const corpse = corpses.find(c => c.x === nx && c.y === ny);
+                    
+                    if (dino) cell = dino.type;
+                    else if (corpse) cell = 'X';
+
                     let freq = 0;
                     let type = 'sine';
-                    let pan = (dir.dx !== 0) ? dir.dx : 0; // Estéreo para Oeste (-1) e Leste (1)
+                    let pan = (dir.dx !== 0) ? dir.dx : 0; 
 
-                    if (cell === 'P') { // Peça: Brilhante e Agudo
+                    if (cell === 'P') { 
                         freq = 880; type = 'triangle';
-                    } else if (cell === 'M') { // Máquina: Melódico/Harmônico
-                        freq = 523.25; type = 'sine'; // Dó central, som limpo
-                    } else if (cell === '*') { // Ar: Som de "sopro" mais perceptível
+                    } else if (cell === 'M') { 
+                        freq = 523.25; type = 'sine'; 
+                    } else if (cell === '*') { 
                         freq = 600; type = 'triangle';
-                    } else if (cell === '#') { // Arbusto: Ruído/Dirty
+                    } else if (cell === '#') { 
                         freq = 150; type = 'square';
-                    } else if (cell === 'T' || cell === 'V') { // Dino: Grave e Ameaçador
+                    } else if (cell === 'T' || cell === 'V') { 
                         freq = 100; type = 'sawtooth';
-                    } else if (cell === 'X') { // Cadáver: Som opaco
+                    } else if (cell === 'X') { 
                         freq = 200; type = 'square';
                     }
-                    // Omitimos o som para '.' (vazio) para criar o "Sonar de Exceção"
 
                     if (freq > 0) {
                         setTimeout(() => {
@@ -262,26 +279,19 @@
 
         function moveDinos() {
             dinos.forEach(d => {
-                // Se estiver distraído comendo, decrementa os turnos e pula o movimento
                 if(d.eatingTurns > 0) {
                     d.eatingTurns--;
-                    if(map[d.y][d.x] === d.type) map[d.y][d.x] = d.type; // Mantém no mapa
                     return;
                 }
 
-                // Remove do mapa atual para mover
-                if(map[d.y][d.x] === d.type) map[d.y][d.x] = '.';
-
-                // Verifica se há um corpo por perto para comer (distância 1 ou na mesma casa)
                 let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) <= 1 && Math.abs(c.y - d.y) <= 1);
                 if(corpseIdx !== -1) {
-                    d.eatingTurns = 5; // Aumentado para 5 turnos de distração
+                    d.eatingTurns = 5; 
                     const corpse = corpses[corpseIdx];
                     d.x = corpse.x; d.y = corpse.y; 
                     corpses.splice(corpseIdx, 1);
                     addToLog(`O ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'} está devorando um cadáver! Ele ficará distraído por um tempo.`);
                     playSound(100, 'square', 0.8, 0.3);
-                    if(map[d.y][d.x] === 'X' || map[d.y][d.x] === '.') map[d.y][d.x] = d.type;
                     return;
                 }
 
@@ -289,12 +299,10 @@
                 let dy = player.y - d.y;
                 let dist = Math.abs(dx) + Math.abs(dy);
 
-                // IA Simples: persegue se estiver perto (dist < 8)
                 if(dist < 8 && dist > 0) {
                     if(Math.abs(dx) > Math.abs(dy)) d.x += dx > 0 ? 1 : -1;
                     else d.y += dy > 0 ? 1 : -1;
                 } else {
-                    // Movimento aleatório se longe
                     let r = Math.random();
                     if(r < 0.25) d.x++;
                     else if(r < 0.5) d.x--;
@@ -302,20 +310,15 @@
                     else d.y--;
                 }
 
-                // Limites do mapa
                 d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x));
                 d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
 
-                // Se pisar no jogador
                 if(d.x === player.x && d.y === player.y) {
                     let dmg = d.type === 'T' ? 20 : 10;
                     player.hp -= dmg;
                     addToLog(`ALERTA: Ataque de ${d.type === 'T' ? 'T-Rex' : 'Velociraptor'}! -${dmg} HP.`);
                     playSound(80, 'sawtooth', 0.5, 0.4);
                 }
-
-                // Garante que não sobreponha itens importantes
-                if(map[d.y][d.x] === '.') map[d.y][d.x] = d.type;
             });
             
             if(player.hp <= 0) {
@@ -330,7 +333,13 @@
             addToLog(`Escaneando de ${player.x}, ${player.y}...`);
             for(let y=0; y<GRID_SIZE; y++) {
                 for(let x=0; x<GRID_SIZE; x++) {
-                    const cell = map[y][x];
+                    let cell = map[y][x];
+                    const dino = dinos.find(d => d.x === x && d.y === y);
+                    const corpse = corpses.find(c => c.x === x && c.y === y);
+                    
+                    if (dino) cell = dino.type;
+                    else if (corpse) cell = 'X';
+
                     if(cell !== '.') {
                         let dx = x - player.x;
                         let dy = y - player.y;
@@ -424,7 +433,6 @@
                     if(d.hp <= 0) {
                         addToLog(`Derrubou o ${dName}!`);
                         corpses.push({x: d.x, y: d.y});
-                        if(map[d.y][d.x] === d.type) map[d.y][d.x] = 'X'; // X marca o cadáver
                         dinos.splice(i, 1);
                     } else {
                         addToLog(`Acertou o ${dName}! (HP: ${d.hp})`);
