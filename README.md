@@ -8,12 +8,12 @@ Você é um explorador temporal preso em uma era pré-histórica. Seu objetivo �
 ### Mecânicas Principais:
 - **Oxigênio (O2):** Cada movimento consome oxigênio. Encontre tanques para sobreviver.
 - **Arsenal:** 
-  - **Machete:** Combate corpo a corpo.
-  - **Taser:** Atordoa (stun) dinossauros por 3 turnos (emite feedback sonoro de 1200Hz).
-  - **Iscas:** Use cadáveres de dinossauros abatidos para distrair outros predadores.
+ - **Machete:** Combate corpo a corpo.
+ - **Taser:** Atordoa (stun) dinossauros por 3 turnos (emite feedback sonoro de 1200Hz).
+ - **Iscas:** Use cadáveres de dinossauros abatidos para distrair outros predadores.
 - **SCAN (Sonar):** Sistema de localização por eco que informa distância e direção de itens e perigos via log de texto e sinais sonoros.
 
-## ♿ Acessibilidade (Digital Inclusion)
+## Acessibilidade (Digital Inclusion)
 O Dino Crawler foi construído seguindo os princípios de **Inclusão Digital**, não apenas acessibilidade técnica:
 - **Aria-Live Logs:** Feedback em tempo real lido automaticamente por leitores de tela (TalkBack, NVDA).
 - **Interface D-Pad:** Botões de movimento em layout de cruz com nomes descritivos (ex: "NORTH (↑)").
