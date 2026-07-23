@@ -454,6 +454,46 @@
                     altText: { pt: 'Dr. Aris de frente para a Máquina do Tempo, prestes a escapar do Cretáceo', en: 'Dr. Aris facing the Time Machine, about to escape the Cretaceous' },
                     fact: { pt: '"Eu sobrevivi ao Cretáceo com uma mochila, um machete e muito oxigênio. E prometo que nunca mais vou reclamar do trânsito." — Dr. Aris', en: '"I survived the Cretaceous with a backpack, a machete, and a lot of oxygen. I promise I\'ll never complain about traffic again." — Dr. Aris' },
                     badge: { pt: '✦ Desbloqueado: Escapou!', en: '✦ Unlocked: Escaped!' }
+                },
+                {
+                    id: 'gambler',
+                    name: { pt: 'O Apostador', en: 'The Gambler' },
+                    art: `  ???\n /T-R\\\n| REX |\n \\---/\n  ZAP`,
+                    altText: { pt: 'Silhueta do T-Rex com raio de taser apontado para ele, simbolizando uma aposta arriscada', en: 'T-Rex silhouette with taser bolt aimed at it, symbolizing a risky bet' },
+                    fact: { pt: 'A probabilidade de paralisar um T-Rex com um Taser é de 35%. Você sabia disso e atirou mesmo assim. Isso tem um nome — e não é coragem.', en: 'The odds of stunning a T-Rex with a Taser are 35%. You knew that and fired anyway. That has a name — and it\'s not courage.' },
+                    badge: { pt: '✦ Desbloqueado: Taser no T-Rex', en: '✦ Unlocked: Taser on T-Rex' }
+                },
+                {
+                    id: 'stubborn',
+                    name: { pt: 'Teimoso', en: 'Stubborn' },
+                    art: `  (o_o)\n  /|\\\n  / \\\n  [M]\n  ???`,
+                    altText: { pt: 'Dr. Aris parado em frente à máquina do tempo sem as peças, olhar confuso', en: 'Dr. Aris standing in front of the time machine without parts, confused look' },
+                    fact: { pt: 'A Máquina precisa de 5 peças para funcionar. Você chegou sem elas. Tecnicamente isso é uma visita. Tecnicamente.', en: 'The Machine needs 5 parts to work. You arrived without them. Technically that\'s a visit. Technically.' },
+                    badge: { pt: '✦ Desbloqueado: Máquina sem peças', en: '✦ Unlocked: Machine without parts' }
+                },
+                {
+                    id: 'countdown',
+                    name: { pt: 'Countdown', en: 'Countdown' },
+                    art: `  10...\n  5...\n  3...\n  1...\n  [GO]`,
+                    altText: { pt: 'Contagem regressiva em texto, chegando a zero — referência ao tema da Game Jam', en: 'Countdown text reaching zero — reference to the Game Jam theme' },
+                    fact: { pt: 'O tema da GMTK 2026 era Built to Scale. Você saiu com o O2 no limite — cada segundo contado. A Máquina ligou no último suspiro.', en: 'GMTK 2026\'s theme was Built to Scale. You escaped with O2 at the limit — every second counted. The Machine fired on the last breath.' },
+                    badge: { pt: '✦ Desbloqueado: Fugiu com O2 ≤ 10', en: '✦ Unlocked: Escaped with O2 ≤ 10' }
+                },
+                {
+                    id: 'lumberjack',
+                    name: { pt: 'Lenhador', en: 'Lumberjack' },
+                    art: `  ###\n  #|#\n  #|#\n  |||\n  |||`,
+                    altText: { pt: 'Arbusto sendo cortado ao meio por um golpe de machete', en: 'Bush being cut in half by a machete blow' },
+                    fact: { pt: 'Os arbustos do Cretáceo eram cycas e fetos gigantes — plantas que sobreviveram à extinção dos dinos. Você cortou uma. Parabéns.', en: 'The Cretaceous bushes were cycads and giant ferns — plants that survived the dino extinction. You cut one down. Congrats.' },
+                    badge: { pt: '✦ Desbloqueado: Arbusto Cortado', en: '✦ Unlocked: Bush Cut' }
+                },
+                {
+                    id: 'disturber',
+                    name: { pt: 'Perturbador', en: 'Disturber' },
+                    art: `  XXX\n X   X\n  ---\n  ???\n  ...`,
+                    altText: { pt: 'Cadáver de dinossauro sendo destruído, representado por X e traços', en: 'Dinosaur corpse being destroyed, represented by X marks and dashes' },
+                    fact: { pt: 'Os dinos são atraídos por cadáveres. Destruir um remove a isca — mas também apaga evidências. O que você está escondendo, Dr. Aris?', en: 'Dinos are attracted to corpses. Destroying one removes the bait — but also erases evidence. What are you hiding, Dr. Aris?' },
+                    badge: { pt: '✦ Desbloqueado: Cadáver Destruído', en: '✦ Unlocked: Corpse Destroyed' }
                 }
             ]
         };
@@ -835,10 +875,12 @@
                 if(map[player.y][player.x] === 'M') { 
                     if(player.parts >= 5) {
                         unlockCard('escape');
+                        if(player.o2 <= 10) unlockCard('countdown');
                         addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dr. Aris — A Fuga!' : 'Card unlocked: Dr. Aris — The Escape!'));
+                        if(player.o2 <= 10) addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Countdown!' : 'Card unlocked: Countdown!'));
                         addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
                         stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
-                    } else { logMsg += " " + i18n[lang].machineMissing; playSound(523.25, 'sine', 0.5, 0.3); }
+                    } else { logMsg += " " + i18n[lang].machineMissing; playSound(523.25, 'sine', 0.5, 0.3); unlockCard('stubborn'); }
                 }
                 if(map[player.y][player.x] === '*') { 
                     player.o2 += 30; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found; 
@@ -1038,11 +1080,13 @@
                             corpses.splice(corpseIdx, 1);
                             addToLog(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
                             playSound(150, 'square', 0.4, 0.4);
+                            unlockCard('disturber');
                         }
                         if(cell === '#') {
                             map[ny][nx] = '.';
                             addToLog(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
                             playSwordSlash();
+                            unlockCard('lumberjack');
                         }
                         checkHit(nx, ny, 10);
                     }
@@ -1082,6 +1126,7 @@
                     d.hp -= dmg;
                     const dName = i18n[lang].names[d.type];
                     if(weapons[player.weaponIdx] === 'Taser') {
+                        if(d.type === 'T') unlockCard('gambler');
                         const stunChance = d.type === 'T' ? 0.35 : 0.65;
                         if(Math.random() < stunChance) {
                             d.stunned = 3;
