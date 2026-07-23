@@ -298,7 +298,7 @@
             }
         };
 
-        let player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weaponIdx: 0, ammo: 5 };
+        let player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 5 };
         const weapons = ['Machete', 'Taser', 'Granada'];
         let map = [];
         let dinos = [];
@@ -341,7 +341,7 @@
         }
 
         function startGame() {
-            player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weaponIdx: 0, ammo: 5 };
+            player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 5 };
             initMap();
             showScreen('screen-game');
             startAmbient();
@@ -580,13 +580,13 @@
                     } else { logMsg += " " + i18n[lang].machineMissing; playSound(523.25, 'sine', 0.5, 0.3); }
                 }
                 if(map[player.y][player.x] === '*') { 
-                    player.o2 += 25; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found; 
+                    player.o2 += 30; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found; 
                     playSound(600, 'triangle', 0.5); 
                 }
                 addToLog(logMsg);
                 playEnvironmentSonar();
                 moveDinos();
-                let spawnChance = 0.05 + (player.parts * 0.02);
+                let spawnChance = 0.03 + (player.parts * 0.02);
                 if(Math.random() < spawnChance) spawnNewDino(); 
                 draw();
             }
@@ -652,16 +652,29 @@
                     playSound(100, 'square', 0.8, 0.3); return;
                 }
                 let dx = px - d.x; let dy = py - d.y; let dist = Math.abs(dx) + Math.abs(dy);
-                let chaseDist = d.type === 'T' ? 25 : 12;
+                let chaseDist = d.type === 'T' ? 25 : 10;
                 if(dist <= chaseDist && dist > 0) {
+                    const distBefore = dist;
                     let moves = d.type === 'T' ? 2 : 1;
                     for(let m=0; m < moves; m++) {
                         let curDx = px - d.x; let curDy = py - d.y;
                         if(Math.abs(curDx) > Math.abs(curDy)) d.x += curDx > 0 ? 1 : -1; else d.y += curDy > 0 ? 1 : -1;
                         if(d.x === px && d.y === py) {
-                            let dmg = d.type === 'T' ? 25 : 10; player.hp -= dmg;
+                            let dmg = d.type === 'T' ? 25 : 8; player.hp -= dmg;
                             addToLog(`${i18n[lang].attack} ${i18n[lang].names[d.type]}! -${dmg} HP.`);
                             playSound(80, 'sawtooth', 0.5, 0.4); break;
+                        }
+                    }
+                    // Alerta sonoro: toca quando o dino avança na direção do player
+                    const distAfter = Math.abs(px - d.x) + Math.abs(py - d.y);
+                    if(distAfter < distBefore && distAfter > 0) {
+                        const pan = Math.max(-1, Math.min(1, (d.x - px) / 5));
+                        if(d.type === 'T') {
+                            // T-Rex: pulso grave audível a qualquer distância
+                            playSound(55, 'sawtooth', Math.max(0.08, 0.35 - distAfter * 0.01), 0.08, pan);
+                        } else if(distAfter <= 5) {
+                            // Velo: clique seco só quando perto (≤5) pra não saturar
+                            playSound(180, 'square', Math.max(0.05, 0.22 - distAfter * 0.03), 0.06, pan);
                         }
                     }
                 } else {
