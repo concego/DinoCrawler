@@ -546,11 +546,18 @@
             const px = player.x; const py = player.y;
             dinos.forEach(d => {
                 if(d.stunned > 0) { d.stunned--; return; }
-                if(d.eatingTurns > 0) { d.eatingTurns--; return; }
+                if(d.eatingTurns > 0) {
+                    d.eatingTurns--;
+                    if(d.eatingTurns === 0) {
+                        // Terminou de comer — remove o cadáver sob ele
+                        const eaten = corpses.findIndex(c => c.x === d.x && c.y === d.y);
+                        if(eaten !== -1) corpses.splice(eaten, 1);
+                    }
+                    return;
+                }
                 let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) <= 1 && Math.abs(c.y - d.y) <= 1);
                 if(corpseIdx !== -1) {
-                    d.eatingTurns = 5; const corpse = corpses[corpseIdx]; d.x = corpse.x; d.y = corpse.y; 
-                    corpses.splice(corpseIdx, 1);
+                    d.eatingTurns = d.type === 'T' ? 3 : 5; const corpse = corpses[corpseIdx]; d.x = corpse.x; d.y = corpse.y;
                     addToLog(`${i18n[lang].names[d.type]} ${i18n[lang].eating}`);
                     playSound(100, 'square', 0.8, 0.3); return;
                 }
