@@ -789,7 +789,7 @@
                 map[ry][rx] = '#';
             }
             // Spawn inicial: Velociraptors
-            for(let i=0; i<4; i++) {
+            for(let i=0; i<3; i++) {
                 let rx = Math.floor(Math.random()*15)+4;
                 let ry = Math.floor(Math.random()*15)+4;
                 if(map[ry][rx] === '.') {
@@ -1012,13 +1012,13 @@
                     if(distA <= 1) {
                         // Ataque de cauda: empurra o jogador 2 células
                         const pushDx = Math.sign(px - d.x); const pushDy = Math.sign(py - d.y);
-                        player.x = Math.max(0, Math.min(GRID_SIZE-1, px + pushDx * 2));
-                        player.y = Math.max(0, Math.min(GRID_SIZE-1, py + pushDy * 2));
-                        player.hp -= 15;
+                        player.x = Math.max(0, Math.min(GRID_SIZE-1, px + pushDx * 1));
+                        player.y = Math.max(0, Math.min(GRID_SIZE-1, py + pushDy * 1));
+                        player.hp -= 10;
                         addToLog(i18n[lang].ankyloBounce);
                         playSound(80, 'sawtooth', 0.5, 0.4);
                         if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
-                    } else if(distA <= 8) {
+                    } else if(distA <= 6) {
                         let adx = px - d.x; let ady = py - d.y;
                         if(Math.abs(adx) > Math.abs(ady)) d.x += adx > 0 ? 1 : -1; else d.y += ady > 0 ? 1 : -1;
                     }
@@ -1032,7 +1032,7 @@
                         // Carrega direto em linha reta até o jogador
                         const distT = Math.abs(px - d.x) + Math.abs(py - d.y);
                         if(distT <= 1) {
-                            player.hp -= 30;
+                            player.hp -= 20;
                             addToLog(i18n[lang].triCharge);
                             playSound(100, 'sawtooth', 0.6, 0.4);
                             d.provoked = false;
@@ -1317,7 +1317,7 @@
                         playSound(120, 'sawtooth', 0.2, 0.3);
                         // Contra-ataque imediato se não estiver stunned e não for Taser
                         if(weapons[player.weaponIdx] !== 'Taser' && d.stunned <= 0) {
-                            const counterDmg = d.type === 'T' ? 25 : 8;
+                            const counterDmg = d.type === 'T' ? 25 : 5;
                             player.hp -= counterDmg;
                             addToLog(lang === 'pt' ? `${dName} contra-ataca! -${counterDmg} HP` : `${dName} counter-attacks! -${counterDmg} HP`);
                             playSound(220, 'sawtooth', 0.4, 0.2);
@@ -1430,9 +1430,8 @@
         function addToLog(msg) {
             const entry = document.createElement('div');
             entry.textContent = `> ${msg}`;
-            log.appendChild(entry);
-            log.scrollTop = log.scrollHeight;
-            if (log.childNodes.length > 50) log.removeChild(log.firstChild);
+            log.insertBefore(entry, log.firstChild);
+            if (log.childNodes.length > 50) log.removeChild(log.lastChild);
         }
 
         document.addEventListener('keydown', (e) => {
