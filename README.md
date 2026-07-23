@@ -8,9 +8,10 @@ Você é um explorador temporal preso em uma era pré-histórica. Seu objetivo �
 ### Mecânicas Principais:
 - **Oxigênio (O2):** Cada movimento consome oxigênio. Encontre tanques para sobreviver.
 - **Arsenal:** 
- - **Machete:** Combate corpo a corpo.
- - **Taser:** Atordoa (stun) dinossauros por 3 turnos (emite feedback sonoro de 1200Hz).
- - **Iscas:** Use cadáveres de dinossauros abatidos para distrair outros predadores.
+  - **Machete:** Combate corpo a corpo, também limpa arbustos (#).
+  - **Taser:** Causa dano com chance de atordoar dinossauros por 3 turnos.
+  - **Granada:** Explode em raio 2 ao redor do jogador — ideal para grupos. Munição limitada (5 unidades).
+  - **Iscas:** Use cadáveres de dinossauros abatidos para distrair outros predadores.
 - **SCAN (Sonar):** Sistema de localização por eco que informa distância e direção de itens e perigos via log de texto e sinais sonoros.
 
 ## Acessibilidade (Digital Inclusion)
@@ -18,8 +19,8 @@ O Dino Crawler foi construído seguindo os princípios de **Inclusão Digital**,
 - **Aria-Live Logs:** Feedback em tempo real lido automaticamente por leitores de tela (TalkBack, NVDA).
 - **Interface D-Pad:** Botões de movimento em layout de cruz com nomes descritivos (ex: "NORTH (↑)").
 - **Sistema Bilíngue:** Suporte completo para Português (PT-BR) e Inglês (EN).
-- **Feedback Sonoro:** Sons distintos para diferentes tipos de terreno, ações e efeitos (como o stun do Taser).
-- **Logs Compactos:** Informações do SCAN agrupadas para evitar spam e fadiga auditiva (ex: `Dinossauro: 3N, 2L`).
+- **Feedback Sonoro:** Sons distintos para diferentes tipos de terreno, ações e efeitos.
+- **Logs Compactos:** Informações do SCAN listadas individualmente para leitura fluida (ex: `Dinossauro: 3N, 2L`).
 
 ## 🛠️ Tecnologias
 - HTML5 / CSS3 (Grid e Flexbox)
