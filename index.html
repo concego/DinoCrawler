@@ -255,6 +255,8 @@
                 steps: "passos ao",
                 here: "Aqui",
                 eating: "está devorando um cadáver! Ele ficará distraído.",
+                fighting: "BRIGA! {a} e {b} disputam o cadáver!",
+                fightWin: "{winner} venceu a disputa. {loser} foi eliminado!",
                 attack: "ALERTA: Ataque de",
                 names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver' }
             },
@@ -283,6 +285,8 @@
                 steps: "steps to the",
                 here: "Here",
                 eating: "is devouring a corpse! He will be distracted.",
+                fighting: "FIGHT! {a} and {b} are fighting over the corpse!",
+                fightWin: "{winner} won the fight. {loser} was eliminated!",
                 attack: "ALERT: Attack from",
                 names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse' }
             }
@@ -583,6 +587,30 @@
             if(player.hp <= 0) {
                 addToLog(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
                 stopAmbient(); setTimeout(() => showScreen('screen-menu'), 3000);
+            }
+
+            // Briga por cadáver: 2 dinos comendo na mesma célula se atacam
+            const eating = dinos.filter(d => d.eatingTurns > 0);
+            for(let i = 0; i < eating.length; i++) {
+                for(let j = i + 1; j < eating.length; j++) {
+                    const a = eating[i]; const b = eating[j];
+                    if(a.x === b.x && a.y === b.y) {
+                        const nameA = i18n[lang].names[a.type]; const nameB = i18n[lang].names[b.type];
+                        addToLog(i18n[lang].fighting.replace('{a}', nameA).replace('{b}', nameB));
+                        playSound(160, 'sawtooth', 0.6, 0.5);
+                        // T-Rex sempre vence; entre iguais é 50/50
+                        let winner, loser;
+                        if(a.type === 'T' && b.type !== 'T') { winner = a; loser = b; }
+                        else if(b.type === 'T' && a.type !== 'T') { winner = b; loser = a; }
+                        else { winner = Math.random() < 0.5 ? a : b; loser = winner === a ? b : a; }
+                        const nameW = i18n[lang].names[winner.type]; const nameL = i18n[lang].names[loser.type];
+                        addToLog(i18n[lang].fightWin.replace('{winner}', nameW).replace('{loser}', nameL));
+                        playSound(60, 'sawtooth', 0.8, 0.4);
+                        dinos.splice(dinos.indexOf(loser), 1);
+                        // Vencedor volta a comer — cadáver já está sendo consumido
+                        winner.eatingTurns = winner.type === 'T' ? 3 : 5;
+                    }
+                }
             }
         }
 
