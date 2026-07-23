@@ -768,18 +768,18 @@
                         if(cell === '#') {
                             map[ny][nx] = '.';
                             addToLog(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
-                            playSound(300, 'square', 0.2, 0.15);
+                            playSwordSlash();
                         }
                         checkHit(nx, ny, 10);
                     }
                 });
-                playSound(400, 'square', 0.3);
+                playSwordSlash();
             } else if(weapons[player.weaponIdx] === 'Taser') {
                 directions.forEach(dir => {
                     const nx = player.x + dir.x; const ny = player.y + dir.y;
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) checkHit(nx, ny, 15);
                 });
-                playSound(800, 'sawtooth', 0.3);
+                playTaserZap();
             } else if(weapons[player.weaponIdx] === 'Granada') {
                 if(player.ammo > 0) {
                     player.ammo--;
@@ -826,6 +826,62 @@
                 }
             }
             return hit;
+        }
+
+        function playSwordSlash() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Impacto seco: ruído branco filtrado com envelope agressivo
+            const bufSize = audioCtx.sampleRate * 0.18;
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1800;
+            filter.Q.value = 1.5;
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+
+            src.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            src.start();
+            src.stop(audioCtx.currentTime + 0.18);
+        }
+
+        function playTaserZap() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Sweep elétrico: frequência desce rapidamente com harmônico
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(2400, t);
+            osc.frequency.exponentialRampToValueAtTime(180, t + 0.18);
+
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'sawtooth';
+            osc2.frequency.setValueAtTime(3600, t);
+            osc2.frequency.exponentialRampToValueAtTime(260, t + 0.15);
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.25, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+
+            const gain2 = audioCtx.createGain();
+            gain2.gain.setValueAtTime(0.15, t);
+            gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+
+            osc.connect(gain);   gain.connect(audioCtx.destination);
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+
+            osc.start(t);  osc.stop(t + 0.22);
+            osc2.start(t); osc2.stop(t + 0.22);
         }
 
         function playEnvironmentSonar() {
