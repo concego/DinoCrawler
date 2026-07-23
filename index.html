@@ -409,6 +409,7 @@
                     if (type === 'T' && (!canSpawnTRex)) type = 'V';
                     dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
                     addToLog(type === 'T' ? i18n[lang].roarRex : i18n[lang].roarVelo);
+                    playSound(type === 'T' ? 55 : 220, 'sawtooth', 0.4, 0.6);
                 }
             }
         }
@@ -644,25 +645,43 @@
         }
 
         function playEnvironmentSonar() {
-            const directions = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
-            directions.forEach((dir, index) => {
-                const nx = player.x + dir.dx; const ny = player.y + dir.dy;
-                if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+            // Som de passo
+            playSound(80, 'sine', 0.05, 0.08);
+
+            const sonarItems = [];
+
+            // Varre raio 3 ao redor do jogador
+            for (let dy = -3; dy <= 3; dy++) {
+                for (let dx = -3; dx <= 3; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = player.x + dx; const ny = player.y + dy;
+                    if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) continue;
+                    const dist = Math.abs(dx) + Math.abs(dy);
                     let cell = map[ny][nx];
                     const dino = dinos.find(d => d.x === nx && d.y === ny);
                     const corpse = corpses.find(c => c.x === nx && c.y === ny);
                     if (dino) cell = dino.type; else if (corpse) cell = 'X';
-                    let freq = 0; let type = 'sine';
-                    if (cell === 'P') { freq = 880; type = 'triangle'; }
-                    else if (cell === 'M') { freq = 523.25; type = 'sine'; }
-                    else if (cell === '*') { freq = 600; type = 'triangle'; }
-                    else if (cell === '#') { freq = 150; type = 'square'; }
-                    else if (cell === 'T' || cell === 'V') { freq = 100; type = 'sawtooth'; }
-                    else if (cell === 'X') { freq = 200; type = 'square'; }
-                    if (freq > 0) {
-                        setTimeout(() => playSound(freq, type, 0.2, 0.15, dir.dx !== 0 ? dir.dx : 0), index * 150);
+
+                    let freq = 0; let type = 'sine'; let maxDist = 1;
+                    if (cell === 'P')         { freq = 880;    type = 'triangle'; maxDist = 1; }
+                    else if (cell === '*')    { freq = 600;    type = 'triangle'; maxDist = 1; }
+                    else if (cell === '#')    { freq = 150;    type = 'square';   maxDist = 1; }
+                    else if (cell === 'M')    { freq = 523.25; type = 'sine';     maxDist = 2; }
+                    else if (cell === 'X')    { freq = 200;    type = 'square';   maxDist = 2; }
+                    else if (cell === 'V')    { freq = 180;    type = 'sawtooth'; maxDist = 3; }
+                    else if (cell === 'T')    { freq = 80;     type = 'sawtooth'; maxDist = 3; }
+
+                    if (freq > 0 && dist <= maxDist) {
+                        const vol = 0.25 - (dist - 1) * 0.07;
+                        const pan = dx / 3;
+                        sonarItems.push({ freq, type, vol: Math.max(vol, 0.04), pan });
                     }
                 }
+            }
+
+            // Toca cada item com delay para não sobrepor tudo
+            sonarItems.forEach((item, i) => {
+                setTimeout(() => playSound(item.freq, item.type, item.vol, 0.15, item.pan), i * 120);
             });
         }
 
