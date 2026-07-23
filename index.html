@@ -596,7 +596,6 @@
                     // Explode em todas as células ao redor (raio 2)
                     for(let dy = -2; dy <= 2; dy++) {
                         for(let dx = -2; dx <= 2; dx++) {
-                            if(dx === 0 && dy === 0) continue;
                             checkHit(player.x + dx, player.y + dy, 25);
                         }
                     }
