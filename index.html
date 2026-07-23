@@ -91,17 +91,29 @@
         }
 
         #log {
-            width: 90vw;
-            max-width: 500px;
-            height: 180px;
-            overflow-y: auto;
-            background: #111;
-            border: 1px solid #444;
-            margin-top: 10px;
-            padding: 8px;
-            font-size: 1.05em;
-            line-height: 1.6;
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        #log-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.88);
+            border-top: 1px solid #444;
+            padding: 6px 12px;
+            font-size: 0.95em;
+            color: #ccc;
             text-align: left;
+            z-index: 999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
         }
 
         #d-pad {
@@ -273,7 +285,7 @@
         </div>
 
         <!-- Tela de Jogo -->
-        <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none;">
+        <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none; padding-bottom: 40px;">
             <h2>Status</h2>
             <div id="hud">
                 <span>HP: <span id="hp">100</span></span>
@@ -314,6 +326,8 @@
             <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0"></div>
         </div>
     </div>
+
+    <div id="log-footer" aria-hidden="true"></div>
 
     <script>
         const container = document.getElementById('game-container');
@@ -1733,12 +1747,15 @@
             srIdx = 1 - srIdx;
         }
 
+        const logFooter = document.getElementById('log-footer');
+
         function addToLog(msg) {
             const entry = document.createElement('div');
             entry.textContent = `> ${msg}`;
             log.appendChild(entry);
             if (log.childNodes.length > 60) log.removeChild(log.firstChild);
             log.scrollTop = log.scrollHeight;
+            logFooter.textContent = `> ${msg}`;
         }
 
         document.addEventListener('keydown', (e) => {
