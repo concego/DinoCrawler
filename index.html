@@ -407,7 +407,7 @@
             const saved = localStorage.getItem('dinoCrawlerCards');
             if(saved) JSON.parse(saved).forEach(id => unlockedCards.add(id));
         } catch(e) {}
-        let killCount = { V: 0, T: 0, F: 0, total: 0 };
+        let killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
         let stunDone = false;
 
         const CARDS = {
@@ -445,6 +445,30 @@
                     altText: { pt: 'Taser faiscando com arco elétrico ao centro', en: 'Taser sparking with electric arc at center' },
                     fact: { pt: 'O Taser cria um campo elétrico que interrompe os sinais nervosos musculares. Num dino de 500kg, isso exige coragem — ou loucura.', en: 'A Taser creates an electric field disrupting muscle nerve signals. On a 500kg dino, that takes courage — or madness.' },
                     badge: { pt: '✦ Desbloqueado: 1° Stun com Taser', en: '✦ Unlocked: 1st Taser Stun' }
+                },
+                {
+                    id: 'ankylosaur',
+                    name: { pt: 'Anquilossauro', en: 'Ankylosaurus' },
+                    art: `  _____\n /o   o\\\n|  ---  |\n|_______| \n  | | |\n  o   o`,
+                    altText: { pt: 'Anquilossauro visto de cima, corpo blindado com placas ósseas e cauda em forma de clava', en: 'Ankylosaurus seen from above, armored body with bone plates and club-shaped tail' },
+                    fact: { pt: 'A cauda-clava do Anquilossauro podia quebrar ossos do T-Rex. A couraça era tão densa que até raios X têm dificuldade de penetrar fósseis inteiros.', en: "Ankylosaurus's club tail could break T-Rex bones. The armor was so dense that X-rays struggle to penetrate intact fossils." },
+                    badge: { pt: '✦ Desbloqueado: Anquilossauro Abatido', en: '✦ Unlocked: Ankylosaurus Slain' }
+                },
+                {
+                    id: 'triceratops',
+                    name: { pt: 'Triceratops', en: 'Triceratops' },
+                    art: `   ///\n  /O O\\\n |  ---\n  \\___/\n   | |`,
+                    altText: { pt: 'Triceratops em postura de carga, chifres apontados para frente e patas traseiras impulsionadas', en: 'Triceratops in charging posture, horns pointed forward and hind legs driving' },
+                    fact: { pt: 'O Triceratops era neutro — até você mexer com ele. Pesquisas recentes indicam que suas costas tinham uma franja de espinhos curtos, como um moicano ósseo.', en: 'Triceratops was neutral — until you provoked it. Recent research suggests its back had a fringe of short spines, like a bony mohawk.' },
+                    badge: { pt: '✦ Desbloqueado: Triceratops Abatido', en: '✦ Unlocked: Triceratops Slain' }
+                },
+                {
+                    id: 'parasaur',
+                    name: { pt: 'Parasaurolofo', en: 'Parasaurolophus' },
+                    art: `  (~~~)\n  /O  \\\n | === |\n  \\___/\n   | |`,
+                    altText: { pt: 'Parasaurolofo com crista tubular erguida, boca aberta em vocalização de alerta', en: 'Parasaurolophus with raised tubular crest, mouth open in alert call' },
+                    fact: { pt: 'A crista do Parasaurolofo era um tubo ósseo oco — funcionava como um instrumento de sopro, produzindo chamados graves que ecoavam por quilômetros.', en: "Parasaurolophus's crest was a hollow bone tube — it worked like a wind instrument, producing deep calls that echoed for kilometers." },
+                    badge: { pt: '✦ Desbloqueado: Parasaurolofo Abatido', en: '✦ Unlocked: Parasaurolophus Slain' }
                 },
                 {
                     id: 'exterminator',
@@ -601,7 +625,7 @@
 
         function startGame() {
             player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 5 };
-            killCount = { V: 0, T: 0, F: 0, total: 0 };
+            killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
             stunDone = false;
             initMap();
             showScreen('screen-game');
@@ -1274,8 +1298,13 @@
                         killCount[dtype] = (killCount[dtype] || 0) + 1;
                         killCount.total++;
                         if(dtype === 'V' && killCount.V === 1) { unlockCard('velociraptor'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Velociraptor!' : 'Card unlocked: Velociraptor!')); }
-                        if(dtype === 'T') { unlockCard('trex'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: T-Rex!' : 'Card unlocked: T-Rex!')); }
-                        if(dtype === 'F' && killCount.F === 1) { unlockCard('herd'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dino de Manada!' : 'Card unlocked: Herd Dinosaur!')); }
+                        if(dtype === 'T') { unlockCard('trex'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Tiranossauro Rex!' : 'Card unlocked: Tyrannosaurus Rex!')); }
+                        if((dtype === 'F' || dtype === 'A' || dtype === '3' || dtype === 'W') && killCount[dtype] === 1) {
+                            if(dtype === 'F') { unlockCard('herd'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dino de Manada!' : 'Card unlocked: Herd Dinosaur!')); }
+                            if(dtype === 'A') { unlockCard('ankylosaur'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Anquilossauro!' : 'Card unlocked: Ankylosaurus!')); }
+                            if(dtype === '3') { unlockCard('triceratops'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Triceratops!' : 'Card unlocked: Triceratops!')); }
+                            if(dtype === 'W') { unlockCard('parasaur'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Parasaurolofo!' : 'Card unlocked: Parasaurolophus!')); }
+                        }
                         if(killCount.V >= 5) { unlockCard('exterminator'); }
                         if(killCount.total >= 10) { unlockCard('apex'); }
                         dinos.splice(i, 1);
