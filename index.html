@@ -1107,6 +1107,14 @@
                             if(Math.abs(rdx) > Math.abs(rdy)) d.x += rdx > 0 ? 1 : -1; else d.y += rdy > 0 ? 1 : -1;
                         }
                         playSound(120, 'sawtooth', 0.2, 0.3);
+                        // Contra-ataque imediato se não estiver stunned e não for Taser
+                        if(weapons[player.weaponIdx] !== 'Taser' && d.stunned <= 0) {
+                            const counterDmg = d.type === 'T' ? 25 : 8;
+                            player.hp -= counterDmg;
+                            addToLog(lang === 'pt' ? `${dName} contra-ataca! -${counterDmg} HP` : `${dName} counter-attacks! -${counterDmg} HP`);
+                            playSound(220, 'sawtooth', 0.4, 0.2);
+                            if(player.hp <= 0) { player.hp = 0; stopAmbient(); stopBreathing(); addToLog(i18n[lang].dead); setTimeout(() => showScreen('screen-menu'), 3000); }
+                        }
                     }
                     hit = true;
                 }
