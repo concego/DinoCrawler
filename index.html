@@ -110,10 +110,9 @@
             color: #ccc;
             text-align: left;
             z-index: 999;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             pointer-events: none;
+            line-height: 1.5;
+            white-space: pre;
         }
 
         #d-pad {
@@ -285,7 +284,7 @@
         </div>
 
         <!-- Tela de Jogo -->
-        <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none; padding-bottom: 40px;">
+        <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none; padding-bottom: 90px;">
             <h2>Status</h2>
             <div id="hud">
                 <span>HP: <span id="hp">100</span></span>
@@ -860,6 +859,8 @@
             laserAmmo = 5; laserCooldown = 0; aimMode = false; scanAmmo = 3; scanCooldown = 0; fires = [];
             document.getElementById('laser-ammo').textContent = 5;
             log.innerHTML = '';
+            logLines.length = 0;
+            logFooter.textContent = '';
             draw();
         }
 
@@ -1748,6 +1749,7 @@
         }
 
         const logFooter = document.getElementById('log-footer');
+        const logLines = [];
 
         function addToLog(msg) {
             const entry = document.createElement('div');
@@ -1755,7 +1757,9 @@
             log.appendChild(entry);
             if (log.childNodes.length > 60) log.removeChild(log.firstChild);
             log.scrollTop = log.scrollHeight;
-            logFooter.textContent = `> ${msg}`;
+            logLines.push(`> ${msg}`);
+            if (logLines.length > 4) logLines.shift();
+            logFooter.textContent = logLines.join('\n');
         }
 
         document.addEventListener('keydown', (e) => {
