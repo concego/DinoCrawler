@@ -397,6 +397,7 @@
         }
 
 
+        function playSound(freq, type = 'sine', volume = 0.3, duration = 0.2, pan = 0) {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
