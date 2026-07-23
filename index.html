@@ -1386,15 +1386,10 @@
                     if(burnedBush){ addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush); }
                     playTaserZap();
                 } else if(weapon === 'Granada') {
-                    if(player.ammo <= 0) { addToLog(i18n[lang].noAmmo); srSay(i18n[lang].noAmmo); return; }
-                    player.ammo--;
-                    // Friendly fire: área 2x2 centrada no player
-                    for(let gy=-1;gy<=1;gy++) for(let gx=-1;gx<=1;gx++) checkHit(player.x+gx, player.y+gy, 25);
-                    player.hp -= 15;
-                    addToLog(lang==='pt'?'GRANADA NA PRÓPRIA POSIÇÃO! -15 HP (friendly fire)':'GRENADE ON SELF! -15 HP (friendly fire)');
-                    srSay(lang==='pt'?'Friendly fire! Menos 15 HP.':'Friendly fire! Minus 15 HP.');
-                    playSound(150,'sawtooth',0.8,0.6); playSound(80,'sawtooth',0.5,0.8);
-                    if(player.hp<=0){player.hp=0;stopAmbient();stopBreathing();addToLog(i18n[lang].gameOver);srSay(i18n[lang].gameOver);setTimeout(()=>showScreen('screen-menu'),3000);return;}
+                    // Granada F+F: exige direção
+                    addToLog(lang==='pt'?'Granada: escolha uma direção com F+seta.':'Grenade: aim with F+arrow.');
+                    srSay(lang==='pt'?'Granada precisa de direção.':'Grenade needs a direction.');
+                    return;
                 } else if(weapon === 'Laser') {
                     if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
                     laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
@@ -1441,14 +1436,20 @@
                 srSay(lang==='pt'?'Taser: apenas corpo a corpo.':'Taser: melee only.');
                 return;
             } else if(weapon === 'Granada') {
-                // Granada: arremessa até 2 casas na direção, área 2x2 no ponto de impacto
+                // Granada: arremessa até 2 casas na direção, área 3x3 no ponto de impacto
                 if(player.ammo<=0){addToLog(i18n[lang].noAmmo);srSay(i18n[lang].noAmmo);return;}
                 player.ammo--;
                 const gx=player.x+dx*2, gy=player.y+dy*2;
-                for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) checkHit(gx+ox,gy+oy,25);
-                addToLog(lang==='pt'?`Granada arremessada!`:`Grenade thrown!`);
-                srSay(lang==='pt'?'Granada arremessada!':'Grenade thrown!');
-                playSound(150,'sawtooth',0.8,0.6); playSound(80,'sawtooth',0.5,0.8);
+                let hits=0;
+                for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++){
+                    const tx=gx+ox, ty=gy+oy;
+                    if(tx>=0&&tx<GRID_SIZE&&ty>=0&&ty<GRID_SIZE) if(checkHit(tx,ty,25)) hits++;
+                }
+                const dirName=dx===0?(dy<0?(lang==='pt'?'Norte':'North'):(lang==='pt'?'Sul':'South')):(dx<0?(lang==='pt'?'Oeste':'West'):(lang==='pt'?'Leste':'East'));
+                const hitMsg = hits>0?(lang==='pt'?` ${hits} atingido(s)!`:` ${hits} hit(s)!`):'';
+                addToLog((lang==='pt'?`Granada → ${dirName}!`:`Grenade → ${dirName}!`)+hitMsg);
+                srSay((lang==='pt'?`Granada lançada para ${dirName}.`:`Grenade thrown ${dirName}.`)+(hits>0?(lang==='pt'?` ${hits} atingido.`:` ${hits} hit.`):''));
+                playSound(150,'sawtooth',0.8,0.6); setTimeout(()=>playSound(80,'sawtooth',0.5,0.8),120);
             } else if(weapon === 'Laser') {
                 // Laser: linha reta até 8 casas, para no 1° dino atingido
                 if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
@@ -1781,6 +1782,10 @@
                 if (e.key === 's') scan();
                 if (e.key === 'f') { aimMode = true; srSay(i18n[lang].aimMode); }
                 if (['1','2','3','4'].includes(e.key)) setWeapon(parseInt(e.key)-1);
+                if (e.key === 'o' || e.key === 'O') { const m=lang==='pt'?`O2: ${player.o2}.`:`O2: ${player.o2}.`; addToLog(m); srSay(m); }
+                if (e.key === 'h' || e.key === 'H') { const m=lang==='pt'?`HP: ${player.hp}.`:`HP: ${player.hp}.`; addToLog(m); srSay(m); }
+                if (e.key === 'p' || e.key === 'P') { const m=lang==='pt'?`Peças: ${player.parts} de 5.`:`Parts: ${player.parts} of 5.`; addToLog(m); srSay(m); }
+                if (e.key === 'c' || e.key === 'C') { const m=lang==='pt'?`Carne: ${player.meat} de 3.`:`Meat: ${player.meat} of 3.`; addToLog(m); srSay(m); }
             }
         });
     </script>
