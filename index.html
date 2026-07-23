@@ -281,7 +281,7 @@
 
             <h2>Mapa</h2>
             <div id="game-container" aria-hidden="true"></div>
-            <div id="sr-announce" aria-live="assertive" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></div>
+            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><span id="sr-a" aria-live="assertive" aria-atomic="true"></span><span id="sr-b" aria-live="assertive" aria-atomic="true"></span></div>
 
             <h2>Controles</h2>
             <div id="controls">
@@ -305,14 +305,15 @@
             </div>
 
             <h2>Log</h2>
-            <div id="log" aria-live="polite" aria-atomic="false"></div>
+            <div id="log" aria-hidden="true"></div>
         </div>
     </div>
 
     <script>
         const container = document.getElementById('game-container');
         const log = document.getElementById('log');
-        const srAnnounce = document.getElementById('sr-announce');
+        const srSlots = [document.getElementById('sr-a'), document.getElementById('sr-b')];
+        let srIdx = 0;
         const GRID_SIZE = 20;
         
         let lang = 'pt';
@@ -1467,8 +1468,11 @@
         }
 
         function srSay(msg) {
-            srAnnounce.textContent = '';
-            requestAnimationFrame(() => { srAnnounce.textContent = msg; });
+            const current = srSlots[srIdx];
+            const other = srSlots[1 - srIdx];
+            other.textContent = '';
+            current.textContent = msg;
+            srIdx = 1 - srIdx;
         }
 
         function addToLog(msg) {
