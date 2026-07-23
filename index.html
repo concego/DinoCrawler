@@ -311,7 +311,7 @@
             </div>
 
             <h2>Log</h2>
-            <div id="log" aria-hidden="true"></div>
+            <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0"></div>
         </div>
     </div>
 
@@ -669,7 +669,7 @@
         }
 
         function startGame() {
-            player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8 };
+            player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
             killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
             stunDone = false;
             initMap();
@@ -1736,8 +1736,9 @@
         function addToLog(msg) {
             const entry = document.createElement('div');
             entry.textContent = `> ${msg}`;
-            log.insertBefore(entry, log.firstChild);
-            if (log.childNodes.length > 50) log.removeChild(log.lastChild);
+            log.appendChild(entry);
+            if (log.childNodes.length > 60) log.removeChild(log.firstChild);
+            log.scrollTop = log.scrollHeight;
         }
 
         document.addEventListener('keydown', (e) => {
