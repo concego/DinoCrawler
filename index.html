@@ -190,7 +190,7 @@
                 <span>HP: <span id="hp">100</span></span>
                 <span>O2: <span id="o2">50</span></span>
                 <span>📦: <span id="parts">0</span>/5</span>
-                <span>🔫: <span id="ammo">5</span></span>
+                <span>💣: <span id="ammo">5</span></span>
             </div>
 
             <div id="game-container"></div>
@@ -211,7 +211,7 @@
             <div id="weapon-selector">
                 <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
                 <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
-                <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. RIFLE</button>
+                <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
             </div>
 
             <div id="log" aria-live="polite" aria-atomic="false"></div>
@@ -232,7 +232,7 @@
                 back: "Voltar",
                 changeLang: "Mudar Idioma",
                 howTo: "Como Jogar",
-                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Use as setas ou botões de direção. Cada passo consome Oxigênio (O2).<br><br><strong>Combate:</strong><br>1. Machete: Curto alcance, limpa arbustos (#).<br>2. Taser: Atordoa dinos próximos.<br>3. Rifle: Longo alcance, munição limitada.<br><br><strong>Estratégia:</strong> Dinos (V, T) são atraídos por cadáveres (X). Use-os como isca! O SCAN (S) localiza itens próximos.",
+                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Use as setas ou botões de direção. Cada passo consome Oxigênio (O2).<br><br><strong>Combate:</strong><br>1. Machete: Curto alcance, limpa arbustos (#).<br>2. Taser: Causa dano com chance de atordoar.<br>3. Granada: Explode em raio 2, munição limitada.<br><br><strong>Estratégia:</strong> Dinos (V, T) são atraídos por cadáveres (X). Use-os como isca! O SCAN (S) localiza itens próximos.",
                 feedback: "Feedback",
                 loreText: "Ano 2150. A humanidade esgotou os recursos da Terra. Você é o Dr. Aris, um cientista enviado 65 milhões de anos ao passado para coletar peças de uma tecnologia experimental deixada por uma expedição perdida. Sua Máquina do Tempo quebrou no impacto. Encontre as 5 peças, recupere oxigênio e tome cuidado: você não está sozinho no Cretáceo.",
                 creditsText: "<p><strong>Equipe:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Enredo:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
@@ -244,7 +244,7 @@
                 machineMissing: "Aqui: Máquina do Tempo (faltam peças).",
                 o2Found: "Aqui: Oxigênio recuperado!",
                 bushBlock: "Arbusto denso bloqueia o caminho! Use o Machete.",
-                noAmmo: "Click... sem munição.",
+                noAmmo: "Sem granadas.",
                 scanned: "Escaneando de",
                 nothingNear: "Nada próximo.",
                 steps: "passos ao",
@@ -260,7 +260,7 @@
                 back: "Back",
                 changeLang: "Change Language",
                 howTo: "How to Play",
-                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Use arrows or direction buttons. Each step consumes Oxygen (O2).<br><br><strong>Combat:</strong><br>1. Machete: Short range, clears bushes (#).<br>2. Taser: Stuns nearby dinos.<br>3. Rifle: Long range, limited ammo.<br><br><strong>Strategy:</strong> Dinos (V, T) are attracted to corpses (X). Use them as bait! SCAN (S) locates nearby items.",
+                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Use arrows or direction buttons. Each step consumes Oxygen (O2).<br><br><strong>Combat:</strong><br>1. Machete: Short range, clears bushes (#).<br>2. Taser: Deals damage with stun chance.<br>3. Grenade: Explodes in radius 2, limited ammo.<br><br><strong>Strategy:</strong> Dinos (V, T) are attracted to corpses (X). Use them as bait! SCAN (S) locates nearby items.",
                 feedback: "Feedback",
                 loreText: "Year 2150. Humanity has depleted Earth's resources. You are Dr. Aris, a scientist sent 65 million years into the past to collect pieces of experimental technology left by a lost expedition. Your Time Machine broke on impact. Find the 5 parts, recover oxygen, and beware: you are not alone in the Cretaceous.",
                 creditsText: "<p><strong>Team:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Plot:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
@@ -272,7 +272,7 @@
                 machineMissing: "Here: Time Machine (parts missing).",
                 o2Found: "Here: Oxygen recovered!",
                 bushBlock: "Dense bush blocks the way! Use Machete.",
-                noAmmo: "Click... out of ammo.",
+                noAmmo: "No grenades left.",
                 scanned: "Scanning from",
                 nothingNear: "Nothing nearby.",
                 steps: "steps to the",
@@ -284,7 +284,7 @@
         };
 
         let player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weaponIdx: 0, ammo: 5 };
-        const weapons = ['Machete', 'Taser', 'Rifle'];
+        const weapons = ['Machete', 'Taser', 'Granada'];
         let map = [];
         let dinos = [];
         let corpses = [];
@@ -562,7 +562,7 @@
         function fire() {
             const directions = [{x:0, y:-1}, {x:0, y:1}, {x:-1, y:0}, {x:1, y:0}];
             // Sempre checa se há algo na mesma posição do jogador
-            checkHit(player.x, player.y, weapons[player.weaponIdx] === 'Rifle' ? 25 : (weapons[player.weaponIdx] === 'Taser' ? 15 : 10));
+            checkHit(player.x, player.y, weapons[player.weaponIdx] === 'Granada' ? 25 : (weapons[player.weaponIdx] === 'Taser' ? 15 : 10));
 
             if(weapons[player.weaponIdx] === 'Machete') {
                 directions.forEach(dir => {
@@ -590,19 +590,21 @@
                     if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) checkHit(nx, ny, 15);
                 });
                 playSound(800, 'sawtooth', 0.3);
-            } else if(weapons[player.weaponIdx] === 'Rifle') {
+            } else if(weapons[player.weaponIdx] === 'Granada') {
                 if(player.ammo > 0) {
-                    player.ammo--; 
-                    directions.forEach(dir => {
-                        for(let i=1; i<=5; i++) {
-                            const nx = player.x + dir.x * i; const ny = player.y + dir.y * i;
-                            if(checkHit(nx, ny, 20)) break;
+                    player.ammo--;
+                    // Explode em todas as células ao redor (raio 2)
+                    for(let dy = -2; dy <= 2; dy++) {
+                        for(let dx = -2; dx <= 2; dx++) {
+                            if(dx === 0 && dy === 0) continue;
+                            checkHit(player.x + dx, player.y + dy, 25);
                         }
-                    });
-                    playSound(200, 'sawtooth', 0.4, 0.3);
-                } else { 
-                    addToLog(i18n[lang].noAmmo); 
-                    return; // Sai sem gastar turno
+                    }
+                    playSound(150, 'sawtooth', 0.8, 0.6);
+                    playSound(80, 'sawtooth', 0.5, 0.8);
+                } else {
+                    addToLog(i18n[lang].noAmmo);
+                    return;
                 }
             }
             moveDinos();
@@ -650,9 +652,6 @@
                     if (cell === 'P') { freq = 880; type = 'triangle'; }
                     else if (cell === 'M') { freq = 523.25; type = 'sine'; }
                     else if (cell === '*') { freq = 600; type = 'triangle'; }
-                    else if (cell === '#') { freq = 150; type = 'square'; }
-                    else if (cell === 'T' || cell === 'V') { freq = 100; type = 'sawtooth'; }
-                    else if (cell === 'X') { freq = 200; type = 'square'; }
                     else if (cell === '#') { freq = 150; type = 'square'; }
                     else if (cell === 'T' || cell === 'V') { freq = 100; type = 'sawtooth'; }
                     else if (cell === 'X') { freq = 200; type = 'square'; }
