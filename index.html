@@ -294,6 +294,7 @@
         let dinos = [];
         let corpses = [];
         let audioCtx = null;
+        let ambientNodes = null; // nós do som ambiente
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
@@ -332,9 +333,70 @@
             player = { x: 1, y: 1, hp: 100, o2: 50, parts: 0, weaponIdx: 0, ammo: 5 };
             initMap();
             showScreen('screen-game');
+            startAmbient();
         }
 
-        function playSound(freq, type = 'sine', volume = 0.3, duration = 0.2, pan = 0) {
+        function startAmbient() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ambientNodes) return; // já tocando
+
+            // Vento suave — ruído branco filtrado
+            const bufferSize = audioCtx.sampleRate * 2;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const wind = audioCtx.createBufferSource();
+            wind.buffer = buffer;
+            wind.loop = true;
+
+            const windFilter = audioCtx.createBiquadFilter();
+            windFilter.type = 'bandpass';
+            windFilter.frequency.value = 400;
+            windFilter.Q.value = 0.3;
+
+            const windGain = audioCtx.createGain();
+            windGain.gain.value = 0.04;
+
+            wind.connect(windFilter);
+            windFilter.connect(windGain);
+            windGain.connect(audioCtx.destination);
+            wind.start();
+
+            // Eco de vale — oscilador grave pulsante
+            const echo = audioCtx.createOscillator();
+            echo.type = 'sine';
+            echo.frequency.value = 55;
+
+            const echoGain = audioCtx.createGain();
+            echoGain.gain.value = 0.0;
+
+            // Pulsa suavemente a cada ~4s simulando ressonância do vale
+            const lfo = audioCtx.createOscillator();
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.25;
+            const lfoGain = audioCtx.createGain();
+            lfoGain.gain.value = 0.02;
+            lfo.connect(lfoGain);
+            lfoGain.connect(echoGain.gain);
+
+            echo.connect(echoGain);
+            echoGain.connect(audioCtx.destination);
+            echo.start();
+            lfo.start();
+
+            ambientNodes = { wind, echo, lfo };
+        }
+
+        function stopAmbient() {
+            if (!ambientNodes) return;
+            try { ambientNodes.wind.stop(); } catch(e) {}
+            try { ambientNodes.echo.stop(); } catch(e) {}
+            try { ambientNodes.lfo.stop(); } catch(e) {}
+            ambientNodes = null;
+        }
+
+
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -402,7 +464,7 @@
             const hasTRex = dinos.some(d => d.type === 'T');
             const canSpawnTRex = player.parts >= 5 && !hasTRex;
             
-            if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.' && (rx !== 0 || ry !== 0)) {
+            if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.' && (rx !== player.x || ry !== player.y) && (rx !== 0 || ry !== 0)) {
                 if(!dinos.some(d => d.x === rx && d.y === ry) && !corpses.some(c => c.x === rx && c.y === ry)) {
                     // Impede spawn de dinos fantasmas em cima de cadáveres
                     let type = (canSpawnTRex && Math.random() > 0.8) ? 'T' : 'V';
@@ -463,7 +525,7 @@
                 if(map[player.y][player.x] === 'M') { 
                     if(player.parts >= 5) {
                         addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
-                        setTimeout(() => showScreen('screen-menu'), 4000); return;
+                        stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
                     } else { logMsg += " " + i18n[lang].machineMissing; playSound(523.25, 'sine', 0.5, 0.3); }
                 }
                 if(map[player.y][player.x] === '*') { 
@@ -512,7 +574,7 @@
             });
             if(player.hp <= 0) {
                 addToLog(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
-                setTimeout(() => showScreen('screen-menu'), 3000);
+                stopAmbient(); setTimeout(() => showScreen('screen-menu'), 3000);
             }
         }
 
@@ -646,7 +708,7 @@
 
         function playEnvironmentSonar() {
             // Som de passo
-            playSound(80, 'sine', 0.05, 0.08);
+            playSound(80, 'sine', 0.12, 0.08);
 
             const sonarItems = [];
 
