@@ -286,14 +286,14 @@
             <h2>Controles</h2>
             <div id="controls">
                 <div id="d-pad">
-                    <button id="btn-up" class="move-btn" onclick="move(0, -1)">NORTE (↑)</button>
-                    <button id="btn-left" class="move-btn" onclick="move(-1, 0)">OESTE (←)</button>
-                    <button id="btn-right" class="move-btn" onclick="move(1, 0)">LESTE (→)</button>
-                    <button id="btn-down" class="move-btn" onclick="move(0, 1)">SUL (↓)</button>
+                    <button id="btn-up" class="move-btn" onclick="aimMode?fireDirectional(0,-1):move(0,-1)">NORTE (↑)</button>
+                    <button id="btn-left" class="move-btn" onclick="aimMode?fireDirectional(-1,0):move(-1,0)">OESTE (←)</button>
+                    <button id="btn-right" class="move-btn" onclick="aimMode?fireDirectional(1,0):move(1,0)">LESTE (→)</button>
+                    <button id="btn-down" class="move-btn" onclick="aimMode?fireDirectional(0,1):move(0,1)">SUL (↓)</button>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:5px;">
                     <button id="btn-scan" class="action-btn" onclick="scan()">SCAN</button>
-                    <button id="btn-fire" class="action-btn" onclick="fire()" style="background:#ff0000; color:#fff;">FIRE</button>
+                    <button id="btn-fire" class="action-btn" onclick="aimMode?fireDirectional(0,0):enterAimMode()" style="background:#ff0000; color:#fff;">FIRE (F)</button>
                 </div>
             </div>
 
@@ -302,6 +302,8 @@
                 <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
                 <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
                 <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
+                <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
+                <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
             </div>
 
             <h2>Log</h2>
@@ -342,6 +344,12 @@
                 o2Found: "Aqui: Oxigênio recuperado!",
                 bushBlock: "Arbusto denso bloqueia o caminho! Use o Machete.",
                 noAmmo: "Sem granadas.",
+                laserNoAmmo: "Laser recarregando... aguarde.",
+                laserFire: "Laser disparado!",
+                laserHit: "Laser acertou",
+                laserMiss: "Laser: caminho limpo.",
+                aimMode: "Modo mira: escolha uma direção (seta) ou F para mesma célula.",
+                aimCancel: "Mira cancelada.",
                 scanned: "Escaneando de",
                 nothingNear: "Nada próximo.",
                 steps: "passos ao",
@@ -379,6 +387,12 @@
                 o2Found: "Here: Oxygen recovered!",
                 bushBlock: "Dense bush blocks the way! Use Machete.",
                 noAmmo: "No grenades left.",
+                laserNoAmmo: "Laser recharging... wait.",
+                laserFire: "Laser fired!",
+                laserHit: "Laser hit",
+                laserMiss: "Laser: clear path.",
+                aimMode: "Aim mode: choose direction (arrow) or F for same cell.",
+                aimCancel: "Aim cancelled.",
                 scanned: "Scanning from",
                 nothingNear: "Nothing nearby.",
                 steps: "steps to the",
@@ -394,8 +408,11 @@
             }
         };
 
-        let player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 5 };
-        const weapons = ['Machete', 'Taser', 'Granada'];
+        let player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 8 };
+        const weapons = ['Machete', 'Taser', 'Granada', 'Laser'];
+        let laserAmmo = 5;      // tiros disponíveis
+        let laserCooldown = 0;  // turnos até ganhar +1 tiro
+        let aimMode = false;    // aguardando seta após F
         let map = [];
         let dinos = [];
         let corpses = [];
@@ -627,7 +644,7 @@
         }
 
         function startGame() {
-            player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 5 };
+            player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 8 };
             killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
             stunDone = false;
             initMap();
@@ -791,32 +808,18 @@
                 do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
                 map[ry][rx] = '#';
             }
-            // Spawn inicial: Velociraptors
-            for(let i=0; i<3; i++) {
-                let rx = Math.floor(Math.random()*15)+4;
-                let ry = Math.floor(Math.random()*15)+4;
-                if(map[ry][rx] === '.') {
-                    dinos.push({x: rx, y: ry, type: 'V', hp: 30, stunned: 0, eatingTurns: 0});
-                }
-            }
-            // Spawn inicial: Anquilossauros (2)
-            for(let i=0; i<2; i++) {
-                let rx, ry;
-                do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
-                dinos.push({x: rx, y: ry, type: 'A', hp: 80, stunned: 0, eatingTurns: 0, slowTick: 0, charged: false});
-            }
-            // Spawn inicial: Triceratops (2)
-            for(let i=0; i<2; i++) {
-                let rx, ry;
-                do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
-                dinos.push({x: rx, y: ry, type: '3', hp: 60, stunned: 0, eatingTurns: 0, provoked: false});
-            }
-            // Spawn inicial: Parasaurolofos (2)
-            for(let i=0; i<2; i++) {
-                let rx, ry;
-                do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
-                dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
-            }
+            // Spawn inicial: 1V + 1A + 1'3' + 1W
+            let rx, ry;
+            rx = Math.floor(Math.random()*15)+4; ry = Math.floor(Math.random()*15)+4;
+            if(map[ry][rx] === '.') dinos.push({x: rx, y: ry, type: 'V', hp: 30, stunned: 0, eatingTurns: 0});
+            do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+            dinos.push({x: rx, y: ry, type: 'A', hp: 80, stunned: 0, eatingTurns: 0, slowTick: 0, charged: false});
+            do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+            dinos.push({x: rx, y: ry, type: '3', hp: 60, stunned: 0, eatingTurns: 0, provoked: false});
+            do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+            dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
+            laserAmmo = 5; laserCooldown = 0; aimMode = false;
+            document.getElementById('laser-ammo').textContent = 5;
             log.innerHTML = '';
             draw();
         }
@@ -936,6 +939,9 @@
                 }
                 player.x = nx; player.y = ny;
                 player.o2--;
+                if(player.ammo < 8) player.ammo++;
+                // Recarga do laser: +1 tiro a cada 2 turnos de cooldown
+                if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; document.getElementById('laser-ammo').textContent = laserAmmo; } }
                 let logMsg = `${player.x}, ${player.y}.`;
                 let srParts = [];
 
@@ -1244,69 +1250,89 @@
         }
 
         function setWeapon(idx) {
-            moveDinos();
             player.weaponIdx = idx;
             document.querySelectorAll('.weapon-btn').forEach((b, i) => {
                 b.classList.toggle('active-weapon', i === idx);
             });
-            srSay(lang === 'pt' ? `Arma: ${weapons[idx]}.` : `Weapon: ${weapons[idx]}.`);
             playSound(400, 'sine', 0.2);
+            setTimeout(() => srSay(lang === 'pt' ? `Arma: ${weapons[idx]}.` : `Weapon: ${weapons[idx]}.`), 120);
+            moveDinos();
         }
 
-        function fire() {
-            const directions = [{x:0, y:-1}, {x:0, y:1}, {x:-1, y:0}, {x:1, y:0}];
-            // Sempre checa se há algo na mesma posição do jogador
-            checkHit(player.x, player.y, weapons[player.weaponIdx] === 'Granada' ? 25 : (weapons[player.weaponIdx] === 'Taser' ? 15 : 10));
+        function fireDirectional(dx, dy) {
+            aimMode = false;
+            const weapon = weapons[player.weaponIdx];
 
-            if(weapons[player.weaponIdx] === 'Machete') {
-                directions.forEach(dir => {
-                    const nx = player.x + dir.x; const ny = player.y + dir.y;
-                    if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
-                        const cell = map[ny][nx];
-                        const corpseIdx = corpses.findIndex(c => c.x === nx && c.y === ny);
-                        if (corpseIdx !== -1) {
-                            corpses.splice(corpseIdx, 1);
-                            addToLog(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
-                            srSay(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
-                            playSound(150, 'square', 0.4, 0.4);
-                            unlockCard('disturber');
-                        }
-                        if(cell === '#') {
-                            map[ny][nx] = '.';
-                            addToLog(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
-                            srSay(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
-                            playSwordSlash();
-                            unlockCard('lumberjack');
-                        }
-                        checkHit(nx, ny, 10);
-                    }
-                });
-                playSwordSlash();
-            } else if(weapons[player.weaponIdx] === 'Taser') {
-                directions.forEach(dir => {
-                    const nx = player.x + dir.x; const ny = player.y + dir.y;
-                    if(nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) checkHit(nx, ny, 15);
-                });
-                playTaserZap();
-            } else if(weapons[player.weaponIdx] === 'Granada') {
-                if(player.ammo > 0) {
+            // ── Mesma célula (F+F) ───────────────────────────────────────
+            if(dx === 0 && dy === 0) {
+                if(weapon === 'Machete') {
+                    checkHit(player.x, player.y, 10); playSwordSlash();
+                } else if(weapon === 'Taser') {
+                    checkHit(player.x, player.y, 15); playTaserZap();
+                } else if(weapon === 'Granada') {
+                    if(player.ammo <= 0) { addToLog(i18n[lang].noAmmo); srSay(i18n[lang].noAmmo); return; }
                     player.ammo--;
-                    // Explode em todas as células ao redor (raio 2)
-                    for(let dy = -2; dy <= 2; dy++) {
-                        for(let dx = -2; dx <= 2; dx++) {
-                            checkHit(player.x + dx, player.y + dy, 25);
-                        }
-                    }
-                    playSound(150, 'sawtooth', 0.8, 0.6);
-                    playSound(80, 'sawtooth', 0.5, 0.8);
-                } else {
-                    addToLog(i18n[lang].noAmmo);
-                    srSay(i18n[lang].noAmmo);
-                    return;
+                    // Friendly fire: área 2x2 centrada no player
+                    for(let gy=-1;gy<=1;gy++) for(let gx=-1;gx<=1;gx++) checkHit(player.x+gx, player.y+gy, 25);
+                    player.hp -= 15;
+                    addToLog(lang==='pt'?'GRANADA NA PRÓPRIA POSIÇÃO! -15 HP (friendly fire)':'GRENADE ON SELF! -15 HP (friendly fire)');
+                    srSay(lang==='pt'?'Friendly fire! Menos 15 HP.':'Friendly fire! Minus 15 HP.');
+                    playSound(150,'sawtooth',0.8,0.6); playSound(80,'sawtooth',0.5,0.8);
+                    if(player.hp<=0){player.hp=0;stopAmbient();stopBreathing();addToLog(i18n[lang].gameOver);srSay(i18n[lang].gameOver);setTimeout(()=>showScreen('screen-menu'),3000);return;}
+                } else if(weapon === 'Laser') {
+                    if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
+                    laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                    const hit=checkHit(player.x,player.y,50);
+                    if(hit){addToLog(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');}
+                    else{addToLog(i18n[lang].laserMiss);srSay(i18n[lang].laserMiss);}
+                    playLaserShot();
                 }
+                moveDinos(); draw(); return;
             }
-            moveDinos();
-            draw();
+
+            // ── Com direção (F + seta) ───────────────────────────────────
+            if(weapon === 'Machete') {
+                // Machete: 1 casa na direção
+                const nx=player.x+dx, ny=player.y+dy;
+                if(nx>=0&&nx<GRID_SIZE&&ny>=0&&ny<GRID_SIZE){
+                    const cell=map[ny][nx];
+                    const corpseIdx=corpses.findIndex(c=>c.x===nx&&c.y===ny);
+                    if(corpseIdx!==-1){corpses.splice(corpseIdx,1);addToLog(lang==='pt'?'Cadáver removido!':'Corpse cleared!');srSay(lang==='pt'?'Cadáver removido!':'Corpse cleared!');playSound(150,'square',0.4,0.4);unlockCard('disturber');}
+                    if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSwordSlash();unlockCard('lumberjack');}
+                    checkHit(nx,ny,10);
+                }
+                playSwordSlash();
+            } else if(weapon === 'Taser') {
+                // Taser: só mesma célula (F+F); F+seta não tem efeito
+                addToLog(lang==='pt'?'Taser: apenas corpo a corpo (F+F).':'Taser: melee only (F+F).');
+                srSay(lang==='pt'?'Taser: apenas corpo a corpo.':'Taser: melee only.');
+                return;
+            } else if(weapon === 'Granada') {
+                // Granada: arremessa até 2 casas na direção, área 2x2 no ponto de impacto
+                if(player.ammo<=0){addToLog(i18n[lang].noAmmo);srSay(i18n[lang].noAmmo);return;}
+                player.ammo--;
+                const gx=player.x+dx*2, gy=player.y+dy*2;
+                for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++) checkHit(gx+ox,gy+oy,25);
+                addToLog(lang==='pt'?`Granada arremessada!`:`Grenade thrown!`);
+                srSay(lang==='pt'?'Granada arremessada!':'Grenade thrown!');
+                playSound(150,'sawtooth',0.8,0.6); playSound(80,'sawtooth',0.5,0.8);
+            } else if(weapon === 'Laser') {
+                // Laser: linha reta até 8 casas, para no 1° dino atingido
+                if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
+                laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                let hit=false;
+                for(let step=1;step<=8;step++){
+                    const lx=player.x+dx*step, ly=player.y+dy*step;
+                    if(lx<0||lx>=GRID_SIZE||ly<0||ly>=GRID_SIZE) break;
+                    if(map[ly][lx]==='#') break; // arbusto bloqueia
+                    if(checkHit(lx,ly,50)){hit=true;break;}
+                }
+                const dirName=dx===0?(dy<0?(lang==='pt'?'Norte':'North'):(lang==='pt'?'Sul':'South')):(dx<0?(lang==='pt'?'Oeste':'West'):(lang==='pt'?'Leste':'East'));
+                if(hit){addToLog(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');}
+                else{addToLog(i18n[lang].laserMiss+' ('+dirName+')');srSay(i18n[lang].laserMiss);}
+                playLaserShot();
+            }
+            moveDinos(); draw();
         }
 
         function checkHit(x, y, dmg) {
@@ -1477,6 +1503,26 @@
             });
         }
 
+        function enterAimMode() {
+            aimMode = true;
+            srSay(i18n[lang].aimMode);
+            addToLog(i18n[lang].aimMode);
+        }
+
+        function playLaserShot() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1800, t);
+            osc.frequency.exponentialRampToValueAtTime(400, t + 0.25);
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.4, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + 0.3);
+        }
+
         function srSay(msg) {
             const current = srSlots[srIdx];
             const other = srSlots[1 - srIdx];
@@ -1494,13 +1540,23 @@
 
         document.addEventListener('keydown', (e) => {
             if (document.getElementById('screen-game').classList.contains('active-screen')) {
+                if (aimMode) {
+                    e.preventDefault();
+                    if (e.key === 'f' || e.key === 'F') { fireDirectional(0, 0); return; }
+                    if (e.key === 'ArrowUp')    { fireDirectional(0, -1); return; }
+                    if (e.key === 'ArrowDown')  { fireDirectional(0,  1); return; }
+                    if (e.key === 'ArrowLeft')  { fireDirectional(-1, 0); return; }
+                    if (e.key === 'ArrowRight') { fireDirectional( 1, 0); return; }
+                    if (e.key === 'Escape') { aimMode = false; srSay(i18n[lang].aimCancel); return; }
+                    return;
+                }
                 if (e.key === 'ArrowUp') move(0, -1);
                 if (e.key === 'ArrowDown') move(0, 1);
                 if (e.key === 'ArrowLeft') move(-1, 0);
                 if (e.key === 'ArrowRight') move(1, 0);
                 if (e.key === 's') scan();
-                if (e.key === 'f') fire();
-                if (['1','2','3'].includes(e.key)) setWeapon(parseInt(e.key)-1);
+                if (e.key === 'f') { aimMode = true; srSay(i18n[lang].aimMode); }
+                if (['1','2','3','4'].includes(e.key)) setWeapon(parseInt(e.key)-1);
             }
         });
     </script>
