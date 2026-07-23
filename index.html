@@ -93,13 +93,14 @@
         #log {
             width: 90vw;
             max-width: 500px;
-            height: 120px;
+            height: 180px;
             overflow-y: auto;
             background: #111;
             border: 1px solid #444;
             margin-top: 10px;
-            padding: 5px;
-            font-size: 0.9em;
+            padding: 8px;
+            font-size: 1.05em;
+            line-height: 1.6;
             text-align: left;
         }
 
@@ -279,6 +280,7 @@
                 <span>O2: <span id="o2">50</span></span>
                 <span>📦: <span id="parts">0</span>/5</span>
                 <span>💣: <span id="ammo">5</span></span>
+                <span>🥩: <span id="meat">0</span>/3</span>
             </div>
 
             <h2>Mapa</h2>
@@ -363,7 +365,12 @@
                 rexRoar: "O T-Rex RUGIU! A manada está em fuga!",
                 rexAttackDino: "T-Rex ATACOU {target} em fúria!",
                 stampede: "Um dinossauro em pânico passa por você! -{dmg} HP.",
-                meatHarvest: 'Machete no cadáver: carne extraída! +15 HP.',
+                meatHarvest: 'Carne extraída do cadáver! +15 HP.',
+                meatRaw:     'Carne crua guardada. Aproxime-se de uma fogueira para cozinhar.',
+                meatCooked:  'Carne cozida na fogueira! Usar automaticamente quando HP < 100.',
+                meatEaten:   'Carne consumida: +20 HP.',
+                meatFull:    'HP cheio. Carne guardada para depois.',
+                meatMaxed:   'Já carrega 3 porções. Descarte ou consuma primeiro.',
                 taserBush:   'Faísca nos arbustos adjacentes! Vegetação em chamas!',
                 fireScared:  'Fogueira! Os dinos recuam com medo!',
                 fireOut:     'A fogueira se apagou.',
@@ -410,7 +417,12 @@
                 rexRoar: "The T-Rex ROARED! The herd is fleeing!",
                 rexAttackDino: "T-Rex ATTACKED {target} in a frenzy!",
                 stampede: "A panicked dinosaur runs past you! -{dmg} HP.",
-                meatHarvest: 'Machete on corpse: meat extracted! +15 HP.',
+                meatHarvest: 'Meat extracted from corpse! +15 HP.',
+                meatRaw:     'Raw meat stored. Get near a fire to cook it.',
+                meatCooked:  'Meat cooked at the fire! Auto-consumed when HP < 100.',
+                meatEaten:   'Meat consumed: +20 HP.',
+                meatFull:    'HP full. Meat saved for later.',
+                meatMaxed:   'Already carrying 3 portions. Drop or consume first.',
                 taserBush:   'Spark in vegetation! Bush caught fire.',
                 fireScared:  'Dinosaur fled from the fire!',
                 fireOut:     'Fire went out.',
@@ -418,7 +430,7 @@
             }
         };
 
-        let player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 8 };
+        let player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
         const weapons = ['Machete', 'Taser', 'Granada', 'Laser'];
         let laserAmmo = 5;      // tiros disponíveis
         let laserCooldown = 0;  // turnos até ganhar +1 tiro
@@ -940,6 +952,7 @@
             document.getElementById('o2').textContent = player.o2;
             document.getElementById('parts').textContent = player.parts;
             document.getElementById('ammo').textContent = player.ammo;
+            const meatEl = document.getElementById('meat'); if(meatEl) meatEl.textContent = player.meat;
         }
 
         function move(dx, dy) {
@@ -1000,6 +1013,22 @@
                     srParts.push(lang === 'pt' ? 'Oxigênio recarregado.' : 'Oxygen recharged.');
                     playSound(600, 'triangle', 0.5);
                 }
+                // Fogueira adjacente: cozinha carne crua e auto-consome se HP < 100
+                if(player.meat > 0) {
+                    const nearFire = fires.some(f => Math.abs(f.x - player.x) + Math.abs(f.y - player.y) <= 1);
+                    if(nearFire) {
+                        addToLog(i18n[lang].meatCooked); srParts.push(i18n[lang].meatCooked);
+                        playSound(440, 'triangle', 0.3, 0.4);
+                        // auto-consome enquanto tiver carne e HP < 100
+                        while(player.meat > 0 && player.hp < 100) {
+                            player.meat--;
+                            player.hp = Math.min(100, player.hp + 20);
+                            addToLog(i18n[lang].meatEaten); srParts.push(i18n[lang].meatEaten);
+                            playSound(600, 'sine', 0.3, 0.2);
+                        }
+                        if(player.hp >= 100) { addToLog(i18n[lang].meatFull); }
+                    }
+                }
 
                 // Alerta de HP/O2 crítico para leitor de tela
                 if(player.hp <= 20) srParts.push(lang === 'pt' ? `HP crítico: ${player.hp}.` : `Critical HP: ${player.hp}.`);
@@ -1017,6 +1046,8 @@
                     else if(map[ay][ax] === 'M') adjNames.push(lang === 'pt' ? 'máquina do tempo' : 'time machine');
                     else if(map[ay][ax] === '*') adjNames.push(lang === 'pt' ? 'O2' : 'O2 canister');
                     else if(map[ay][ax] === '#') adjNames.push(lang === 'pt' ? 'arbusto' : 'bush');
+                    else if(fires.some(f => f.x === ax && f.y === ay)) adjNames.push(lang === 'pt' ? 'fogueira' : 'fire');
+                    else if(corpses.some(co => co.x === ax && co.y === ay)) adjNames.push(lang === 'pt' ? 'cadáver' : 'corpse');
                 }
                 if(adjNames.length > 0) srParts.push((lang === 'pt' ? 'Adjacente: ' : 'Adjacent: ') + adjNames.join(', ') + '.');
 
@@ -1314,8 +1345,13 @@
                     const selfCorpseIdx = corpses.findIndex(c => c.x === player.x && c.y === player.y);
                     if(selfCorpseIdx !== -1) {
                         corpses.splice(selfCorpseIdx, 1);
-                        player.hp = Math.min(100, player.hp + 15);
-                        addToLog(i18n[lang].meatHarvest); srSay(i18n[lang].meatHarvest);
+                        if(player.meat < 3) {
+                            player.meat++;
+                            addToLog(i18n[lang].meatRaw); srSay(i18n[lang].meatRaw);
+                        } else {
+                            addToLog(i18n[lang].meatMaxed); srSay(i18n[lang].meatMaxed);
+                        }
+                        addToLog(i18n[lang].meatHarvest);
                         playSwordSlash(); updateStatus(); moveDinos(); draw(); return;
                     }
                     checkHit(player.x, player.y, 10); playSwordSlash();
@@ -1363,8 +1399,13 @@
                     const corpseIdx=corpses.findIndex(c=>c.x===nx&&c.y===ny);
                     if(corpseIdx!==-1){
                         corpses.splice(corpseIdx,1);
-                        player.hp = Math.min(100, player.hp + 15);
-                        addToLog(i18n[lang].meatHarvest); srSay(i18n[lang].meatHarvest);
+                        if(player.meat < 3) {
+                            player.meat++;
+                            addToLog(i18n[lang].meatRaw); srSay(i18n[lang].meatRaw);
+                        } else {
+                            addToLog(i18n[lang].meatMaxed); srSay(i18n[lang].meatMaxed);
+                        }
+                        addToLog(i18n[lang].meatHarvest);
                         playSound(150,'square',0.4,0.4); unlockCard('disturber');
                     }
                     if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSwordSlash();unlockCard('lumberjack');}
