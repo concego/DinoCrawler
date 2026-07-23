@@ -430,7 +430,7 @@
             }
         };
 
-        let player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
+        let player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
         const weapons = ['Machete', 'Taser', 'Granada', 'Laser'];
         let laserAmmo = 5;      // tiros disponíveis
         let laserCooldown = 0;  // turnos até ganhar +1 tiro
@@ -669,7 +669,7 @@
         }
 
         function startGame() {
-            player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 8 };
+            player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8 };
             killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
             stunDone = false;
             initMap();
@@ -823,7 +823,7 @@
                 do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
                 map[ry][rx] = 'P';
             }
-            for(let i=0; i<3; i++) {
+            for(let i=0; i<5; i++) {
                 let rx, ry;
                 do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
                 map[ry][rx] = '*';
@@ -1009,7 +1009,7 @@
                     }
                 }
                 if(map[player.y][player.x] === '*') {
-                    player.o2 += 30; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found;
+                    player.o2 = Math.min(100, player.o2 + 50); map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found;
                     srParts.push(lang === 'pt' ? 'Oxigênio recarregado.' : 'Oxygen recharged.');
                     playSound(600, 'triangle', 0.5);
                 }
@@ -1022,7 +1022,7 @@
                         // auto-consome enquanto tiver carne e HP < 100
                         while(player.meat > 0 && player.hp < 100) {
                             player.meat--;
-                            player.hp = Math.min(100, player.hp + 20);
+                            player.hp = Math.min(120, player.hp + 20);
                             addToLog(i18n[lang].meatEaten); srParts.push(i18n[lang].meatEaten);
                             playSound(600, 'sine', 0.3, 0.2);
                         }
@@ -1031,7 +1031,7 @@
                 }
 
                 // Alerta de HP/O2 crítico para leitor de tela
-                if(player.hp <= 20) srParts.push(lang === 'pt' ? `HP crítico: ${player.hp}.` : `Critical HP: ${player.hp}.`);
+                if(player.hp <= 30) srParts.push(lang === 'pt' ? `HP crítico: ${player.hp}.` : `Critical HP: ${player.hp}.`);
                 else if(player.o2 <= 10) srParts.push(lang === 'pt' ? `O2 crítico: ${player.o2}.` : `Critical O2: ${player.o2}.`);
 
                 // O que há nas células adjacentes (raio 1) para o leitor de tela
