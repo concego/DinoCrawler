@@ -258,7 +258,10 @@
                 fighting: "BRIGA! {a} e {b} disputam o cadáver!",
                 fightWin: "{winner} venceu a disputa. {loser} foi eliminado!",
                 attack: "ALERTA: Ataque de",
-                names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver' }
+                rexRoar: "O T-Rex RUGIU! A manada está em fuga!",
+                rexAttackDino: "T-Rex ATACOU {target} em fúria!",
+                stampede: "Um dinossauro em pânico passa por você! -{dmg} HP.",
+                names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver', 'F': 'Dinossauro em fuga' }
             },
             en: {
                 start: "Start Game",
@@ -288,7 +291,10 @@
                 fighting: "FIGHT! {a} and {b} are fighting over the corpse!",
                 fightWin: "{winner} won the fight. {loser} was eliminated!",
                 attack: "ALERT: Attack from",
-                names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse' }
+                rexRoar: "The T-Rex ROARED! The herd is fleeing!",
+                rexAttackDino: "T-Rex ATTACKED {target} in a frenzy!",
+                stampede: "A panicked dinosaur runs past you! -{dmg} HP.",
+                names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse', 'F': 'Fleeing Dinosaur' }
             }
         };
 
@@ -297,6 +303,7 @@
         let map = [];
         let dinos = [];
         let corpses = [];
+        let rexRoarTimer = 0; // turnos até o próximo rugido do T-Rex
         let audioCtx = null;
         let ambientNodes = null; // nós do som ambiente
 
@@ -460,7 +467,46 @@
             let corners = [[18, 18], [18, 0], [0, 18]];
             let pick = corners[Math.floor(Math.random() * corners.length)];
             dinos.push({x: pick[0], y: pick[1], type: 'T', hp: 120, eatingTurns: 0});
+            rexRoarTimer = 8 + Math.floor(Math.random() * 5); // primeiro rugido em 8~12 turnos
             draw();
+        }
+
+        function triggerRexRoar() {
+            addToLog(i18n[lang].rexRoar);
+            // Rugido grave longo
+            playSound(45, 'sawtooth', 1.2, 0.8);
+            setTimeout(() => playSound(38, 'sawtooth', 0.8, 0.6), 300);
+
+            // Spawna 2~3 dinos em fuga em bordas aleatórias
+            const count = 2 + Math.floor(Math.random() * 2);
+            for(let i = 0; i < count; i++) {
+                // Escolhe uma borda de entrada
+                const side = Math.floor(Math.random() * 4);
+                let sx, sy, dirX, dirY;
+                if(side === 0)      { sx = Math.floor(Math.random() * GRID_SIZE); sy = 0;  dirX = 0;  dirY = 1; }  // norte → sul
+                else if(side === 1) { sx = Math.floor(Math.random() * GRID_SIZE); sy = GRID_SIZE-1; dirX = 0; dirY = -1; } // sul → norte
+                else if(side === 2) { sx = 0; sy = Math.floor(Math.random() * GRID_SIZE); dirX = 1;  dirY = 0; }  // oeste → leste
+                else                { sx = GRID_SIZE-1; sy = Math.floor(Math.random() * GRID_SIZE); dirX = -1; dirY = 0; } // leste → oeste
+                dinos.push({ x: sx, y: sy, type: 'F', hp: 20, eatingTurns: 0, dirX, dirY });
+            }
+
+            // T-Rex ataca dinos adjacentes (raiva — ataca tudo)
+            const rex = dinos.find(d => d.type === 'T');
+            if(rex) {
+                const adjacent = dinos.filter(d => d !== rex && Math.abs(d.x - rex.x) + Math.abs(d.y - rex.y) <= 1);
+                adjacent.forEach(target => {
+                    const dmg = 40;
+                    target.hp -= dmg;
+                    addToLog(i18n[lang].rexAttackDino.replace('{target}', i18n[lang].names[target.type]));
+                    playSound(90, 'sawtooth', 0.5, 0.3);
+                    if(target.hp <= 0) {
+                        corpses.push({ x: target.x, y: target.y });
+                        dinos.splice(dinos.indexOf(target), 1);
+                    }
+                });
+            }
+
+            rexRoarTimer = 8 + Math.floor(Math.random() * 6); // próximo rugido em 8~13 turnos
         }
 
         function spawnNewDino() {
@@ -548,17 +594,57 @@
 
         function moveDinos() {
             const px = player.x; const py = player.y;
+
+            // Tick do rugido do T-Rex
+            if(dinos.some(d => d.type === 'T')) {
+                rexRoarTimer--;
+                if(rexRoarTimer <= 0) triggerRexRoar();
+            }
+
+            // Remove dinos em fuga que saíram do mapa
+            for(let i = dinos.length - 1; i >= 0; i--) {
+                const d = dinos[i];
+                if(d.type === 'F' && (d.x < 0 || d.x >= GRID_SIZE || d.y < 0 || d.y >= GRID_SIZE)) {
+                    dinos.splice(i, 1);
+                }
+            }
+
             dinos.forEach(d => {
                 if(d.stunned > 0) { d.stunned--; return; }
+
+                // Dino em fuga: corre em linha reta, ataca player apenas se passar pela célula
+                if(d.type === 'F') {
+                    d.x += d.dirX; d.y += d.dirY;
+                    if(d.x === px && d.y === py) {
+                        const dmg = 8;
+                        player.hp -= dmg;
+                        addToLog(i18n[lang].stampede.replace('{dmg}', dmg));
+                        playSound(200, 'sawtooth', 0.5, 0.3);
+                    }
+                    return;
+                }
+
                 if(d.eatingTurns > 0) {
                     d.eatingTurns--;
                     if(d.eatingTurns === 0) {
-                        // Terminou de comer — remove o cadáver sob ele
                         const eaten = corpses.findIndex(c => c.x === d.x && c.y === d.y);
                         if(eaten !== -1) corpses.splice(eaten, 1);
                     }
                     return;
                 }
+
+                // T-Rex ataca dinos adjacentes (V ou F) antes de perseguir player
+                if(d.type === 'T') {
+                    const prey = dinos.find(other => other !== d && Math.abs(other.x - d.x) + Math.abs(other.y - d.y) <= 1);
+                    if(prey) {
+                        const dmg = 40; prey.hp -= dmg;
+                        addToLog(i18n[lang].rexAttackDino.replace('{target}', i18n[lang].names[prey.type]));
+                        playSound(90, 'sawtooth', 0.5, 0.3);
+                        if(prey.hp <= 0) { corpses.push({ x: prey.x, y: prey.y }); dinos.splice(dinos.indexOf(prey), 1); }
+                        return;
+                    }
+                }
+
                 let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) <= 1 && Math.abs(c.y - d.y) <= 1);
                 if(corpseIdx !== -1) {
                     d.eatingTurns = d.type === 'T' ? 3 : 5; const corpse = corpses[corpseIdx]; d.x = corpse.x; d.y = corpse.y;
