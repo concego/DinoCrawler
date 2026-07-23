@@ -403,6 +403,10 @@
 
         // --- Galeria / Colecionáveis ---
         let unlockedCards = new Set();
+        try {
+            const saved = localStorage.getItem('dinoCrawlerCards');
+            if(saved) JSON.parse(saved).forEach(id => unlockedCards.add(id));
+        } catch(e) {}
         let killCount = { V: 0, T: 0, F: 0, total: 0 };
         let stunDone = false;
 
@@ -509,7 +513,10 @@
             ]
         };
 
-        function unlockCard(id) { unlockedCards.add(id); }
+        function unlockCard(id) {
+            unlockedCards.add(id);
+            try { localStorage.setItem('dinoCrawlerCards', JSON.stringify([...unlockedCards])); } catch(e) {}
+        }
 
         function renderCard(card, unlocked) {
             const l = lang || 'pt';
@@ -918,7 +925,14 @@
                         if(player.o2 <= 10) addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Countdown!' : 'Card unlocked: Countdown!'));
                         addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
                         stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
-                    } else { logMsg += " " + i18n[lang].machineMissing; playSound(523.25, 'sine', 0.5, 0.3); unlockCard('stubborn'); }
+                    } else {
+                        logMsg += " " + i18n[lang].machineMissing;
+                        playSound(523.25, 'sine', 0.5, 0.3);
+                        if(!unlockedCards.has('stubborn')) {
+                            unlockCard('stubborn');
+                            addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Teimoso!' : 'Card unlocked: Stubborn!'));
+                        }
+                    }
                 }
                 if(map[player.y][player.x] === '*') { 
                     player.o2 += 30; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found; 
