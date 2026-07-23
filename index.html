@@ -280,7 +280,8 @@
             </div>
 
             <h2>Mapa</h2>
-            <div id="game-container"></div>
+            <div id="game-container" aria-hidden="true"></div>
+            <div id="sr-announce" aria-live="assertive" aria-atomic="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"></div>
 
             <h2>Controles</h2>
             <div id="controls">
@@ -311,6 +312,7 @@
     <script>
         const container = document.getElementById('game-container');
         const log = document.getElementById('log');
+        const srAnnounce = document.getElementById('sr-announce');
         const GRID_SIZE = 20;
         
         let lang = 'pt';
@@ -927,30 +929,37 @@
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                 if(map[ny][nx] === '#') {
                     addToLog(i18n[lang].bushBlock);
+                    srSay(lang === 'pt' ? 'Bloqueado: arbusto.' : 'Blocked: bush.');
                     playSound(150, 'square', 0.2);
                     return;
                 }
                 player.x = nx; player.y = ny;
                 player.o2--;
                 let logMsg = `${player.x}, ${player.y}.`;
+                let srParts = [];
+
                 if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " O2!"; playSound(100, 'sawtooth'); }
                 // Feedback sonoro progressivo de O2 baixo
                 if(player.o2 <= 20 && player.o2 > 10) playO2Warning();
                 if(player.o2 <= 10 && player.o2 > 0) scheduleBreathing();
-                if(map[player.y][player.x] === 'P') { 
-                    player.parts++; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].partFound; 
+
+                if(map[player.y][player.x] === 'P') {
+                    player.parts++; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].partFound;
+                    srParts.push(lang === 'pt' ? `Peça coletada! ${player.parts} de 5.` : `Part collected! ${player.parts} of 5.`);
                     playSound(1200, 'sine', 0.4); if(player.parts === 5) spawnTRex();
                 }
-                if(map[player.y][player.x] === 'M') { 
+                if(map[player.y][player.x] === 'M') {
                     if(player.parts >= 5) {
                         unlockCard('escape');
                         if(player.o2 <= 10) unlockCard('countdown');
                         addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dr. Aris — A Fuga!' : 'Card unlocked: Dr. Aris — The Escape!'));
                         if(player.o2 <= 10) addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Countdown!' : 'Card unlocked: Countdown!'));
                         addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
+                        srSay(lang === 'pt' ? 'Vitória! Máquina ativada.' : 'Victory! Machine activated.');
                         stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
                     } else {
                         logMsg += " " + i18n[lang].machineMissing;
+                        srParts.push(lang === 'pt' ? `Máquina do tempo. Faltam ${5 - player.parts} peças.` : `Time machine. ${5 - player.parts} parts missing.`);
                         playSound(523.25, 'sine', 0.5, 0.3);
                         if(!unlockedCards.has('stubborn')) {
                             unlockCard('stubborn');
@@ -958,15 +967,45 @@
                         }
                     }
                 }
-                if(map[player.y][player.x] === '*') { 
-                    player.o2 += 30; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found; 
-                    playSound(600, 'triangle', 0.5); 
+                if(map[player.y][player.x] === '*') {
+                    player.o2 += 30; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found;
+                    srParts.push(lang === 'pt' ? 'Oxigênio recarregado.' : 'Oxygen recharged.');
+                    playSound(600, 'triangle', 0.5);
                 }
+
+                // Alerta de HP/O2 crítico para leitor de tela
+                if(player.hp <= 20) srParts.push(lang === 'pt' ? `HP crítico: ${player.hp}.` : `Critical HP: ${player.hp}.`);
+                else if(player.o2 <= 10) srParts.push(lang === 'pt' ? `O2 crítico: ${player.o2}.` : `Critical O2: ${player.o2}.`);
+
+                // O que há nas células adjacentes (raio 1) para o leitor de tela
+                const adjNames = [];
+                const dinoNames = lang === 'pt' ? i18n.pt.names : i18n.en.names;
+                for(const [adx, ady] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    const ax = player.x + adx; const ay = player.y + ady;
+                    if(ax < 0 || ax >= GRID_SIZE || ay < 0 || ay >= GRID_SIZE) continue;
+                    const adjDino = dinos.find(d => d.x === ax && d.y === ay);
+                    if(adjDino) adjNames.push(dinoNames[adjDino.type] || adjDino.type);
+                    else if(map[ay][ax] === 'P') adjNames.push(lang === 'pt' ? 'peça' : 'part');
+                    else if(map[ay][ax] === 'M') adjNames.push(lang === 'pt' ? 'máquina do tempo' : 'time machine');
+                    else if(map[ay][ax] === '*') adjNames.push(lang === 'pt' ? 'O2' : 'O2 canister');
+                    else if(map[ay][ax] === '#') adjNames.push(lang === 'pt' ? 'arbusto' : 'bush');
+                }
+                if(adjNames.length > 0) srParts.push((lang === 'pt' ? 'Adjacente: ' : 'Adjacent: ') + adjNames.join(', ') + '.');
+
+                const dirLabel = (function() {
+                    if(dx === 0 && dy === -1) return lang === 'pt' ? 'Norte' : 'North';
+                    if(dx === 0 && dy ===  1) return lang === 'pt' ? 'Sul'   : 'South';
+                    if(dx === -1 && dy === 0) return lang === 'pt' ? 'Oeste' : 'West';
+                    if(dx ===  1 && dy === 0) return lang === 'pt' ? 'Leste' : 'East';
+                    return '';
+                })();
+                srSay([dirLabel].concat(srParts).filter(Boolean).join('. '));
+
                 addToLog(logMsg);
                 playEnvironmentSonar();
                 moveDinos();
                 let spawnChance = 0.03 + (player.parts * 0.02);
-                if(Math.random() < spawnChance) spawnNewDino(); 
+                if(Math.random() < spawnChance) spawnNewDino();
                 draw();
             }
         }
@@ -997,7 +1036,7 @@
                     if(d.x === px && d.y === py) {
                         const dmg = d.type === 'A' ? 20 : d.type === '3' ? 15 : 8;
                         player.hp -= dmg;
-                        addToLog(i18n[lang].stampede.replace('{dmg}', dmg));
+                        addToLog(i18n[lang].stampede.replace('{dmg}', dmg)); srSay(i18n[lang].stampede.replace('{dmg}', dmg) + ' HP: ' + player.hp + '.');
                         playSound(200, 'sawtooth', 0.5, 0.3);
                         if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
                     }
@@ -1015,7 +1054,7 @@
                         player.x = Math.max(0, Math.min(GRID_SIZE-1, px + pushDx * 1));
                         player.y = Math.max(0, Math.min(GRID_SIZE-1, py + pushDy * 1));
                         player.hp -= 10;
-                        addToLog(i18n[lang].ankyloBounce);
+                        addToLog(i18n[lang].ankyloBounce); srSay(i18n[lang].ankyloBounce + ' HP: ' + player.hp + '.');
                         playSound(80, 'sawtooth', 0.5, 0.4);
                         if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
                     } else if(distA <= 6) {
@@ -1033,7 +1072,7 @@
                         const distT = Math.abs(px - d.x) + Math.abs(py - d.y);
                         if(distT <= 1) {
                             player.hp -= 20;
-                            addToLog(i18n[lang].triCharge);
+                            addToLog(i18n[lang].triCharge); srSay(i18n[lang].triCharge + ' HP: ' + player.hp + '.');
                             playSound(100, 'sawtooth', 0.6, 0.4);
                             d.provoked = false;
                             if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
@@ -1055,7 +1094,7 @@
                     const distW = Math.abs(px - d.x) + Math.abs(py - d.y);
                     if(distW <= 4) {
                         // Vocaliza e alerta dinos no raio 6
-                        addToLog(i18n[lang].paraVocal);
+                        addToLog(i18n[lang].paraVocal); srSay(i18n[lang].paraVocal);
                         playSound(440, 'sine', 0.4, 0.6);
                         dinos.forEach(other => {
                             if(other !== d && other.type !== 'W' && other.type !== 'T') {
@@ -1132,7 +1171,7 @@
                 d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
             });
             if(player.hp <= 0) {
-                addToLog(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
+                addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
                 stopAmbient(); setTimeout(() => showScreen('screen-menu'), 3000);
             }
 
@@ -1319,7 +1358,7 @@
                         if(weapons[player.weaponIdx] !== 'Taser' && d.stunned <= 0) {
                             const counterDmg = d.type === 'T' ? 25 : 5;
                             player.hp -= counterDmg;
-                            addToLog(lang === 'pt' ? `${dName} contra-ataca! -${counterDmg} HP` : `${dName} counter-attacks! -${counterDmg} HP`);
+                            addToLog(lang === 'pt' ? `${dName} contra-ataca! -${counterDmg} HP` : `${dName} counter-attacks! -${counterDmg} HP`); srSay(lang === 'pt' ? `${dName} contra-ataca! HP: ${player.hp}.` : `${dName} counter-attacks! HP: ${player.hp}.`);
                             playSound(220, 'sawtooth', 0.4, 0.2);
                             if(player.hp <= 0) { player.hp = 0; stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
                         }
@@ -1425,6 +1464,11 @@
             sonarItems.forEach((item, i) => {
                 setTimeout(() => playSound(item.freq, item.type, item.vol, 0.15, item.pan), i * 120);
             });
+        }
+
+        function srSay(msg) {
+            srAnnounce.textContent = '';
+            requestAnimationFrame(() => { srAnnounce.textContent = msg; });
         }
 
         function addToLog(msg) {
