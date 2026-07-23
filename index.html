@@ -186,6 +186,7 @@
 
         <!-- Tela de Jogo -->
         <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none;">
+            <h2>Status</h2>
             <div id="hud">
                 <span>HP: <span id="hp">100</span></span>
                 <span>O2: <span id="o2">50</span></span>
@@ -193,8 +194,10 @@
                 <span>💣: <span id="ammo">5</span></span>
             </div>
 
+            <h2>Mapa</h2>
             <div id="game-container"></div>
 
+            <h2>Controles</h2>
             <div id="controls">
                 <div id="d-pad">
                     <button id="btn-up" class="move-btn" onclick="move(0, -1)">NORTE (↑)</button>
@@ -208,12 +211,14 @@
                 </div>
             </div>
 
+            <h2>Armas</h2>
             <div id="weapon-selector">
                 <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
                 <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
                 <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
             </div>
 
+            <h2>Log</h2>
             <div id="log" aria-live="polite" aria-atomic="false"></div>
         </div>
     </div>
