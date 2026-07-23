@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dino Crawler</title>
+    <meta name="description" content="Roguelike ASCII acessível — GMTK Game Jam 2026. Colete 5 peças e escape do Cretáceo. Jogável por cegos e videntes em pé de igualdade.">
+    <meta name="author" content="Eu Concego Jogar (ECJ)">
+    <meta name="theme-color" content="#00ff00">
+    <meta property="og:title" content="Dino Crawler">
+    <meta property="og:description" content="Roguelike ASCII acessível — GMTK Game Jam 2026. Colete 5 peças e escape do Cretáceo.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://concego.github.io/DinoCrawler/">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon192.png">
     <style>
         body {
             background-color: #121212;
@@ -344,7 +353,7 @@
                 back: "Voltar",
                 changeLang: "Mudar Idioma",
                 howTo: "Como Jogar",
-                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Use as setas ou botões de direção. Cada passo consome Oxigênio (O2).<br><br><strong>Combate:</strong><br>1. Machete: Curto alcance, limpa arbustos (#).<br>2. Taser: Causa dano com chance de atordoar.<br>3. Granada: Explode em raio 2, munição limitada.<br><br><strong>Estratégia:</strong> Dinos (V, T) são atraídos por cadáveres (X). Use-os como isca! O SCAN (S) localiza itens próximos.",
+                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Setas / botões D-Pad. Cada passo consome O2. Bolsões (*) recargam +50 O2 permanentemente.<br><br><strong>Arsenal:</strong><br>1. Machete: Corpo a corpo, limpa arbustos (#).<br>2. Taser: Dano + chance de paralisar 3 turnos. Anquilossauro (A) é imune.<br>3. Granada: F + seta → arremessa 2 casas, explode em área 3×3. Munição: 8.<br>4. Laser: F + seta → linha reta até 8 casas, para no 1° dino. Recarrega sozinho.<br><br><strong>Sobrevivência:</strong><br>• Cadáveres (X): extraia carne crua com Machete.<br>• Fogueira (^): Taser em arbusto (#) cria fogo. Dinos fogem. Carne crua vira cozinhada (+20 HP).<br>• Carne: consumida automaticamente quando HP &lt; 100. Máximo: 3 porções.<br><br><strong>Atalhos (sem consumir turno):</strong><br>O = O2 | H = HP | P = Peças | C = Carne | S = SCAN | 1/2/3/4 = arma | F+seta = atacar<br><br><strong>Dinossauros:</strong> V Velociraptor · T T-Rex · A Anquilossauro · 3 Triceratops · W Parasaurolofo<br>Dinos são atraídos por cadáveres — use como isca!",
                 feedback: "Feedback",
                 loreText: "Ano 2150. A humanidade esgotou os recursos da Terra. Você é o Dr. Aris, um cientista enviado 65 milhões de anos ao passado para coletar peças de uma tecnologia experimental deixada por uma expedição perdida. Sua Máquina do Tempo quebrou no impacto. Encontre as 5 peças, recupere oxigênio e tome cuidado: você não está sozinho no Cretáceo.",
                 creditsText: "<p><strong>Equipe:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Enredo:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
@@ -396,7 +405,7 @@
                 back: "Back",
                 changeLang: "Change Language",
                 howTo: "How to Play",
-                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Use arrows or direction buttons. Each step consumes Oxygen (O2).<br><br><strong>Combat:</strong><br>1. Machete: Short range, clears bushes (#).<br>2. Taser: Deals damage with stun chance.<br>3. Grenade: Explodes in radius 2, limited ammo.<br><br><strong>Strategy:</strong> Dinos (V, T) are attracted to corpses (X). Use them as bait! SCAN (S) locates nearby items.",
+                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Arrows / D-Pad buttons. Each step consumes O2. Air pockets (*) recharge +50 O2 permanently.<br><br><strong>Arsenal:</strong><br>1. Machete: Melee, clears bushes (#).<br>2. Taser: Damage + stun chance for 3 turns. Ankylosaurus (A) is immune.<br>3. Grenade: F + arrow → throws 2 tiles, explodes in 3×3 area. Ammo: 8.<br>4. Laser: F + arrow → straight line up to 8 tiles, stops at 1st dino. Self-recharges.<br><br><strong>Survival:</strong><br>• Corpses (X): harvest raw meat with Machete.<br>• Fire (^): Taser a bush (#) to start a fire. Dinos flee. Raw meat becomes cooked (+20 HP).<br>• Meat: auto-consumed when HP &lt; 100. Max: 3 portions.<br><br><strong>Shortcuts (no turn cost):</strong><br>O = O2 | H = HP | P = Parts | C = Meat | S = SCAN | 1/2/3/4 = weapon | F+arrow = attack<br><br><strong>Dinosaurs:</strong> V Velociraptor · T T-Rex · A Ankylosaurus · 3 Triceratops · W Parasaurolophus<br>Dinos are attracted to corpses — use them as bait!",
                 feedback: "Feedback",
                 loreText: "Year 2150. Humanity has depleted Earth's resources. You are Dr. Aris, a scientist sent 65 million years into the past to collect pieces of experimental technology left by a lost expedition. Your Time Machine broke on impact. Find the 5 parts, recover oxygen, and beware: you are not alone in the Cretaceous.",
                 creditsText: "<p><strong>Team:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Plot:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
@@ -1788,6 +1797,14 @@
                 if (e.key === 'c' || e.key === 'C') { const m=lang==='pt'?`Carne: ${player.meat} de 3.`:`Meat: ${player.meat} of 3.`; addToLog(m); srSay(m); }
             }
         });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/DinoCrawler/sw.js')
+                    .catch(() => {});
+            });
+        }
     </script>
 </body>
 </html>
