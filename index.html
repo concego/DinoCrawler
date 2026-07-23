@@ -1082,11 +1082,16 @@
                     d.hp -= dmg;
                     const dName = i18n[lang].names[d.type];
                     if(weapons[player.weaponIdx] === 'Taser') {
-                        d.stunned = 3;
-                        playSound(1200, 'sine', 0.2, 0.5);
-                        addToLog(`Stun: ${dName}!`);
-                        // Conquista: 1º stun com Taser
-                        if(!stunDone) { stunDone = true; unlockCard('stun'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Choque Certeiro!' : 'Card unlocked: Precise Shock!')); }
+                        const stunChance = d.type === 'T' ? 0.35 : 0.65;
+                        if(Math.random() < stunChance) {
+                            d.stunned = 3;
+                            playSound(1200, 'sine', 0.2, 0.5);
+                            addToLog(lang === 'pt' ? `Stun: ${dName} paralisado!` : `Stun: ${dName} paralyzed!`);
+                            if(!stunDone) { stunDone = true; unlockCard('stun'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Choque Certeiro!' : 'Card unlocked: Precise Shock!')); }
+                        } else {
+                            playSound(400, 'sine', 0.15, 0.3);
+                            addToLog(lang === 'pt' ? `Taser: ${dName} resistiu ao choque!` : `Taser: ${dName} resisted the shock!`);
+                        }
                     }
                     if(d.hp <= 0) {
                         addToLog(`Kill: ${dName}!`); corpses.push({x: d.x, y: d.y});
