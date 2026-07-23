@@ -1,0 +1,16 @@
+{
+  "name": "Dino Crawler",
+  "short_name": "DinoCrawler",
+  "description": "Roguelike ASCII acessível — GMTK Game Jam 2026. Colete 5 peças e escape do Cretáceo.",
+  "start_url": "/DinoCrawler/",
+  "scope": "/DinoCrawler/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121212",
+  "theme_color": "#00ff00",
+  "lang": "pt-BR",
+  "icons": [
+    { "src": "icon192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
