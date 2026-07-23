@@ -1024,7 +1024,7 @@
                     }
                 }
                 if(map[player.y][player.x] === '*') {
-                    player.o2 = Math.min(100, player.o2 + 50); map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].o2Found;
+                    player.o2 = Math.min(100, player.o2 + 50); logMsg += " " + i18n[lang].o2Found;
                     srParts.push(lang === 'pt' ? 'Oxigênio recarregado.' : 'Oxygen recharged.');
                     playSound(600, 'triangle', 0.5);
                 }
