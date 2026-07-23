@@ -1004,8 +1004,8 @@
                 addToLog(logMsg);
                 playEnvironmentSonar();
                 moveDinos();
-                let spawnChance = 0.03 + (player.parts * 0.02);
-                if(Math.random() < spawnChance) spawnNewDino();
+                let spawnChance = 0.02 + (player.parts * 0.008);
+                if(dinos.length < 6 && Math.random() < spawnChance) spawnNewDino();
                 draw();
             }
         }
