@@ -75,6 +75,9 @@
         .player { color: #fff; text-shadow: 0 0 5px #fff; }
         .part { color: #ffcc00; }
         .air { color: #00ffff; }
+        .ankylosaur { color: #aa8844; }
+        .triceratops { color: #66cc66; }
+        .parasaur { color: #ff9966; }
         
         #hud, #controls {
             width: 90vw;
@@ -326,6 +329,10 @@
                 win: "MISSÃO CUMPRIDA! Você voltou para o futuro!",
                 gameOver: "VOCÊ VIROU COMIDA DE DINOSSAURO. FIM DE JOGO.",
                 roarRex: "UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou faminto!",
+                ankyloBounce: "Anquilossauro te golpeou com a cauda! Você foi arremessado!",
+                ankyloImune: "Taser ineficaz! A couraça do Anquilossauro bloqueou o choque!",
+                triCharge: "Triceratops CARREGOU! Impacto brutal!",
+                paraVocal: "VOCALIZAÇÃO DO PARASAUROLOFO! Os dinos próximos foram alertados!",
                 roarVelo: "Você ouve um rugido distante... um Velociraptor entrou na área!",
                 partFound: "Aqui: Peça coletada!",
                 machineMissing: "Aqui: Máquina do Tempo (faltam peças).",
@@ -343,7 +350,7 @@
                 rexRoar: "O T-Rex RUGIU! A manada está em fuga!",
                 rexAttackDino: "T-Rex ATACOU {target} em fúria!",
                 stampede: "Um dinossauro em pânico passa por você! -{dmg} HP.",
-                names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver', 'F': 'Dinossauro em fuga' }
+                names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver', 'F': 'Dinossauro em fuga', 'A': 'Anquilossauro', '3': 'Triceratops', 'W': 'Parasaurolofo' }
             },
             en: {
                 start: "Start Game",
@@ -359,6 +366,10 @@
                 win: "MISSION ACCOMPLISHED! You returned to the future!",
                 gameOver: "YOU BECAME DINOSAUR FOOD. GAME OVER.",
                 roarRex: "A DEAFENING ROAR ECHOES! The T-Rex woke up hungry!",
+                ankyloBounce: "Ankylosaurus tail-slammed you! You were knocked back!",
+                ankyloImune: "Taser ineffective! Ankylosaurus armor blocked the shock!",
+                triCharge: "Triceratops CHARGED! Brutal impact!",
+                paraVocal: "PARASAUROLOPHUS CALL! Nearby dinos were alerted!",
                 roarVelo: "You hear a distant roar... a Velociraptor has entered the area!",
                 partFound: "Here: Part collected!",
                 machineMissing: "Here: Time Machine (parts missing).",
@@ -376,7 +387,7 @@
                 rexRoar: "The T-Rex ROARED! The herd is fleeing!",
                 rexAttackDino: "T-Rex ATTACKED {target} in a frenzy!",
                 stampede: "A panicked dinosaur runs past you! -{dmg} HP.",
-                names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse', 'F': 'Fleeing Dinosaur' }
+                names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse', 'F': 'Fleeing Dinosaur', 'A': 'Ankylosaurus', '3': 'Triceratops', 'W': 'Parasaurolophus' }
             }
         };
 
@@ -746,12 +757,31 @@
                 do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
                 map[ry][rx] = '#';
             }
-            for(let i=0; i<5; i++) {
+            // Spawn inicial: Velociraptors
+            for(let i=0; i<4; i++) {
                 let rx = Math.floor(Math.random()*15)+4;
                 let ry = Math.floor(Math.random()*15)+4;
                 if(map[ry][rx] === '.') {
-                    dinos.push({x: rx, y: ry, type: 'V', hp: 30, eatingTurns: 0});
+                    dinos.push({x: rx, y: ry, type: 'V', hp: 30, stunned: 0, eatingTurns: 0});
                 }
+            }
+            // Spawn inicial: Anquilossauros (2)
+            for(let i=0; i<2; i++) {
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+                dinos.push({x: rx, y: ry, type: 'A', hp: 80, stunned: 0, eatingTurns: 0, slowTick: 0, charged: false});
+            }
+            // Spawn inicial: Triceratops (2)
+            for(let i=0; i<2; i++) {
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+                dinos.push({x: rx, y: ry, type: '3', hp: 60, stunned: 0, eatingTurns: 0, provoked: false});
+            }
+            // Spawn inicial: Parasaurolofos (2)
+            for(let i=0; i<2; i++) {
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+                dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
             }
             log.innerHTML = '';
             draw();
@@ -773,7 +803,7 @@
             playSound(45, 'sawtooth', 1.2, 0.8);
             setTimeout(() => playSound(38, 'sawtooth', 0.8, 0.6), 300);
 
-            // Spawna 2~3 dinos em fuga em bordas aleatórias
+            // Spawna 2~3 dinos em fuga em bordas aleatórias — pode ser qualquer herbívoro do vale
             const count = 2 + Math.floor(Math.random() * 2);
             for(let i = 0; i < count; i++) {
                 // Escolhe uma borda de entrada
@@ -783,7 +813,10 @@
                 else if(side === 1) { sx = Math.floor(Math.random() * GRID_SIZE); sy = GRID_SIZE-1; dirX = 0; dirY = -1; } // sul → norte
                 else if(side === 2) { sx = 0; sy = Math.floor(Math.random() * GRID_SIZE); dirX = 1;  dirY = 0; }  // oeste → leste
                 else                { sx = GRID_SIZE-1; sy = Math.floor(Math.random() * GRID_SIZE); dirX = -1; dirY = 0; } // leste → oeste
-                dinos.push({ x: sx, y: sy, type: 'F', hp: 20, eatingTurns: 0, dirX, dirY });
+                const fleeTypes = ['F', 'A', '3', 'W'];
+                const ftype = fleeTypes[Math.floor(Math.random() * fleeTypes.length)];
+                const fhp = ftype === 'A' ? 80 : ftype === '3' ? 60 : ftype === 'W' ? 25 : 20;
+                dinos.push({ x: sx, y: sy, type: ftype, hp: fhp, stunned: 0, eatingTurns: 0, dirX, dirY, fleeing: true, slowTick: 0, provoked: false });
             }
 
             // T-Rex ataca dinos adjacentes (raiva — ataca tudo)
@@ -835,7 +868,12 @@
                     } else {
                         const dino = dinos.find(d => d.x === x && d.y === y);
                         const corpse = corpses.find(c => c.x === x && c.y === y);
-                        if (dino) cell.textContent = dino.type;
+                        if (dino) {
+                            cell.textContent = dino.type;
+                            if (dino.type === 'A') cell.classList.add('ankylosaur');
+                            else if (dino.type === '3') cell.classList.add('triceratops');
+                            else if (dino.type === 'W') cell.classList.add('parasaur');
+                        }
                         else if (corpse) cell.textContent = 'X';
                         else {
                             cell.textContent = map[y][x];
@@ -907,7 +945,7 @@
             // Remove dinos em fuga que saíram do mapa
             for(let i = dinos.length - 1; i >= 0; i--) {
                 const d = dinos[i];
-                if(d.type === 'F' && (d.x < 0 || d.x >= GRID_SIZE || d.y < 0 || d.y >= GRID_SIZE)) {
+                if(d.fleeing && (d.x < 0 || d.x >= GRID_SIZE || d.y < 0 || d.y >= GRID_SIZE)) {
                     dinos.splice(i, 1);
                 }
             }
@@ -915,14 +953,82 @@
             dinos.forEach(d => {
                 if(d.stunned > 0) { d.stunned--; return; }
 
-                // Dino em fuga: corre em linha reta, ataca player apenas se passar pela célula
-                if(d.type === 'F') {
+                // Dino em fuga (qualquer tipo): corre em linha reta
+                if(d.fleeing) {
                     d.x += d.dirX; d.y += d.dirY;
                     if(d.x === px && d.y === py) {
-                        const dmg = 8;
+                        const dmg = d.type === 'A' ? 20 : d.type === '3' ? 15 : 8;
                         player.hp -= dmg;
                         addToLog(i18n[lang].stampede.replace('{dmg}', dmg));
                         playSound(200, 'sawtooth', 0.5, 0.3);
+                        if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].dead); setTimeout(() => showScreen('screen-menu'), 3000); }
+                    }
+                    return;
+                }
+
+                // --- Anquilossauro ---
+                if(d.type === 'A') {
+                    d.slowTick = (d.slowTick || 0) + 1;
+                    if(d.slowTick % 2 !== 0) return; // move 1 a cada 2 turnos
+                    const distA = Math.abs(px - d.x) + Math.abs(py - d.y);
+                    if(distA <= 1) {
+                        // Ataque de cauda: empurra o jogador 2 células
+                        const pushDx = Math.sign(px - d.x); const pushDy = Math.sign(py - d.y);
+                        player.x = Math.max(0, Math.min(GRID_SIZE-1, px + pushDx * 2));
+                        player.y = Math.max(0, Math.min(GRID_SIZE-1, py + pushDy * 2));
+                        player.hp -= 15;
+                        addToLog(i18n[lang].ankyloBounce);
+                        playSound(80, 'sawtooth', 0.5, 0.4);
+                        if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].dead); setTimeout(() => showScreen('screen-menu'), 3000); }
+                    } else if(distA <= 8) {
+                        let adx = px - d.x; let ady = py - d.y;
+                        if(Math.abs(adx) > Math.abs(ady)) d.x += adx > 0 ? 1 : -1; else d.y += ady > 0 ? 1 : -1;
+                    }
+                    d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
+                    return;
+                }
+
+                // --- Triceratops ---
+                if(d.type === '3') {
+                    if(d.provoked) {
+                        // Carrega direto em linha reta até o jogador
+                        const distT = Math.abs(px - d.x) + Math.abs(py - d.y);
+                        if(distT <= 1) {
+                            player.hp -= 30;
+                            addToLog(i18n[lang].triCharge);
+                            playSound(100, 'sawtooth', 0.6, 0.4);
+                            d.provoked = false;
+                            if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].dead); setTimeout(() => showScreen('screen-menu'), 3000); }
+                        } else {
+                            // Move 2 células em direção ao player
+                            for(let m = 0; m < 2; m++) {
+                                let tdx = px - d.x; let tdy = py - d.y;
+                                if(Math.abs(tdx) > Math.abs(tdy)) d.x += tdx > 0 ? 1 : -1; else d.y += tdy > 0 ? 1 : -1;
+                                d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
+                            }
+                        }
+                    }
+                    // Neutro: fica parado
+                    return;
+                }
+
+                // --- Parasaurolofo ---
+                if(d.type === 'W') {
+                    const distW = Math.abs(px - d.x) + Math.abs(py - d.y);
+                    if(distW <= 4) {
+                        // Vocaliza e alerta dinos no raio 6
+                        addToLog(i18n[lang].paraVocal);
+                        playSound(440, 'sine', 0.4, 0.6);
+                        dinos.forEach(other => {
+                            if(other !== d && other.type !== 'W' && other.type !== 'T') {
+                                const od = Math.abs(other.x - d.x) + Math.abs(other.y - d.y);
+                                if(od <= 6) other.chaseOverride = true;
+                            }
+                        });
+                        // Foge do jogador
+                        let wdx = d.x - px; let wdy = d.y - py;
+                        if(Math.abs(wdx) > Math.abs(wdy)) d.x += wdx > 0 ? 1 : -1; else d.y += wdy > 0 ? 1 : -1;
+                        d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
                     }
                     return;
                 }
@@ -956,6 +1062,7 @@
                 }
                 let dx = px - d.x; let dy = py - d.y; let dist = Math.abs(dx) + Math.abs(dy);
                 let chaseDist = d.type === 'T' ? 25 : 10;
+                if(d.chaseOverride) { chaseDist = 25; d.chaseOverride = false; }
                 if(dist <= chaseDist && dist > 0) {
                     const distBefore = dist;
                     let moves = d.type === 'T' ? 2 : 1;
@@ -1125,17 +1232,25 @@
                 if(d.x === x && d.y === y) {
                     d.hp -= dmg;
                     const dName = i18n[lang].names[d.type];
+                    // Triceratops fica provoked ao levar hit
+                    if(d.type === '3' && d.hp > 0) d.provoked = true;
                     if(weapons[player.weaponIdx] === 'Taser') {
                         if(d.type === 'T') unlockCard('gambler');
-                        const stunChance = d.type === 'T' ? 0.35 : 0.65;
-                        if(Math.random() < stunChance) {
-                            d.stunned = 3;
-                            playSound(1200, 'sine', 0.2, 0.5);
-                            addToLog(lang === 'pt' ? `Stun: ${dName} paralisado!` : `Stun: ${dName} paralyzed!`);
-                            if(!stunDone) { stunDone = true; unlockCard('stun'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Choque Certeiro!' : 'Card unlocked: Precise Shock!')); }
+                        if(d.type === 'A') {
+                            // Anquilossauro é imune ao Taser
+                            playSound(200, 'square', 0.3, 0.3);
+                            addToLog(i18n[lang].ankyloImune);
                         } else {
-                            playSound(400, 'sine', 0.15, 0.3);
-                            addToLog(lang === 'pt' ? `Taser: ${dName} resistiu ao choque!` : `Taser: ${dName} resisted the shock!`);
+                            const stunChance = d.type === 'T' ? 0.35 : d.type === '3' ? 0.65 : 0.65;
+                            if(Math.random() < stunChance) {
+                                d.stunned = 3;
+                                playSound(1200, 'sine', 0.2, 0.5);
+                                addToLog(lang === 'pt' ? `Stun: ${dName} paralisado!` : `Stun: ${dName} paralyzed!`);
+                                if(!stunDone) { stunDone = true; unlockCard('stun'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Choque Certeiro!' : 'Card unlocked: Precise Shock!')); }
+                            } else {
+                                playSound(400, 'sine', 0.15, 0.3);
+                                addToLog(lang === 'pt' ? `Taser: ${dName} resistiu ao choque!` : `Taser: ${dName} resisted the shock!`);
+                            }
                         }
                     }
                     if(d.hp <= 0) {
