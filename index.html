@@ -292,7 +292,7 @@
                     <button id="btn-down" class="move-btn" onclick="aimMode?fireDirectional(0,1):move(0,1)">SUL (↓)</button>
                 </div>
                 <div style="display:flex; flex-direction:column; gap:5px;">
-                    <button id="btn-scan" class="action-btn" onclick="scan()">SCAN</button>
+                    <button id="btn-scan" class="action-btn" onclick="scan()">SCAN 🔋(<span id="scan-ammo">3</span>)</button>
                     <button id="btn-fire" class="action-btn" onclick="aimMode?fireDirectional(0,0):enterAimMode()" style="background:#ff0000; color:#fff;">FIRE (F)</button>
                 </div>
             </div>
@@ -412,6 +412,8 @@
         const weapons = ['Machete', 'Taser', 'Granada', 'Laser'];
         let laserAmmo = 5;      // tiros disponíveis
         let laserCooldown = 0;  // turnos até ganhar +1 tiro
+        let scanAmmo = 3;       // usos de scan disponíveis
+        let scanCooldown = 0;   // turnos até ganhar +1 uso
         let aimMode = false;    // aguardando seta após F
         let map = [];
         let dinos = [];
@@ -818,7 +820,7 @@
             dinos.push({x: rx, y: ry, type: '3', hp: 60, stunned: 0, eatingTurns: 0, provoked: false});
             do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
             dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
-            laserAmmo = 5; laserCooldown = 0; aimMode = false;
+            laserAmmo = 5; laserCooldown = 0; aimMode = false; scanAmmo = 3; scanCooldown = 0;
             document.getElementById('laser-ammo').textContent = 5;
             log.innerHTML = '';
             draw();
@@ -942,6 +944,7 @@
                 if(player.ammo < 8) player.ammo++;
                 // Recarga do laser: +1 tiro a cada 2 turnos de cooldown
                 if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; document.getElementById('laser-ammo').textContent = laserAmmo; } }
+                if(scanCooldown > 0) { scanCooldown--; if(scanCooldown === 0 && scanAmmo < 3) { scanAmmo++; document.getElementById('scan-ammo').textContent = scanAmmo; } }
                 let logMsg = `${player.x}, ${player.y}.`;
                 let srParts = [];
 
@@ -1208,7 +1211,13 @@
         }
 
         function scan() {
-            moveDinos();
+            if(scanAmmo <= 0) {
+                const msg = lang === 'pt' ? 'Scanner sem bateria. Aguarde recarga.' : 'Scanner out of power. Wait for recharge.';
+                addToLog(msg); srSay(msg); return;
+            }
+            scanAmmo--;
+            scanCooldown = 2;
+            document.getElementById('scan-ammo').textContent = scanAmmo;
             let found = [];
             addToLog(`${i18n[lang].scanned} ${player.x}, ${player.y}...`);
             for(let y=0; y<GRID_SIZE; y++) {
