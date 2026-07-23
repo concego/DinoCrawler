@@ -140,6 +140,75 @@
             overflow-y: auto;
             margin-bottom: 20px;
         }
+
+        /* --- Galeria --- */
+        .gallery-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+        .tab-btn {
+            background: #222;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px 18px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1em;
+        }
+        .tab-btn.active-tab { background: #00ff00; color: #000; font-weight: bold; }
+
+        .gallery-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            max-height: 420px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .gallery-card {
+            border: 2px solid #00ff00;
+            background: #0a0a0a;
+            width: 140px;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 0.78em;
+            line-height: 1.4;
+        }
+        .gallery-card.locked {
+            border-color: #333;
+            color: #333;
+            filter: brightness(0.35);
+        }
+        .gallery-card .card-art {
+            font-size: 0.72em;
+            white-space: pre;
+            line-height: 1.2;
+            margin: 6px 0;
+            color: #00cc00;
+        }
+        .gallery-card.locked .card-art { color: #222; }
+        .gallery-card .card-name {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #ffcc00;
+            margin-bottom: 4px;
+        }
+        .gallery-card.locked .card-name { color: #333; }
+        .gallery-card .card-fact {
+            font-size: 0.75em;
+            color: #aaffaa;
+            margin-top: 6px;
+            text-align: left;
+        }
+        .gallery-card .card-badge {
+            font-size: 0.7em;
+            color: #00ffff;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -158,6 +227,7 @@
             <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
             <button class="menu-btn" onclick="showScreen('screen-how-to')" id="btn-how-to">Como Jogar</button>
             <button class="menu-btn" onclick="showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
+            <button class="menu-btn" onclick="openGallery()" id="btn-gallery">Galeria</button>
             <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
             <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
         </div>
@@ -182,6 +252,18 @@
             <div id="credits-content" class="lore-text">
             </div>
             <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-credits-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Galeria -->
+        <div id="screen-gallery" class="screen">
+            <h1 id="gallery-title">Galeria</h1>
+            <div class="gallery-tabs">
+                <button class="tab-btn active-tab" id="tab-bestiary" onclick="switchTab('bestiary')">Bestiário</button>
+                <button class="tab-btn" id="tab-achievements" onclick="switchTab('achievements')">Conquistas</button>
+            </div>
+            <div id="gallery-bestiary" class="gallery-grid"></div>
+            <div id="gallery-achievements" class="gallery-grid" style="display:none;"></div>
+            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-gallery-back">Voltar</button>
         </div>
 
         <!-- Tela de Jogo -->
@@ -308,6 +390,124 @@
         let ambientNodes = null; // nós do som ambiente
         let breathingTimeout = null; // handle do loop de respiração ofegante
 
+        // --- Galeria / Colecionáveis ---
+        let unlockedCards = new Set();
+        let killCount = { V: 0, T: 0, F: 0, total: 0 };
+        let stunDone = false;
+
+        const CARDS = {
+            bestiary: [
+                {
+                    id: 'velociraptor',
+                    name: { pt: 'Velociraptor', en: 'Velociraptor' },
+                    art: `  __\n /  \\>\n( o  )\n \\__/|\n  | |\\\n  | | \\`,
+                    altText: { pt: 'Velociraptor em postura de ataque, com garra traseira erguida e boca aberta', en: 'Velociraptor in attack posture, rear claw raised and mouth open' },
+                    fact: { pt: 'O Velociraptor real tinha o tamanho de um peru — e era coberto de penas. O que Hollywood mostrou era, na verdade, um Deinonychus.', en: 'The real Velociraptor was turkey-sized — and feathered. What Hollywood showed was actually a Deinonychus.' },
+                    badge: { pt: '✦ Desbloqueado: 1° Kill', en: '✦ Unlocked: 1st Kill' }
+                },
+                {
+                    id: 'trex',
+                    name: { pt: 'Tiranossauro Rex', en: 'Tyrannosaurus Rex' },
+                    art: `  ___\n /O O\\\n|  ^  |\n \\___/\n  | |\n _| |_`,
+                    altText: { pt: 'T-Rex visto de frente, cabeça enorme e braços atrofiados', en: 'T-Rex seen from the front, huge head and tiny arms' },
+                    fact: { pt: 'A visão do T-Rex era mais aguçada do que a de uma águia. Ele não caçava pelo movimento — ele te viu antes de você perceber que ele existia.', en: "T-Rex vision was sharper than an eagle's. It didn't hunt by movement — it saw you before you knew it existed." },
+                    badge: { pt: '✦ Desbloqueado: Rex Abatido', en: '✦ Unlocked: Rex Slain' }
+                },
+                {
+                    id: 'herd',
+                    name: { pt: 'Dino de Manada', en: 'Herd Dinosaur' },
+                    art: `->-\\\n   /O\\\n  ( - )\n ->/ \\->\n  |   |`,
+                    altText: { pt: 'Dinossauro de manada em corrida, corpo inclinado para frente em alta velocidade', en: 'Herd dinosaur running, body leaning forward at full speed' },
+                    fact: { pt: 'Fósseis de Tenontosaurus cercado por vários Deinonychus sugerem que caça coordenada em grupo era real — e letal.', en: 'Fossils of Tenontosaurus surrounded by multiple Deinonychus suggest coordinated group hunting was real — and lethal.' },
+                    badge: { pt: '✦ Desbloqueado: 1° Kill de Manada', en: '✦ Unlocked: 1st Herd Kill' }
+                }
+            ],
+            achievements: [
+                {
+                    id: 'stun',
+                    name: { pt: 'Choque Certeiro', en: 'Precise Shock' },
+                    art: `  /|\\\n / | \\\n/~~*~~\\\n   |\n  /|\\`,
+                    altText: { pt: 'Taser faiscando com arco elétrico ao centro', en: 'Taser sparking with electric arc at center' },
+                    fact: { pt: 'O Taser cria um campo elétrico que interrompe os sinais nervosos musculares. Num dino de 500kg, isso exige coragem — ou loucura.', en: 'A Taser creates an electric field disrupting muscle nerve signals. On a 500kg dino, that takes courage — or madness.' },
+                    badge: { pt: '✦ Desbloqueado: 1° Stun com Taser', en: '✦ Unlocked: 1st Taser Stun' }
+                },
+                {
+                    id: 'exterminator',
+                    name: { pt: 'Exterminador', en: 'Exterminator' },
+                    art: `X   X\n X X\n  X\n X X\nX   X`,
+                    altText: { pt: 'Pilha de ossos cruzados representando múltiplos abates', en: 'Crossed bones pile representing multiple kills' },
+                    fact: { pt: 'Velociraptor caçava em grupo. Matar 5 numa mesma expedição significa que você quebrou a hierarquia da matilha. O restante vai lembrar.', en: 'Velociraptor hunted in packs. Killing 5 in one run means you broke the pack hierarchy. The rest will remember.' },
+                    badge: { pt: '✦ Desbloqueado: 5 Velos Abatidos', en: '✦ Unlocked: 5 Velos Killed' }
+                },
+                {
+                    id: 'apex',
+                    name: { pt: 'Apex Hunter', en: 'Apex Hunter' },
+                    art: `  /\\\n /XX\\\n/ __ \\\n|    |\n \\  /`,
+                    altText: { pt: 'Caveira de dinossauro sobre fundo escuro, símbolo de predador máximo', en: 'Dinosaur skull on dark background, symbol of apex predator' },
+                    fact: { pt: 'No Cretáceo, nenhum humano deveria estar no topo da cadeia alimentar. Você mudou isso.', en: 'In the Cretaceous, no human should be at the top of the food chain. You changed that.' },
+                    badge: { pt: '✦ Desbloqueado: 10 Kills na Run', en: '✦ Unlocked: 10 Kills in Run' }
+                },
+                {
+                    id: 'escape',
+                    name: { pt: 'Dr. Aris: A Fuga', en: 'Dr. Aris: The Escape' },
+                    art: `[Dr.Aris]\n  (o_o)\n  /|\\\n  / \\\n~MAQUINA~`,
+                    altText: { pt: 'Dr. Aris de frente para a Máquina do Tempo, prestes a escapar do Cretáceo', en: 'Dr. Aris facing the Time Machine, about to escape the Cretaceous' },
+                    fact: { pt: '"Eu sobrevivi ao Cretáceo com uma mochila, um machete e muito oxigênio. E prometo que nunca mais vou reclamar do trânsito." — Dr. Aris', en: '"I survived the Cretaceous with a backpack, a machete, and a lot of oxygen. I promise I\'ll never complain about traffic again." — Dr. Aris' },
+                    badge: { pt: '✦ Desbloqueado: Escapou!', en: '✦ Unlocked: Escaped!' }
+                }
+            ]
+        };
+
+        function unlockCard(id) { unlockedCards.add(id); }
+
+        function renderCard(card, unlocked) {
+            const l = lang || 'pt';
+            const div = document.createElement('div');
+            div.className = 'gallery-card' + (unlocked ? '' : ' locked');
+            const artLines = card.art.replace(/\\n/g, '\n');
+            if(unlocked) {
+                div.setAttribute('aria-label', card.name[l] + '. ' + card.altText[l] + '. ' + card.fact[l]);
+                div.innerHTML =
+                    '<div class="card-name">' + card.name[l] + '</div>' +
+                    '<pre class="card-art" aria-hidden="true">' + artLines + '</pre>' +
+                    '<div class="card-fact">' + card.fact[l] + '</div>' +
+                    '<div class="card-badge">' + card.badge[l] + '</div>';
+            } else {
+                div.setAttribute('aria-label', 'Card bloqueado');
+                div.innerHTML =
+                    '<div class="card-name">???</div>' +
+                    '<pre class="card-art" aria-hidden="true">  ???\n\n  ???\n\n  ???</pre>' +
+                    '<div class="card-fact">???</div>';
+            }
+            return div;
+        }
+
+        function openGallery() { renderGalleryTab('bestiary'); switchTab('bestiary'); showScreen('screen-gallery'); }
+
+        function switchTab(tab) {
+            document.getElementById('gallery-bestiary').style.display = tab === 'bestiary' ? 'flex' : 'none';
+            document.getElementById('gallery-achievements').style.display = tab === 'achievements' ? 'flex' : 'none';
+            document.getElementById('tab-bestiary').classList.toggle('active-tab', tab === 'bestiary');
+            document.getElementById('tab-achievements').classList.toggle('active-tab', tab === 'achievements');
+            renderGalleryTab(tab);
+        }
+
+        function renderGalleryTab(tab) {
+            const container = document.getElementById('gallery-' + tab);
+            container.innerHTML = '';
+            CARDS[tab].forEach(card => container.appendChild(renderCard(card, unlockedCards.has(card.id))));
+        }
+
+        function updateGalleryLang() {
+            const l = lang || 'pt';
+            const t = { pt: { gallery: 'Galeria', back: 'Voltar', title: 'Galeria', best: 'Bestiário', ach: 'Conquistas' }, en: { gallery: 'Gallery', back: 'Back', title: 'Gallery', best: 'Bestiary', ach: 'Achievements' } };
+            document.getElementById('btn-gallery').textContent = t[l].gallery;
+            document.getElementById('btn-gallery-back').textContent = t[l].back;
+            document.getElementById('gallery-title').textContent = t[l].title;
+            document.getElementById('tab-bestiary').textContent = t[l].best;
+            document.getElementById('tab-achievements').textContent = t[l].ach;
+        }
+
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
             document.getElementById(id).classList.add('active-screen');
@@ -337,12 +537,14 @@
             document.getElementById('btn-down').textContent = lang === 'pt' ? 'SUL (↓)' : 'SOUTH (↓)';
             document.getElementById('btn-left').textContent = lang === 'pt' ? 'OESTE (←)' : 'WEST (←)';
             document.getElementById('btn-right').textContent = lang === 'pt' ? 'LESTE (→)' : 'EAST (→)';
-            
+            updateGalleryLang();
             showScreen('screen-menu');
         }
 
         function startGame() {
             player = { x: 1, y: 1, hp: 100, o2: 80, parts: 0, weaponIdx: 0, ammo: 5 };
+            killCount = { V: 0, T: 0, F: 0, total: 0 };
+            stunDone = false;
             initMap();
             showScreen('screen-game');
             startAmbient();
@@ -632,6 +834,8 @@
                 }
                 if(map[player.y][player.x] === 'M') { 
                     if(player.parts >= 5) {
+                        unlockCard('escape');
+                        addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dr. Aris — A Fuga!' : 'Card unlocked: Dr. Aris — The Escape!'));
                         addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
                         stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
                     } else { logMsg += " " + i18n[lang].machineMissing; playSound(523.25, 'sine', 0.5, 0.3); }
@@ -881,9 +1085,21 @@
                         d.stunned = 3;
                         playSound(1200, 'sine', 0.2, 0.5);
                         addToLog(`Stun: ${dName}!`);
+                        // Conquista: 1º stun com Taser
+                        if(!stunDone) { stunDone = true; unlockCard('stun'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Choque Certeiro!' : 'Card unlocked: Precise Shock!')); }
                     }
                     if(d.hp <= 0) {
-                        addToLog(`Kill: ${dName}!`); corpses.push({x: d.x, y: d.y}); dinos.splice(i, 1);
+                        addToLog(`Kill: ${dName}!`); corpses.push({x: d.x, y: d.y});
+                        // Contagem de kills para galeria
+                        const dtype = d.type;
+                        killCount[dtype] = (killCount[dtype] || 0) + 1;
+                        killCount.total++;
+                        if(dtype === 'V' && killCount.V === 1) { unlockCard('velociraptor'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Velociraptor!' : 'Card unlocked: Velociraptor!')); }
+                        if(dtype === 'T') { unlockCard('trex'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: T-Rex!' : 'Card unlocked: T-Rex!')); }
+                        if(dtype === 'F' && killCount.F === 1) { unlockCard('herd'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dino de Manada!' : 'Card unlocked: Herd Dinosaur!')); }
+                        if(killCount.V >= 5) { unlockCard('exterminator'); }
+                        if(killCount.total >= 10) { unlockCard('apex'); }
+                        dinos.splice(i, 1);
                     } else {
                         addToLog(`Hit: ${dName}! (HP: ${d.hp})`);
                         if(!(weapons[player.weaponIdx] === 'Taser')) {
