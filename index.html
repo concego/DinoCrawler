@@ -75,6 +75,8 @@
         .player { color: #fff; text-shadow: 0 0 5px #fff; }
         .part { color: #ffcc00; }
         .air { color: #00ffff; }
+        .fire-cell { color: #ff6600; animation: flicker 0.6s infinite alternate; }
+        @keyframes flicker { from { color: #ff6600; } to { color: #ffcc00; } }
         .ankylosaur { color: #aa8844; }
         .triceratops { color: #66cc66; }
         .parasaur { color: #ff9966; }
@@ -362,7 +364,9 @@
                 rexAttackDino: "T-Rex ATACOU {target} em fúria!",
                 stampede: "Um dinossauro em pânico passa por você! -{dmg} HP.",
                 meatHarvest: 'Machete no cadáver: carne extraída! +15 HP.',
-                taserBush:   'Faísca na vegetação! Arbusto queimado.',
+                taserBush:   'Faísca nos arbustos adjacentes! Vegetação em chamas!',
+                fireScared:  'Fogueira! Os dinos recuam com medo!',
+                fireOut:     'A fogueira se apagou.',
                 names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver', 'F': 'Dinossauro em fuga', 'A': 'Anquilossauro', '3': 'Triceratops', 'W': 'Parasaurolofo' }
             },
             en: {
@@ -407,7 +411,9 @@
                 rexAttackDino: "T-Rex ATTACKED {target} in a frenzy!",
                 stampede: "A panicked dinosaur runs past you! -{dmg} HP.",
                 meatHarvest: 'Machete on corpse: meat extracted! +15 HP.',
-                taserBush:   'Spark in vegetation! Bush burned.',
+                taserBush:   'Spark in vegetation! Bush caught fire.',
+                fireScared:  'Dinosaur fled from the fire!',
+                fireOut:     'Fire went out.',
                 names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse', 'F': 'Fleeing Dinosaur', 'A': 'Ankylosaurus', '3': 'Triceratops', 'W': 'Parasaurolophus' }
             }
         };
@@ -422,6 +428,7 @@
         let map = [];
         let dinos = [];
         let corpses = [];
+        let fires = [];  // {x, y, turns} — fogueiras ativas
         let rexRoarTimer = 0; // turnos até o próximo rugido do T-Rex
         let audioCtx = null;
         let ambientNodes = null; // nós do som ambiente
@@ -824,7 +831,7 @@
             dinos.push({x: rx, y: ry, type: '3', hp: 60, stunned: 0, eatingTurns: 0, provoked: false});
             do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
             dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
-            laserAmmo = 5; laserCooldown = 0; aimMode = false; scanAmmo = 3; scanCooldown = 0;
+            laserAmmo = 5; laserCooldown = 0; aimMode = false; scanAmmo = 3; scanCooldown = 0; fires = [];
             document.getElementById('laser-ammo').textContent = 5;
             log.innerHTML = '';
             draw();
@@ -917,6 +924,7 @@
                             else if (dino.type === '3') cell.classList.add('triceratops');
                             else if (dino.type === 'W') cell.classList.add('parasaur');
                         }
+                        else if (fires.some(f=>f.x===x&&f.y===y)) { cell.textContent='~'; cell.classList.add('fire'); }
                         else if (corpse) cell.textContent = 'X';
                         else {
                             cell.textContent = map[y][x];
@@ -949,6 +957,12 @@
                 // Recarga do laser: +1 tiro a cada 2 turnos de cooldown
                 if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; document.getElementById('laser-ammo').textContent = laserAmmo; } }
                 if(scanCooldown > 0) { scanCooldown--; if(scanCooldown === 0 && scanAmmo < 3) { scanAmmo++; document.getElementById('scan-ammo').textContent = scanAmmo; } }
+                // Fogueiras: decrementar e apagar
+                fires = fires.filter(f => {
+                    f.turns--;
+                    if(f.turns <= 0){ addToLog(i18n[lang].fireOut); srSay(i18n[lang].fireOut); return false; }
+                    return true;
+                });
                 let logMsg = `${player.x}, ${player.y}.`;
                 let srParts = [];
 
@@ -1151,6 +1165,23 @@
                     addToLog(`${i18n[lang].names[d.type]} ${i18n[lang].eating}`);
                     playSound(100, 'square', 0.8, 0.3); return;
                 }
+                // Foge de fogueira adjacente
+                const nearFire = fires.some(f => Math.abs(f.x-d.x)<=2 && Math.abs(f.y-d.y)<=2);
+                if(nearFire) {
+                    addToLog(i18n[lang].fireScares); srSay(i18n[lang].fireScares);
+                    // Afasta do fogo: move na direção oposta
+                    const nearestFire = fires.reduce((a,b)=>{
+                        const da=Math.abs(a.x-d.x)+Math.abs(a.y-d.y);
+                        const db=Math.abs(b.x-d.x)+Math.abs(b.y-d.y);
+                        return da<db?a:b;
+                    });
+                    const fx=d.x-nearestFire.x, fy=d.y-nearestFire.y;
+                    const nx2=d.x+(fx!==0?Math.sign(fx):0), ny2=d.y+(fy!==0?Math.sign(fy):0);
+                    if(nx2>=0&&nx2<GRID_SIZE&&ny2>=0&&ny2<GRID_SIZE&&map[ny2][nx2]!=='#'&&!dinos.some(o=>o!==d&&o.x===nx2&&o.y===ny2)){
+                        d.x=nx2; d.y=ny2;
+                    }
+                    return;
+                }
                 let dx = px - d.x; let dy = py - d.y; let dist = Math.abs(dx) + Math.abs(dy);
                 let chaseDist = d.type === 'T' ? 25 : 10;
                 if(d.chaseOverride) { chaseDist = 25; d.chaseOverride = false; }
@@ -1289,7 +1320,19 @@
                     }
                     checkHit(player.x, player.y, 10); playSwordSlash();
                 } else if(weapon === 'Taser') {
-                    checkHit(player.x, player.y, 15); playTaserZap();
+                    checkHit(player.x, player.y, 15);
+                    // Queima arbustos adjacentes
+                    let burnedBush = false;
+                    [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}].forEach(dir=>{
+                        const bx=player.x+dir.x, by=player.y+dir.y;
+                        if(bx>=0&&bx<GRID_SIZE&&by>=0&&by<GRID_SIZE&&map[by][bx]==='#'){
+                            map[by][bx]='.';
+                            fires.push({x:bx, y:by, turns:4});
+                            burnedBush = true;
+                        }
+                    });
+                    if(burnedBush){ addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush); }
+                    playTaserZap();
                 } else if(weapon === 'Granada') {
                     if(player.ammo <= 0) { addToLog(i18n[lang].noAmmo); srSay(i18n[lang].noAmmo); return; }
                     player.ammo--;
@@ -1329,14 +1372,15 @@
                 }
                 playSwordSlash();
             } else if(weapon === 'Taser') {
-                // Arbusto à frente → faísca queima o arbusto
+                // Taser com direção: só queima arbusto adjacente naquela direção
                 const tnx=player.x+dx, tny=player.y+dy;
                 if(tnx>=0&&tnx<GRID_SIZE&&tny>=0&&tny<GRID_SIZE&&map[tny][tnx]==='#') {
                     map[tny][tnx]='.';
+                    fires.push({x:tnx, y:tny, turns:4});
                     addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush);
                     playTaserZap(); moveDinos(); draw(); return;
                 }
-                // Taser: só mesma célula (F+F); F+seta sem arbusto não tem efeito
+                // Sem arbusto na direção: apenas corpo a corpo
                 addToLog(lang==='pt'?'Taser: apenas corpo a corpo (F+F).':'Taser: melee only (F+F).');
                 srSay(lang==='pt'?'Taser: apenas corpo a corpo.':'Taser: melee only.');
                 return;
