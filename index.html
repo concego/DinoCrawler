@@ -1249,6 +1249,7 @@
             document.querySelectorAll('.weapon-btn').forEach((b, i) => {
                 b.classList.toggle('active-weapon', i === idx);
             });
+            srSay(lang === 'pt' ? `Arma: ${weapons[idx]}.` : `Weapon: ${weapons[idx]}.`);
             playSound(400, 'sine', 0.2);
         }
 
@@ -1266,12 +1267,14 @@
                         if (corpseIdx !== -1) {
                             corpses.splice(corpseIdx, 1);
                             addToLog(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
+                            srSay(lang === 'pt' ? "Cadáver removido!" : "Corpse cleared!");
                             playSound(150, 'square', 0.4, 0.4);
                             unlockCard('disturber');
                         }
                         if(cell === '#') {
                             map[ny][nx] = '.';
                             addToLog(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
+                            srSay(lang === 'pt' ? "Arbusto removido!" : "Bush cleared!");
                             playSwordSlash();
                             unlockCard('lumberjack');
                         }
@@ -1298,6 +1301,7 @@
                     playSound(80, 'sawtooth', 0.5, 0.8);
                 } else {
                     addToLog(i18n[lang].noAmmo);
+                    srSay(i18n[lang].noAmmo);
                     return;
                 }
             }
@@ -1320,21 +1324,24 @@
                             // Anquilossauro é imune ao Taser
                             playSound(200, 'square', 0.3, 0.3);
                             addToLog(i18n[lang].ankyloImune);
+                            srSay(i18n[lang].ankyloImune);
                         } else {
                             const stunChance = d.type === 'T' ? 0.35 : d.type === '3' ? 0.65 : 0.65;
                             if(Math.random() < stunChance) {
                                 d.stunned = 3;
                                 playSound(1200, 'sine', 0.2, 0.5);
                                 addToLog(lang === 'pt' ? `Stun: ${dName} paralisado!` : `Stun: ${dName} paralyzed!`);
+                                srSay(lang === 'pt' ? `Stun: ${dName} paralisado!` : `Stun: ${dName} paralyzed!`);
                                 if(!stunDone) { stunDone = true; unlockCard('stun'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Choque Certeiro!' : 'Card unlocked: Precise Shock!')); }
                             } else {
                                 playSound(400, 'sine', 0.15, 0.3);
                                 addToLog(lang === 'pt' ? `Taser: ${dName} resistiu ao choque!` : `Taser: ${dName} resisted the shock!`);
+                                srSay(lang === 'pt' ? `Taser: ${dName} resistiu ao choque!` : `Taser: ${dName} resisted the shock!`);
                             }
                         }
                     }
                     if(d.hp <= 0) {
-                        addToLog(`Kill: ${dName}!`); corpses.push({x: d.x, y: d.y});
+                        addToLog(`Kill: ${dName}!`); srSay(`Kill: ${dName}!`); corpses.push({x: d.x, y: d.y});
                         // Contagem de kills para galeria
                         const dtype = d.type;
                         killCount[dtype] = (killCount[dtype] || 0) + 1;
@@ -1352,6 +1359,7 @@
                         dinos.splice(i, 1);
                     } else {
                         addToLog(`Hit: ${dName}! (HP: ${d.hp})`);
+                        srSay(lang === 'pt' ? `Acerto: ${dName}! HP restante: ${d.hp}.` : `Hit: ${dName}! Remaining HP: ${d.hp}.`);
                         if(!(weapons[player.weaponIdx] === 'Taser')) {
                             let rdx = player.x - d.x; let rdy = player.y - d.y;
                             if(Math.abs(rdx) > Math.abs(rdy)) d.x += rdx > 0 ? 1 : -1; else d.y += rdy > 0 ? 1 : -1;
@@ -1363,7 +1371,7 @@
                             player.hp -= counterDmg;
                             addToLog(lang === 'pt' ? `${dName} contra-ataca! -${counterDmg} HP` : `${dName} counter-attacks! -${counterDmg} HP`); srSay(lang === 'pt' ? `${dName} contra-ataca! HP: ${player.hp}.` : `${dName} counter-attacks! HP: ${player.hp}.`);
                             playSound(220, 'sawtooth', 0.4, 0.2);
-                            if(player.hp <= 0) { player.hp = 0; stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                            if(player.hp <= 0) { player.hp = 0; stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
                         }
                     }
                     hit = true;
