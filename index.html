@@ -973,7 +973,7 @@
                 // Fogueiras: decrementar e apagar
                 fires = fires.filter(f => {
                     f.turns--;
-                    if(f.turns <= 0){ addToLog(i18n[lang].fireOut); srSay(i18n[lang].fireOut); return false; }
+                    if(f.turns <= 0){ addToLog(i18n[lang].fireOut); srSay(i18n[lang].fireOut); playFireOut(); return false; }
                     return true;
                 });
                 let logMsg = `${player.x}, ${player.y}.`;
@@ -1364,6 +1364,7 @@
                         if(bx>=0&&bx<GRID_SIZE&&by>=0&&by<GRID_SIZE&&map[by][bx]==='#'){
                             map[by][bx]='.';
                             fires.push({x:bx, y:by, turns:4});
+                            playFireCrackle();
                             burnedBush = true;
                         }
                     });
@@ -1383,9 +1384,8 @@
                     if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
                     laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
                     const hit=checkHit(player.x,player.y,50);
-                    if(hit){addToLog(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');}
-                    else{addToLog(i18n[lang].laserMiss);srSay(i18n[lang].laserMiss);}
-                    playLaserShot();
+                    if(hit){addToLog(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');playLaserShot();setTimeout(playLaserImpact,180);}
+                    else{addToLog(i18n[lang].laserMiss);srSay(i18n[lang].laserMiss);playLaserShot();}
                 }
                 moveDinos(); draw(); return;
             }
@@ -1419,7 +1419,7 @@
                     map[tny][tnx]='.';
                     fires.push({x:tnx, y:tny, turns:4});
                     addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush);
-                    playTaserZap(); moveDinos(); draw(); return;
+                    playFireCrackle(); playTaserZap(); moveDinos(); draw(); return;
                 }
                 // Sem arbusto na direção: apenas corpo a corpo
                 addToLog(lang==='pt'?'Taser: apenas corpo a corpo (F+F).':'Taser: melee only (F+F).');
@@ -1446,9 +1446,8 @@
                     if(checkHit(lx,ly,50)){hit=true;break;}
                 }
                 const dirName=dx===0?(dy<0?(lang==='pt'?'Norte':'North'):(lang==='pt'?'Sul':'South')):(dx<0?(lang==='pt'?'Oeste':'West'):(lang==='pt'?'Leste':'East'));
-                if(hit){addToLog(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');}
-                else{addToLog(i18n[lang].laserMiss+' ('+dirName+')');srSay(i18n[lang].laserMiss);}
-                playLaserShot();
+                if(hit){addToLog(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');playLaserShot();setTimeout(playLaserImpact,180);}
+                else{addToLog(i18n[lang].laserMiss+' ('+dirName+')');srSay(i18n[lang].laserMiss);playLaserShot();}
             }
             moveDinos(); draw();
         }
@@ -1639,6 +1638,91 @@
             gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
             osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start(t); osc.stop(t + 0.3);
+        }
+
+        function playLaserImpact() {
+            // Impacto do laser: "thud" elétrico — freq alta que cai, com burst de ruído
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            // Onda elétrica de impacto
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(900, t);
+            osc.frequency.exponentialRampToValueAtTime(80, t + 0.18);
+            const oscGain = audioCtx.createGain();
+            oscGain.gain.setValueAtTime(0.5, t);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+            osc.connect(oscGain); oscGain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + 0.2);
+            // Burst de ruído junto
+            const bufSize = Math.floor(audioCtx.sampleRate * 0.1);
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i/bufSize);
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.35, t + 0.02);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+            src.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+            src.start(t + 0.02); src.stop(t + 0.12);
+        }
+
+        function playFireCrackle(loud = true) {
+            // Crepitar de fogueira: ruído marrom filtrado com envelope de chama
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            const vol = loud ? 0.45 : 0.18;
+            const dur = loud ? 0.55 : 0.25;
+            // Ruído filtrado (frequência baixa = "calor")
+            const bufSize = Math.floor(audioCtx.sampleRate * dur);
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+            filter.Q.value = 0.7;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.linearRampToValueAtTime(vol * 0.7, t + dur * 0.4);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+            // Segundo "estalo" seco
+            const buf2 = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.06), audioCtx.sampleRate);
+            const d2 = buf2.getChannelData(0);
+            for(let i = 0; i < d2.length; i++) d2[i] = (Math.random() * 2 - 1) * (1 - i/d2.length);
+            const src2 = audioCtx.createBufferSource();
+            src2.buffer = buf2;
+            const g2 = audioCtx.createGain();
+            g2.gain.setValueAtTime(vol * 0.6, t + 0.12);
+            g2.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+            src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            src2.connect(g2); g2.connect(audioCtx.destination);
+            src.start(t); src.stop(t + dur);
+            src2.start(t + 0.12); src2.stop(t + 0.18);
+        }
+
+        function playFireOut() {
+            // Brasa se apagando: ruído curto que cai de frequência, tipo "tssssh"
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            const bufSize = Math.floor(audioCtx.sampleRate * 0.3);
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2400, t);
+            filter.frequency.exponentialRampToValueAtTime(200, t + 0.3);
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.25, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            src.start(t); src.stop(t + 0.3);
         }
 
         function srSay(msg) {
