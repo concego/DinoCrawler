@@ -361,6 +361,8 @@
                 rexRoar: "O T-Rex RUGIU! A manada está em fuga!",
                 rexAttackDino: "T-Rex ATACOU {target} em fúria!",
                 stampede: "Um dinossauro em pânico passa por você! -{dmg} HP.",
+                meatHarvest: 'Machete no cadáver: carne extraída! +15 HP.',
+                taserBush:   'Faísca na vegetação! Arbusto queimado.',
                 names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver', 'F': 'Dinossauro em fuga', 'A': 'Anquilossauro', '3': 'Triceratops', 'W': 'Parasaurolofo' }
             },
             en: {
@@ -404,6 +406,8 @@
                 rexRoar: "The T-Rex ROARED! The herd is fleeing!",
                 rexAttackDino: "T-Rex ATTACKED {target} in a frenzy!",
                 stampede: "A panicked dinosaur runs past you! -{dmg} HP.",
+                meatHarvest: 'Machete on corpse: meat extracted! +15 HP.',
+                taserBush:   'Spark in vegetation! Bush burned.',
                 names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse', 'F': 'Fleeing Dinosaur', 'A': 'Ankylosaurus', '3': 'Triceratops', 'W': 'Parasaurolophus' }
             }
         };
@@ -1275,6 +1279,14 @@
             // ── Mesma célula (F+F) ───────────────────────────────────────
             if(dx === 0 && dy === 0) {
                 if(weapon === 'Machete') {
+                    // Cadáver na própria célula → extrai carne (medkit jurássico)
+                    const selfCorpseIdx = corpses.findIndex(c => c.x === player.x && c.y === player.y);
+                    if(selfCorpseIdx !== -1) {
+                        corpses.splice(selfCorpseIdx, 1);
+                        player.hp = Math.min(100, player.hp + 15);
+                        addToLog(i18n[lang].meatHarvest); srSay(i18n[lang].meatHarvest);
+                        playSwordSlash(); updateStatus(); moveDinos(); draw(); return;
+                    }
                     checkHit(player.x, player.y, 10); playSwordSlash();
                 } else if(weapon === 'Taser') {
                     checkHit(player.x, player.y, 15); playTaserZap();
@@ -1306,13 +1318,25 @@
                 if(nx>=0&&nx<GRID_SIZE&&ny>=0&&ny<GRID_SIZE){
                     const cell=map[ny][nx];
                     const corpseIdx=corpses.findIndex(c=>c.x===nx&&c.y===ny);
-                    if(corpseIdx!==-1){corpses.splice(corpseIdx,1);addToLog(lang==='pt'?'Cadáver removido!':'Corpse cleared!');srSay(lang==='pt'?'Cadáver removido!':'Corpse cleared!');playSound(150,'square',0.4,0.4);unlockCard('disturber');}
+                    if(corpseIdx!==-1){
+                        corpses.splice(corpseIdx,1);
+                        player.hp = Math.min(100, player.hp + 15);
+                        addToLog(i18n[lang].meatHarvest); srSay(i18n[lang].meatHarvest);
+                        playSound(150,'square',0.4,0.4); unlockCard('disturber');
+                    }
                     if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSwordSlash();unlockCard('lumberjack');}
                     checkHit(nx,ny,10);
                 }
                 playSwordSlash();
             } else if(weapon === 'Taser') {
-                // Taser: só mesma célula (F+F); F+seta não tem efeito
+                // Arbusto à frente → faísca queima o arbusto
+                const tnx=player.x+dx, tny=player.y+dy;
+                if(tnx>=0&&tnx<GRID_SIZE&&tny>=0&&tny<GRID_SIZE&&map[tny][tnx]==='#') {
+                    map[tny][tnx]='.';
+                    addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush);
+                    playTaserZap(); moveDinos(); draw(); return;
+                }
+                // Taser: só mesma célula (F+F); F+seta sem arbusto não tem efeito
                 addToLog(lang==='pt'?'Taser: apenas corpo a corpo (F+F).':'Taser: melee only (F+F).');
                 srSay(lang==='pt'?'Taser: apenas corpo a corpo.':'Taser: melee only.');
                 return;
