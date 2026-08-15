@@ -349,10 +349,9 @@
         <div id="screen-menu" class="screen">
             <h1 id="menu-title">DINO CRAWLER</h1>
             <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
-            <button class="menu-btn" onclick="openHowTo('screen-menu')" id="btn-how-to">Como Jogar</button>
             <button class="menu-btn" onclick="openHelp('screen-menu')" id="btn-help">Ajuda e Legenda</button>
-            <button class="menu-btn" onclick="showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
-            <button class="menu-btn" onclick="openGallery()" id="btn-gallery">Galeria</button>
+            <button class="menu-btn" onclick="playSfx('open', 0.45); showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
+            <button class="menu-btn" onclick="playSfx('open', 0.45); openGallery()" id="btn-gallery">Galeria</button>
             <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
             <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
         </div>
