@@ -333,6 +333,7 @@
     </style>
 </head>
 <body>
+    <audio id="menu-music" src="audio/menu-metal-energetic.ogg" loop preload="auto" aria-hidden="true"></audio>
     <audio id="valley-ambience" src="audio/forest-ambience.mp3" loop preload="auto" aria-hidden="true"></audio>
     <audio id="valley-music" src="audio/jungle-music.ogg" loop preload="auto" aria-hidden="true"></audio>
     <audio id="rex-tension" src="audio/rex-tension.ogg" loop preload="auto" aria-hidden="true"></audio>
@@ -349,12 +350,11 @@
         <div id="screen-menu" class="screen">
             <h1 id="menu-title">DINO CRAWLER</h1>
             <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
-            <button class="menu-btn" onclick="openHowTo('screen-menu')" id="btn-how-to">Como Jogar</button>
             <button class="menu-btn" onclick="openHelp('screen-menu')" id="btn-help">Ajuda e Legenda</button>
-            <button class="menu-btn" onclick="showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
-            <button class="menu-btn" onclick="openGallery()" id="btn-gallery">Galeria</button>
-            <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
-            <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
+            <button class="menu-btn" onclick="playSfx('open', 0.45); showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
+            <button class="menu-btn" onclick="playSfx('open', 0.45); openGallery()" id="btn-gallery">Galeria</button>
+            <button class="menu-btn" onclick="playSfx('open', 0.45); showScreen('screen-credits')" id="btn-credits">Créditos</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
         </div>
 
         <!-- Tela de Ajuda -->
@@ -384,7 +384,7 @@
         <div id="screen-lore" class="screen">
             <h1 id="lore-title">A Lore</h1>
             <div id="lore-content" class="lore-text"></div>
-            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-lore-back">Voltar</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-menu')" id="btn-lore-back">Voltar</button>
         </div>
 
         <!-- Tela de Créditos -->
@@ -392,7 +392,7 @@
             <h1 id="credits-title">Créditos</h1>
             <div id="credits-content" class="lore-text">
             </div>
-            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-credits-back">Voltar</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-menu')" id="btn-credits-back">Voltar</button>
         </div>
 
         <!-- Tela de Galeria -->
@@ -404,7 +404,7 @@
             </div>
             <div id="gallery-bestiary" class="gallery-grid"></div>
             <div id="gallery-achievements" class="gallery-grid" style="display:none;"></div>
-            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-gallery-back">Voltar</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-menu')" id="btn-gallery-back">Voltar</button>
         </div>
 
         <!-- Tela de Jogo -->
@@ -459,8 +459,44 @@
 
     <script>
         const container = document.getElementById('game-container');
+        const menuMusic = document.getElementById('menu-music');
         const valleyAmbience = document.getElementById('valley-ambience');
         const valleyMusic = document.getElementById('valley-music');
+        const sfx = {
+            cursor: new Audio('audio/02-ui-click-002.ogg'),
+            confirm: new Audio('audio/05-ui-confirmation-001.ogg'),
+            open: new Audio('audio/06-ui-open-001.ogg'),
+            scan: new Audio('audio/09-scan-computer-001.ogg'),
+            scanEquip: new Audio('audio/11-scan-switch-001.ogg'),
+            equipTaser: new Audio('audio/01-ui-click-001.ogg'),
+            taser: new Audio('audio/20-taser-forcefield-001.ogg'),
+            equipMachete: new Audio('audio/23-machete-metal-000.ogg'),
+            machete: new Audio('audio/24-machete-mining-000.ogg'),
+            equipGrenade: new Audio('audio/35-equip-switch-002.ogg'),
+            grenade: new Audio('audio/16-grenade-crunch-000.ogg'),
+            equipLaser: new Audio('audio/14-laser-small-000.ogg'),
+            laser: new Audio('audio/15-laser-large-000.ogg'),
+            machineMissing: new Audio('audio/10-scan-glitch-001.ogg'),
+            machineOn: new Audio('audio/30-machine-space-low-000.ogg'),
+            fire: new Audio('audio/fire-crackle.ogg'),
+            bush: new Audio('audio/bush-rustle-02.flac'),
+            back: new Audio('audio/menu-back-slide-electronic-00.mp3')
+        };
+        Object.values(sfx).forEach(audio => { audio.preload = 'auto'; });
+
+        function playSfx(name, volume = 0.6, maxDuration = null) {
+            const audio = sfx[name];
+            if (!audio) return false;
+            try {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.volume = volume;
+                const promise = audio.play();
+                if (promise && promise.catch) promise.catch(() => {});
+                if (maxDuration) setTimeout(() => { try { audio.pause(); audio.currentTime = 0; } catch(e) {} }, maxDuration * 1000);
+                return true;
+            } catch(e) { return false; }
+        }
         const rexTension = document.getElementById('rex-tension');
         const log = document.getElementById('log');
         const srSlots = [document.getElementById('sr-a'), document.getElementById('sr-b')];
@@ -836,35 +872,53 @@
             document.getElementById('tab-achievements').textContent = t[l].ach;
         }
 
+        function startMenuMusic() {
+            menuMusic.volume = 0.16;
+            const promise = menuMusic.play();
+            if (promise && promise.catch) promise.catch(() => {});
+        }
+
+        function stopMenuMusic() {
+            try { menuMusic.pause(); menuMusic.currentTime = 0; } catch(e) {}
+        }
+
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
             document.getElementById(id).classList.add('active-screen');
+            if (id === 'screen-menu') startMenuMusic();
+            if (id === 'screen-game') stopMenuMusic();
         }
 
         function openHelp(returnScreen) {
+            playSfx('open', 0.45);
             helpReturnScreen = returnScreen || 'screen-menu';
             showScreen('screen-help');
         }
 
         function closeHelp() {
+            playSfx('back', 0.75);
             showScreen(helpReturnScreen || 'screen-menu');
         }
 
         function openHowTo(returnScreen) {
+            playSfx('open', 0.45);
             howToReturnScreen = returnScreen || 'screen-menu';
             showScreen('screen-how-to');
         }
 
         function closeHowTo() {
+            playSfx('back', 0.75);
             showScreen(howToReturnScreen || 'screen-menu');
         }
 
         function openMapLegend(returnScreen) {
+            playSfx('open', 0.45);
             legendReturnScreen = returnScreen || 'screen-help';
             showScreen('screen-map-legend');
         }
 
         function closeMapLegend() {
+            playSfx('back', 0.75);
             showScreen(legendReturnScreen || 'screen-help');
         }
 
@@ -882,7 +936,6 @@
             const t = i18n[lang];
             document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
             document.getElementById('btn-start').textContent = t.start;
-            document.getElementById('btn-how-to').textContent = t.howTo;
             document.getElementById('how-to-title').textContent = t.howTo;
             document.getElementById('how-to-content').innerHTML = `<p>${t.howToText}</p>`;
             document.getElementById('btn-how-to-back').textContent = t.back;
@@ -936,6 +989,7 @@
         }
 
         function startGame() {
+            playSfx('confirm', 0.55);
             player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
             killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
             stunDone = false;
@@ -1244,13 +1298,13 @@
                         if(player.o2 <= 10) unlockCard('countdown');
                         addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dr. Aris — A Fuga!' : 'Card unlocked: Dr. Aris — The Escape!'));
                         if(player.o2 <= 10) addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Countdown!' : 'Card unlocked: Countdown!'));
-                        addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
+                        addToLog(i18n[lang].win); if (!playSfx('machineOn', 0.8)) playSound(1500, 'triangle', 1.0, 0.4);
                         srSay(lang === 'pt' ? 'Vitória! Máquina ativada.' : 'Victory! Machine activated.');
                         stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
                     } else {
                         logMsg += " " + i18n[lang].machineMissing;
                         srParts.push(lang === 'pt' ? `Máquina do tempo. Faltam ${5 - player.parts} peças.` : `Time machine. ${5 - player.parts} parts missing.`);
-                        playSound(523.25, 'sine', 0.5, 0.3);
+                        if (!playSfx('machineMissing', 0.55, 0.5)) playSound(523.25, 'sine', 0.5, 0.3);
                         if(!unlockedCards.has('stubborn')) {
                             unlockCard('stubborn');
                             addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Teimoso!' : 'Card unlocked: Stubborn!'));
@@ -1298,7 +1352,7 @@
                     else if(fires.some(f => f.x === ax && f.y === ay)) adjNames.push(lang === 'pt' ? 'fogueira' : 'fire');
                     else if(corpses.some(co => co.x === ax && co.y === ay)) adjNames.push(lang === 'pt' ? 'cadáver' : 'corpse');
                 }
-                if(adjNames.length > 0) srParts.push((lang === 'pt' ? 'Adjacente: ' : 'Adjacent: ') + adjNames.join(', ') + '.');
+                if(adjNames.length > 0) srParts.push((lang === 'pt' ? 'Adjacente: ' : 'Nearby: ') + adjNames.join(', ') + '.');
 
                 const dirLabel = (function() {
                     if(dx === 0 && dy === -1) return lang === 'pt' ? 'Norte' : 'North';
@@ -1531,6 +1585,7 @@
                 addToLog(msg); srSay(msg); return;
             }
             scanAmmo--;
+            playSfx('scan', 0.6, 0.55);
             scanCooldown = 2;
             document.getElementById('scan-ammo').textContent = scanAmmo;
             let found = [];
@@ -1578,7 +1633,8 @@
             document.querySelectorAll('.weapon-btn').forEach((b, i) => {
                 b.classList.toggle('active-weapon', i === idx);
             });
-            playSound(400, 'sine', 0.2);
+            const equipNames = ['equipMachete', 'equipTaser', 'equipGrenade', 'equipLaser'];
+            if (!playSfx(equipNames[idx], 0.5)) playSound(400, 'sine', 0.2);
             setTimeout(() => srSay(`${i18n[lang].weapon}: ${i18n[lang].weaponNames[idx]}.`), 120);
             moveDinos();
         }
@@ -1652,7 +1708,7 @@
                         addToLog(i18n[lang].meatHarvest);
                         playSound(150,'square',0.4,0.4); unlockCard('disturber');
                     }
-                    if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSwordSlash();unlockCard('lumberjack');}
+                    if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSfx('bush', 0.85); playSwordSlash();unlockCard('lumberjack');}
                     checkHit(nx,ny,10);
                 }
                 playSwordSlash();
@@ -1683,7 +1739,7 @@
                 const hitMsg = hits>0?(lang==='pt'?` ${hits} atingido(s)!`:` ${hits} hit(s)!`):'';
                 addToLog((lang==='pt'?`Granada → ${dirName}!`:`Grenade → ${dirName}!`)+hitMsg);
                 srSay((lang==='pt'?`Granada lançada para ${dirName}.`:`Grenade thrown ${dirName}.`)+(hits>0?(lang==='pt'?` ${hits} atingido.`:` ${hits} hit.`):''));
-                playSound(150,'sawtooth',0.8,0.6); setTimeout(()=>playSound(80,'sawtooth',0.5,0.8),120);
+                if (!playSfx('grenade', 0.75)) playSound(150,'sawtooth',0.8,0.6);
             } else if(weapon === 'Laser') {
                 // Laser: linha reta até 8 casas, para no 1° dino atingido
                 if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
@@ -1774,6 +1830,7 @@
         }
 
         function playSwordSlash() {
+            if (playSfx('machete', 0.7)) return;
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             // Impacto seco: ruído branco filtrado com envelope agressivo
             const bufSize = audioCtx.sampleRate * 0.18;
@@ -1801,6 +1858,7 @@
         }
 
         function playTaserZap() {
+            if (playSfx('taser', 0.7)) return;
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             // Sweep elétrico: frequência desce rapidamente com harmônico
             const t = audioCtx.currentTime;
@@ -1877,6 +1935,7 @@
         }
 
         function playLaserShot() {
+            if (playSfx('laser', 0.75)) return;
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const t = audioCtx.currentTime;
             const osc = audioCtx.createOscillator();
@@ -1919,7 +1978,9 @@
         }
 
         function playFireCrackle(loud = true) {
-            // Crepitar de fogueira: ruído marrom filtrado com envelope de chama
+            // Candidato 51 (CC0): usar o efeito real e manter o Web Audio como fallback.
+            if (playSfx('fire', loud ? 1.0 : 0.45, loud ? 0.8 : 0.35)) return;
+            // Fallback: crepitar sintetizado de fogueira.
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const t = audioCtx.currentTime;
             const vol = loud ? 0.45 : 0.18;
