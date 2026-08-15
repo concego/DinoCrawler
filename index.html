@@ -251,18 +251,35 @@
         <div id="screen-menu" class="screen">
             <h1 id="menu-title">DINO CRAWLER</h1>
             <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
-            <button class="menu-btn" onclick="showScreen('screen-how-to')" id="btn-how-to">Como Jogar</button>
+            <button class="menu-btn" onclick="openHowTo('screen-menu')" id="btn-how-to">Como Jogar</button>
+            <button class="menu-btn" onclick="openHelp('screen-menu')" id="btn-help">Ajuda e Legenda</button>
             <button class="menu-btn" onclick="showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
             <button class="menu-btn" onclick="openGallery()" id="btn-gallery">Galeria</button>
             <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
             <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
         </div>
 
+        <!-- Tela de Ajuda -->
+        <div id="screen-help" class="screen">
+            <h1 id="help-title">Ajuda e Legenda</h1>
+            <div id="help-intro" class="lore-text"></div>
+            <button class="menu-btn" onclick="openHowTo('screen-help')" id="btn-help-how-to">Como Jogar</button>
+            <button class="menu-btn" onclick="openMapLegend('screen-help')" id="btn-help-legend">Legenda do Mapa</button>
+            <button class="menu-btn" onclick="closeHelp()" id="btn-help-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Legenda do Mapa -->
+        <div id="screen-map-legend" class="screen">
+            <h1 id="legend-title">Legenda do Mapa</h1>
+            <div id="legend-content" class="lore-text"></div>
+            <button class="menu-btn" onclick="closeMapLegend()" id="btn-legend-back">Voltar</button>
+        </div>
+
         <!-- Tela de Como Jogar -->
         <div id="screen-how-to" class="screen">
             <h1 id="how-to-title">Como Jogar</h1>
             <div id="how-to-content" class="lore-text"></div>
-            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-how-to-back">Voltar</button>
+            <button class="menu-btn" onclick="closeHowTo()" id="btn-how-to-back">Voltar</button>
         </div>
 
         <!-- Tela de Lore -->
@@ -295,6 +312,7 @@
         <!-- Tela de Jogo -->
         <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none; padding-bottom: 90px;">
             <h2 id="status-title">Status</h2>
+            <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda</button>
             <div id="hud">
                 <span><span id="hp-label">HP:</span> <span id="hp">120</span></span>
                 <span><span id="o2-label">O2:</span> <span id="o2">100</span></span>
@@ -352,6 +370,10 @@
                 back: "Voltar",
                 changeLang: "Mudar Idioma",
                 howTo: "Como Jogar",
+                help: "Ajuda e Legenda",
+                helpIntro: "Consulte as instruções completas ou descubra o significado de cada símbolo do mapa. Durante a partida, abrir esta ajuda não consome um turno.",
+                mapLegend: "Legenda do Mapa",
+                legendText: "<strong>Legenda:</strong><br><br>@ Você, Dr. Aris<br>. Espaço livre<br>P Peça da Máquina do Tempo<br>M Máquina do Tempo<br>* Bolsão de oxigênio (+50 O2)<br># Arbusto denso<br>~ Fogueira<br>X Cadáver<br>V Velociraptor<br>T T-Rex<br>A Anquilossauro<br>3 Triceratops<br>W Parasaurolofo<br>F Dinossauro em fuga",
                 howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Setas / botões D-Pad. Cada passo consome O2. Bolsões (*) recargam +50 O2 permanentemente.<br><br><strong>Arsenal:</strong><br>1. Machete: Corpo a corpo, limpa arbustos (#).<br>2. Taser: Dano + chance de paralisar 3 turnos. Anquilossauro (A) é imune.<br>3. Granada: F + seta → arremessa 2 casas, explode em área 2×2. Munição: 8.<br>4. Laser: F + seta → linha reta até 8 casas, para no 1° dino. Recarrega sozinho.<br><br><strong>Sobrevivência:</strong><br>• Cadáveres (X): extraia carne crua com Machete.<br>• Fogueira (~): Taser em arbusto (#) cria fogo. Dinos fogem. Carne crua vira cozinhada (+20 HP).<br>• Carne: consumida automaticamente quando HP &lt; 100. Máximo: 3 porções.<br><br><strong>Atalhos (sem consumir turno):</strong><br>O = O2 | H = HP | P = Peças | C = Carne | S = SCAN | 1/2/3/4 = arma | F+seta = atacar<br><br><strong>Dinossauros:</strong> V Velociraptor · T T-Rex · A Anquilossauro · 3 Triceratops · W Parasaurolofo<br>Dinos são atraídos por cadáveres — use como isca!",
                 feedback: "Feedback",
                 status: "Status",
@@ -423,6 +445,10 @@
                 back: "Back",
                 changeLang: "Change Language",
                 howTo: "How to Play",
+                help: "Help & Legend",
+                helpIntro: "Read the full instructions or check what each map symbol means. During a run, opening this help does not consume a turn.",
+                mapLegend: "Map Legend",
+                legendText: "<strong>Legend:</strong><br><br>@ You, Dr. Aris<br>. Open ground<br>P Time Machine part<br>M Time Machine<br>* Oxygen pocket (+50 O2)<br># Dense bush<br>~ Campfire<br>X Corpse<br>V Velociraptor<br>T T-Rex<br>A Ankylosaurus<br>3 Triceratops<br>W Parasaurolophus<br>F Fleeing dinosaur",
                 howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Arrows / D-Pad buttons. Each step consumes O2. Air pockets (*) recharge +50 O2 permanently.<br><br><strong>Arsenal:</strong><br>1. Machete: Melee, clears bushes (#).<br>2. Taser: Damage + stun chance for 3 turns. Ankylosaurus (A) is immune.<br>3. Grenade: F + arrow → throws 2 tiles, explodes in a 2×2 area. Ammo: 8.<br>4. Laser: F + arrow → straight line up to 8 tiles, stops at 1st dino. Self-recharges.<br><br><strong>Survival:</strong><br>• Corpses (X): harvest raw meat with Machete.<br>• Fire (~): Taser a bush (#) to start a fire. Dinos flee. Raw meat becomes cooked (+20 HP).<br>• Meat: auto-consumed when HP &lt; 100. Max: 3 portions.<br><br><strong>Shortcuts (no turn cost):</strong><br>O = O2 | H = HP | P = Parts | C = Meat | S = SCAN | 1/2/3/4 = weapon | F+arrow = attack<br><br><strong>Dinosaurs:</strong> V Velociraptor · T T-Rex · A Ankylosaurus · 3 Triceratops · W Parasaurolophus<br>Dinos are attracted to corpses — use them as bait!",
                 feedback: "Feedback",
                 status: "Status",
@@ -504,6 +530,9 @@
         let audioCtx = null;
         let ambientNodes = null; // nós do som ambiente
         let breathingTimeout = null; // handle do loop de respiração ofegante
+        let helpReturnScreen = 'screen-menu';
+        let howToReturnScreen = 'screen-menu';
+        let legendReturnScreen = 'screen-help';
 
         // --- Galeria / Colecionáveis ---
         let unlockedCards = new Set();
@@ -644,6 +673,7 @@
         function unlockCard(id) {
             unlockedCards.add(id);
             try { localStorage.setItem('dinoCrawlerCards', JSON.stringify([...unlockedCards])); } catch(e) {}
+            updateGalleryAvailability();
         }
 
         function renderCard(card, unlocked) {
@@ -668,7 +698,12 @@
             return div;
         }
 
-        function openGallery() { renderGalleryTab('bestiary'); switchTab('bestiary'); showScreen('screen-gallery'); }
+        function openGallery() {
+            if (unlockedCards.size === 0) return;
+            renderGalleryTab('bestiary');
+            switchTab('bestiary');
+            showScreen('screen-gallery');
+        }
 
         function switchTab(tab) {
             document.getElementById('gallery-bestiary').style.display = tab === 'bestiary' ? 'flex' : 'none';
@@ -699,6 +734,41 @@
             document.getElementById(id).classList.add('active-screen');
         }
 
+        function openHelp(returnScreen) {
+            helpReturnScreen = returnScreen || 'screen-menu';
+            showScreen('screen-help');
+        }
+
+        function closeHelp() {
+            showScreen(helpReturnScreen || 'screen-menu');
+        }
+
+        function openHowTo(returnScreen) {
+            howToReturnScreen = returnScreen || 'screen-menu';
+            showScreen('screen-how-to');
+        }
+
+        function closeHowTo() {
+            showScreen(howToReturnScreen || 'screen-menu');
+        }
+
+        function openMapLegend(returnScreen) {
+            legendReturnScreen = returnScreen || 'screen-help';
+            showScreen('screen-map-legend');
+        }
+
+        function closeMapLegend() {
+            showScreen(legendReturnScreen || 'screen-help');
+        }
+
+        function updateGalleryAvailability() {
+            const button = document.getElementById('btn-gallery');
+            if (!button) return;
+            const available = unlockedCards.size > 0;
+            button.hidden = !available;
+            button.disabled = !available;
+        }
+
         function setLang(l) {
             lang = l;
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -709,6 +779,16 @@
             document.getElementById('how-to-title').textContent = t.howTo;
             document.getElementById('how-to-content').innerHTML = `<p>${t.howToText}</p>`;
             document.getElementById('btn-how-to-back').textContent = t.back;
+            document.getElementById('help-title').textContent = t.help;
+            document.getElementById('help-intro').innerHTML = `<p>${t.helpIntro}</p>`;
+            document.getElementById('btn-help').textContent = t.help;
+            document.getElementById('btn-game-help').textContent = t.help;
+            document.getElementById('btn-help-how-to').textContent = t.howTo;
+            document.getElementById('btn-help-legend').textContent = t.mapLegend;
+            document.getElementById('btn-help-back').textContent = t.back;
+            document.getElementById('legend-title').textContent = t.mapLegend;
+            document.getElementById('legend-content').innerHTML = `<p>${t.legendText}</p>`;
+            document.getElementById('btn-legend-back').textContent = t.back;
             document.getElementById('btn-lore').textContent = t.lore;
             document.getElementById('btn-credits').textContent = t.credits;
             document.getElementById('btn-back-lang').textContent = t.changeLang;
@@ -744,6 +824,7 @@
             document.getElementById('btn-left').textContent = lang === 'pt' ? 'OESTE (←)' : 'WEST (←)';
             document.getElementById('btn-right').textContent = lang === 'pt' ? 'LESTE (→)' : 'EAST (→)';
             updateGalleryLang();
+            updateGalleryAvailability();
             showScreen('screen-menu');
         }
 
