@@ -1,10 +1,13 @@
-const CACHE = 'dinocrawler-v5';
+const CACHE = 'dinocrawler-v6';
 const ASSETS = [
   '/DinoCrawler/',
   '/DinoCrawler/index.html',
   '/DinoCrawler/manifest.json',
   '/DinoCrawler/icon192.png',
-  '/DinoCrawler/icon512.png'
+  '/DinoCrawler/icon512.png',
+  '/DinoCrawler/audio/forest-ambience.mp3',
+  '/DinoCrawler/audio/jungle-music.ogg',
+  '/DinoCrawler/audio/rex-tension.ogg'
 ];
 
 self.addEventListener('install', e => {
