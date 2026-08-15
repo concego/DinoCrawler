@@ -352,8 +352,8 @@
             <button class="menu-btn" onclick="openHelp('screen-menu')" id="btn-help">Ajuda e Legenda</button>
             <button class="menu-btn" onclick="playSfx('open', 0.45); showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
             <button class="menu-btn" onclick="playSfx('open', 0.45); openGallery()" id="btn-gallery">Galeria</button>
-            <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
-            <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
+            <button class="menu-btn" onclick="playSfx('open', 0.45); showScreen('screen-credits')" id="btn-credits">Créditos</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
         </div>
 
         <!-- Tela de Ajuda -->
@@ -383,7 +383,7 @@
         <div id="screen-lore" class="screen">
             <h1 id="lore-title">A Lore</h1>
             <div id="lore-content" class="lore-text"></div>
-            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-lore-back">Voltar</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-menu')" id="btn-lore-back">Voltar</button>
         </div>
 
         <!-- Tela de Créditos -->
@@ -391,7 +391,7 @@
             <h1 id="credits-title">Créditos</h1>
             <div id="credits-content" class="lore-text">
             </div>
-            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-credits-back">Voltar</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-menu')" id="btn-credits-back">Voltar</button>
         </div>
 
         <!-- Tela de Galeria -->
@@ -403,7 +403,7 @@
             </div>
             <div id="gallery-bestiary" class="gallery-grid"></div>
             <div id="gallery-achievements" class="gallery-grid" style="display:none;"></div>
-            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-gallery-back">Voltar</button>
+            <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-menu')" id="btn-gallery-back">Voltar</button>
         </div>
 
         <!-- Tela de Jogo -->
@@ -476,7 +476,9 @@
             laser: new Audio('audio/15-laser-large-000.ogg'),
             machineMissing: new Audio('audio/10-scan-glitch-001.ogg'),
             machineOn: new Audio('audio/30-machine-space-low-000.ogg'),
-            fire: new Audio('../sound-test/audio/51-fire-crackle.ogg')
+            fire: new Audio('../sound-test/audio/51-fire-crackle.ogg'),
+            bush: new Audio('../sound-test/audio/54-bush-rustle-02.flac'),
+            back: new Audio('../sound-test/audio/82-menu-back-slide-electronic-00.mp3')
         };
         Object.values(sfx).forEach(audio => { audio.preload = 'auto'; });
 
@@ -880,6 +882,7 @@
         }
 
         function closeHelp() {
+            playSfx('back', 0.75);
             showScreen(helpReturnScreen || 'screen-menu');
         }
 
@@ -890,6 +893,7 @@
         }
 
         function closeHowTo() {
+            playSfx('back', 0.75);
             showScreen(howToReturnScreen || 'screen-menu');
         }
 
@@ -900,6 +904,7 @@
         }
 
         function closeMapLegend() {
+            playSfx('back', 0.75);
             showScreen(legendReturnScreen || 'screen-help');
         }
 
@@ -1650,7 +1655,7 @@
                         if(bx>=0&&bx<GRID_SIZE&&by>=0&&by<GRID_SIZE&&map[by][bx]==='#'){
                             map[by][bx]='.';
                             fires.push({x:bx, y:by, turns:4});
-                            playFireCrackle();
+                            playSfx('bush', 0.55); playFireCrackle();
                             burnedBush = true;
                         }
                     });
@@ -1689,7 +1694,7 @@
                         addToLog(i18n[lang].meatHarvest);
                         playSound(150,'square',0.4,0.4); unlockCard('disturber');
                     }
-                    if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSwordSlash();unlockCard('lumberjack');}
+                    if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSfx('bush', 0.85); playSwordSlash();unlockCard('lumberjack');}
                     checkHit(nx,ny,10);
                 }
                 playSwordSlash();
@@ -1700,7 +1705,7 @@
                     map[tny][tnx]='.';
                     fires.push({x:tnx, y:tny, turns:4});
                     addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush);
-                    playFireCrackle(); playTaserZap(); moveDinos(); draw(); return;
+                    playSfx('bush', 0.55); playFireCrackle(); playTaserZap(); moveDinos(); draw(); return;
                 }
                 // Sem arbusto na direção: apenas corpo a corpo
                 addToLog(lang==='pt'?'Taser: apenas corpo a corpo (F+F).':'Taser: melee only (F+F).');
