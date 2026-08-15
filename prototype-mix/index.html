@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Crawler</title>
+    <meta name="description" content="Roguelike ASCII acessível — GMTK Game Jam 2026. Colete 5 peças e escape do Cretáceo. Jogável por cegos e videntes em pé de igualdade.">
+    <meta name="author" content="Eu Concego Jogar (ECJ)">
+    <meta name="theme-color" content="#00ff00">
+    <meta property="og:title" content="Dino Crawler">
+    <meta property="og:description" content="Roguelike ASCII acessível — GMTK Game Jam 2026. Colete 5 peças e escape do Cretáceo.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://concego.github.io/DinoCrawler/">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon192.png">
+    <style>
+        body {
+            background-color: #121212;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        #ui-layer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .screen {
+            display: none;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #00ff00;
+            background: #000;
+        }
+
+        .active-screen {
+            display: block;
+        }
+
+        .game-screen {
+            width: calc(100% - 24px);
+            max-width: 1160px;
+            box-sizing: border-box;
+            border: none;
+            padding: 16px;
+            text-align: left;
+        }
+        .game-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+            gap: 24px;
+            align-items: start;
+        }
+        .game-main {
+            min-width: 0;
+            text-align: center;
+        }
+        .game-log-panel {
+            min-width: 0;
+            border: 1px solid #444;
+            background: #080808;
+            padding: 12px;
+            position: sticky;
+            top: 12px;
+        }
+        .game-log-panel h2 {
+            margin-top: 0;
+            text-align: left;
+        }
+
+        h1 { font-size: 2em; margin-bottom: 20px; color: #ff0000; }
+        .menu-btn {
+            background: #222;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin: 10px 0;
+            width: 100%;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-family: inherit;
+        }
+        .menu-btn:hover { background: #004400; }
+
+        #game-container {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 1px;
+            background-color: #333;
+            border: 4px solid #555;
+            width: 90vw;
+            max-width: 500px;
+            aspect-ratio: 1/1;
+        }
+        .cell {
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .player { color: #fff; text-shadow: 0 0 5px #fff; }
+        .part { color: #ffcc00; }
+        .air { color: #00ffff; }
+        .fire-cell { color: #ff6600; animation: flicker 0.6s infinite alternate; }
+        @keyframes flicker { from { color: #ff6600; } to { color: #ffcc00; } }
+        .ankylosaur { color: #aa8844; }
+        .triceratops { color: #66cc66; }
+        .parasaur { color: #ff9966; }
+        
+        #hud, #controls {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px auto 0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2em;
+        }
+        #hud {
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            justify-content: center;
+        }
+        #controls {
+            align-items: center;
+            gap: 16px;
+        }
+        .action-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+        #weapon-selector {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px auto 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+        #weapon-selector .weapon-btn {
+            flex: 1 1 45%;
+            min-width: 135px;
+        }
+
+        #log {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        #log-footer {
+            width: 100%;
+            box-sizing: border-box;
+            min-height: 9em;
+            max-height: 35vh;
+            overflow-y: auto;
+            background: #000;
+            border: 1px solid #444;
+            padding: 8px;
+            font-size: 0.95em;
+            color: #ccc;
+            text-align: left;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        #d-pad {
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left . right"
+                ". down .";
+            gap: 5px;
+        }
+        #btn-up { grid-area: up; }
+        #btn-down { grid-area: down; }
+        #btn-left { grid-area: left; }
+        #btn-right { grid-area: right; }
+
+        .move-btn {
+            padding: 10px;
+            font-size: 0.8em;
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            cursor: pointer;
+            min-width: 80px;
+        }
+
+        .weapon-btn, .action-btn {
+            padding: 15px;
+            font-size: 1em;
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            cursor: pointer;
+        }
+
+        .active-weapon { background: #00ff00; color: #000; }
+
+        .lore-text {
+            text-align: left;
+            font-size: 0.9em;
+            line-height: 1.4;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        /* --- Galeria --- */
+        .gallery-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+        .tab-btn {
+            background: #222;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 8px 18px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1em;
+        }
+        .tab-btn.active-tab { background: #00ff00; color: #000; font-weight: bold; }
+
+        .gallery-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            max-height: 420px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+
+        .gallery-card {
+            border: 2px solid #00ff00;
+            background: #0a0a0a;
+            width: 140px;
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 0.78em;
+            line-height: 1.4;
+        }
+        .gallery-card.locked {
+            border-color: #333;
+            color: #333;
+            filter: brightness(0.35);
+        }
+        .gallery-card .card-art {
+            font-size: 0.72em;
+            white-space: pre;
+            line-height: 1.2;
+            margin: 6px 0;
+            color: #00cc00;
+        }
+        .gallery-card.locked .card-art { color: #222; }
+        .gallery-card .card-name {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #ffcc00;
+            margin-bottom: 4px;
+        }
+        .gallery-card.locked .card-name { color: #333; }
+        .gallery-card .card-fact {
+            font-size: 0.75em;
+            color: #aaffaa;
+            margin-top: 6px;
+            text-align: left;
+        }
+        .gallery-card .card-badge {
+            font-size: 0.7em;
+            color: #00ffff;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 820px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .game-log-panel {
+                position: static;
+            }
+            #log-footer {
+                max-height: 24vh;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .game-screen {
+                width: 100%;
+                padding: 10px 6px;
+            }
+            #controls {
+                gap: 8px;
+            }
+            .move-btn {
+                min-width: 64px;
+                padding: 8px 4px;
+                font-size: 0.72em;
+            }
+            .action-btn {
+                padding: 10px 6px;
+                font-size: 0.85em;
+            }
+            #weapon-selector .weapon-btn {
+                min-width: 0;
+                padding: 10px 5px;
+                font-size: 0.82em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="valley-ambience" src="audio/forest-ambience.mp3" loop preload="auto" aria-hidden="true"></audio>
+    <audio id="valley-music" src="audio/jungle-music.ogg" loop preload="auto" aria-hidden="true"></audio>
+
+    <div id="ui-layer">
+        <!-- Tela de Idioma -->
+        <div id="screen-lang" class="screen active-screen">
+            <h1>DINO CRAWLER</h1>
+            <button class="menu-btn" onclick="setLang('pt')">Português (Brasil)</button>
+            <button class="menu-btn" onclick="setLang('en')">English</button>
+        </div>
+
+        <!-- Menu Principal -->
+        <div id="screen-menu" class="screen">
+            <h1 id="menu-title">DINO CRAWLER</h1>
+            <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
+            <button class="menu-btn" onclick="openHowTo('screen-menu')" id="btn-how-to">Como Jogar</button>
+            <button class="menu-btn" onclick="openHelp('screen-menu')" id="btn-help">Ajuda e Legenda</button>
+            <button class="menu-btn" onclick="showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
+            <button class="menu-btn" onclick="openGallery()" id="btn-gallery">Galeria</button>
+            <button class="menu-btn" onclick="showScreen('screen-credits')" id="btn-credits">Créditos</button>
+            <button class="menu-btn" onclick="showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
+        </div>
+
+        <!-- Tela de Ajuda -->
+        <div id="screen-help" class="screen">
+            <h1 id="help-title">Ajuda e Legenda</h1>
+            <div id="help-intro" class="lore-text"></div>
+            <button class="menu-btn" onclick="openHowTo('screen-help')" id="btn-help-how-to">Como Jogar</button>
+            <button class="menu-btn" onclick="openMapLegend('screen-help')" id="btn-help-legend">Legenda do Mapa</button>
+            <button class="menu-btn" onclick="closeHelp()" id="btn-help-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Legenda do Mapa -->
+        <div id="screen-map-legend" class="screen">
+            <h1 id="legend-title">Legenda do Mapa</h1>
+            <div id="legend-content" class="lore-text"></div>
+            <button class="menu-btn" onclick="closeMapLegend()" id="btn-legend-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Como Jogar -->
+        <div id="screen-how-to" class="screen">
+            <h1 id="how-to-title">Como Jogar</h1>
+            <div id="how-to-content" class="lore-text"></div>
+            <button class="menu-btn" onclick="closeHowTo()" id="btn-how-to-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Lore -->
+        <div id="screen-lore" class="screen">
+            <h1 id="lore-title">A Lore</h1>
+            <div id="lore-content" class="lore-text"></div>
+            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-lore-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Créditos -->
+        <div id="screen-credits" class="screen">
+            <h1 id="credits-title">Créditos</h1>
+            <div id="credits-content" class="lore-text">
+            </div>
+            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-credits-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Galeria -->
+        <div id="screen-gallery" class="screen">
+            <h1 id="gallery-title">Galeria</h1>
+            <div class="gallery-tabs">
+                <button class="tab-btn active-tab" id="tab-bestiary" onclick="switchTab('bestiary')">Bestiário</button>
+                <button class="tab-btn" id="tab-achievements" onclick="switchTab('achievements')">Conquistas</button>
+            </div>
+            <div id="gallery-bestiary" class="gallery-grid"></div>
+            <div id="gallery-achievements" class="gallery-grid" style="display:none;"></div>
+            <button class="menu-btn" onclick="showScreen('screen-menu')" id="btn-gallery-back">Voltar</button>
+        </div>
+
+        <!-- Tela de Jogo -->
+        <div id="screen-game" class="screen game-screen">
+            <div class="game-layout">
+                <main class="game-main">
+                    <h2 id="status-title">Status</h2>
+                    <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda</button>
+                    <div id="hud">
+                        <span><span id="hp-label">HP:</span> <span id="hp">120</span></span>
+                        <span><span id="o2-label">O2:</span> <span id="o2">100</span></span>
+                        <span><span id="parts-label">📦:</span> <span id="parts">0</span>/5</span>
+                        <span><span id="ammo-label">💣:</span> <span id="ammo">8</span></span>
+                        <span><span id="meat-label">🥩:</span> <span id="meat">0</span>/3</span>
+                    </div>
+
+                    <h2 id="map-title">Mapa</h2>
+                    <div id="game-container" aria-hidden="true"></div>
+                    <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><span id="sr-a" aria-live="assertive" aria-atomic="true"></span><span id="sr-b" aria-live="assertive" aria-atomic="true"></span></div>
+
+                    <h2 id="controls-title">Controles</h2>
+                    <div id="controls">
+                        <div id="d-pad">
+                            <button id="btn-up" class="move-btn" onclick="aimMode?fireDirectional(0,-1):move(0,-1)">NORTE (↑)</button>
+                            <button id="btn-left" class="move-btn" onclick="aimMode?fireDirectional(-1,0):move(-1,0)">OESTE (←)</button>
+                            <button id="btn-right" class="move-btn" onclick="aimMode?fireDirectional(1,0):move(1,0)">LESTE (→)</button>
+                            <button id="btn-down" class="move-btn" onclick="aimMode?fireDirectional(0,1):move(0,1)">SUL (↓)</button>
+                        </div>
+                        <div class="action-controls">
+                            <button id="btn-scan" class="action-btn" onclick="scan()">SCAN 🔋(<span id="scan-ammo">3</span>)</button>
+                            <button id="btn-fire" class="action-btn" onclick="aimMode?fireDirectional(0,0):enterAimMode()" style="background:#ff0000; color:#fff;">FIRE (F)</button>
+                        </div>
+                    </div>
+
+                    <h2 id="weapons-title">Armas</h2>
+                    <div id="weapon-selector">
+                        <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
+                        <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
+                        <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
+                        <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
+                    </div>
+                </main>
+
+                <aside class="game-log-panel">
+                    <h2 id="log-title">Log</h2>
+                    <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0"></div>
+                    <div id="log-footer" aria-hidden="true"></div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('game-container');
+        const valleyAmbience = document.getElementById('valley-ambience');
+        const valleyMusic = document.getElementById('valley-music');
+        const log = document.getElementById('log');
+        const srSlots = [document.getElementById('sr-a'), document.getElementById('sr-b')];
+        let srIdx = 0;
+        const GRID_SIZE = 20;
+        
+        let lang = 'pt';
+        const i18n = {
+            pt: {
+                start: "Iniciar Jogo",
+                lore: "Lore (História)",
+                credits: "Créditos",
+                back: "Voltar",
+                changeLang: "Mudar Idioma",
+                howTo: "Como Jogar",
+                help: "Ajuda e Legenda",
+                helpIntro: "Consulte as instruções completas ou descubra o significado de cada símbolo do mapa. Durante a partida, abrir esta ajuda não consome um turno.",
+                mapLegend: "Legenda do Mapa",
+                legendText: "<strong>Legenda:</strong><br><br>@ Você, Dr. Aris<br>. Espaço livre<br>P Peça da Máquina do Tempo<br>M Máquina do Tempo<br>* Bolsão de oxigênio (+50 O2)<br># Arbusto denso<br>~ Fogueira<br>X Cadáver<br>V Velociraptor<br>T T-Rex<br>A Anquilossauro<br>3 Triceratops<br>W Parasaurolofo<br>F Dinossauro em fuga",
+                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Setas / botões D-Pad. Cada passo consome O2. Bolsões (*) recargam +50 O2 permanentemente.<br><br><strong>Arsenal:</strong><br>1. Machete: Corpo a corpo, limpa arbustos (#).<br>2. Taser: Dano + chance de paralisar 3 turnos. Anquilossauro (A) é imune.<br>3. Granada: F + seta → arremessa 2 casas, explode em área 2×2. Munição: 8.<br>4. Laser: F + seta → linha reta até 8 casas, para no 1° dino. Recarrega sozinho.<br><br><strong>Sobrevivência:</strong><br>• Cadáveres (X): extraia carne crua com Machete.<br>• Fogueira (~): Taser em arbusto (#) cria fogo. Dinos fogem. Carne crua vira cozinhada (+20 HP).<br>• Carne: consumida automaticamente quando HP &lt; 100. Máximo: 3 porções.<br><br><strong>Atalhos (sem consumir turno):</strong><br>O = O2 | H = HP | P = Peças | C = Carne | S = SCAN | 1/2/3/4 = arma | F+seta = atacar<br><br><strong>Dinossauros:</strong> V Velociraptor · T T-Rex · A Anquilossauro · 3 Triceratops · W Parasaurolofo<br>Dinos são atraídos por cadáveres — use como isca!",
+                feedback: "Feedback",
+                status: "Status",
+                hp: "HP",
+                o2: "O2",
+                partsIcon: "📦",
+                ammoIcon: "💣",
+                meatIcon: "🥩",
+                map: "Mapa",
+                controls: "Controles",
+                weapons: "Armas",
+                weapon: "Arma",
+                log: "Log",
+                scan: "SCAN",
+                fire: "DISPARAR",
+                logLabel: "Histórico de ações",
+                lockedCard: "Carta bloqueada",
+                kill: "Abate",
+                hit: "Acerto",
+                remainingHp: "HP restante",
+                weaponNames: ["Machete", "Taser", "Granada", "Laser"],
+                loreText: "Ano 2150. A humanidade esgotou os recursos da Terra. Você é o Dr. Aris, um cientista enviado 65 milhões de anos ao passado para coletar peças de uma tecnologia experimental deixada por uma expedição perdida. Sua Máquina do Tempo quebrou no impacto. Encontre as 5 peças, recupere oxigênio e tome cuidado: você não está sozinho no Cretáceo.",
+                creditsText: "<p><strong>Equipe:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Enredo:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
+                win: "MISSÃO CUMPRIDA! Você voltou para o futuro!",
+                gameOver: "VOCÊ VIROU COMIDA DE DINOSSAURO. FIM DE JOGO.",
+                roarRex: "UM RUGIDO ENSURDECEDOR ECOA! O T-Rex despertou faminto!",
+                ankyloBounce: "Anquilossauro te golpeou com a cauda! Você foi arremessado!",
+                ankyloImune: "Taser ineficaz! A couraça do Anquilossauro bloqueou o choque!",
+                triCharge: "Triceratops CARREGOU! Impacto brutal!",
+                paraVocal: "VOCALIZAÇÃO DO PARASAUROLOFO! Os dinos próximos foram alertados!",
+                roarVelo: "Você ouve um rugido distante... um Velociraptor entrou na área!",
+                partFound: "Aqui: Peça coletada!",
+                machineMissing: "Aqui: Máquina do Tempo (faltam peças).",
+                o2Found: "Aqui: Oxigênio recuperado!",
+                bushBlock: "Arbusto denso bloqueia o caminho! Use o Machete.",
+                noAmmo: "Sem granadas.",
+                laserNoAmmo: "Laser recarregando... aguarde.",
+                laserFire: "Laser disparado!",
+                laserHit: "Laser acertou",
+                laserMiss: "Laser: caminho limpo.",
+                aimMode: "Modo mira: escolha uma direção (seta) ou F para mesma célula.",
+                aimCancel: "Mira cancelada.",
+                scanned: "Escaneando de",
+                nothingNear: "Nada próximo.",
+                steps: "passos ao",
+                here: "Aqui",
+                eating: "está devorando um cadáver! Ele ficará distraído.",
+                fighting: "BRIGA! {a} e {b} disputam o cadáver!",
+                fightWin: "{winner} venceu a disputa. {loser} foi eliminado!",
+                attack: "ALERTA: Ataque de",
+                rexRoar: "O T-Rex RUGIU! A manada está em fuga!",
+                rexAttackDino: "T-Rex ATACOU {target} em fúria!",
+                stampede: "Um dinossauro em pânico passa por você! -{dmg} HP.",
+                meatHarvest: 'Carne extraída do cadáver! +15 HP.',
+                meatRaw:     'Carne crua guardada. Aproxime-se de uma fogueira para cozinhar.',
+                meatCooked:  'Carne cozida na fogueira! Usar automaticamente quando HP < 100.',
+                meatEaten:   'Carne consumida: +20 HP.',
+                meatFull:    'HP cheio. Carne guardada para depois.',
+                meatMaxed:   'Já carrega 3 porções. Descarte ou consuma primeiro.',
+                taserBush:   'Faísca nos arbustos adjacentes! Vegetação em chamas!',
+                fireScared:  'Fogueira! Os dinos recuam com medo!',
+                fireOut:     'A fogueira se apagou.',
+                names: { 'P': 'Peça', '*': 'Ar', '#': 'Arbusto', 'M': 'Máquina', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Cadáver', 'F': 'Dinossauro em fuga', 'A': 'Anquilossauro', '3': 'Triceratops', 'W': 'Parasaurolofo' }
+            },
+            en: {
+                start: "Start Game",
+                lore: "Lore (Story)",
+                credits: "Credits",
+                back: "Back",
+                changeLang: "Change Language",
+                howTo: "How to Play",
+                help: "Help & Map Key",
+                helpIntro: "Read the full instructions or check what each map symbol means. During a run, opening this help does not consume a turn.",
+                mapLegend: "Map Key",
+                legendText: "<strong>Map key:</strong><br><br>@ You, Dr. Aris<br>. Open ground<br>P Time Machine part<br>M Time Machine<br>* Oxygen pocket (+50 O2)<br># Dense bush<br>~ Campfire<br>X Corpse<br>V Velociraptor<br>T T-Rex<br>A Ankylosaurus<br>3 Triceratops<br>W Parasaurolophus<br>F Fleeing dinosaur",
+                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Arrows / D-Pad buttons. Each step consumes O2. Air pockets (*) recharge +50 O2 permanently.<br><br><strong>Arsenal:</strong><br>1. Machete: Melee, clears bushes (#).<br>2. Taser: Damage + stun chance for 3 turns. Ankylosaurus (A) is immune.<br>3. Grenade: F + arrow → throws 2 tiles, explodes in a 2×2 area. Ammo: 8.<br>4. Laser: F + arrow → straight line up to 8 tiles, stops at 1st dino. Self-recharges.<br><br><strong>Survival:</strong><br>• Corpses (X): harvest raw meat with Machete.<br>• Fire (~): Taser a bush (#) to start a fire. Dinos flee. Raw meat becomes cooked (+20 HP).<br>• Meat: auto-consumed when HP &lt; 100. Max: 3 portions.<br><br><strong>Shortcuts (no turn cost):</strong><br>O = O2 | H = HP | P = Parts | C = Meat | S = SCAN | 1/2/3/4 = weapon | F+arrow = attack<br><br><strong>Dinosaurs:</strong> V Velociraptor · T T-Rex · A Ankylosaurus · 3 Triceratops · W Parasaurolophus<br>Dinos are attracted to corpses — use them as bait!",
+                feedback: "Feedback",
+                status: "Status",
+                hp: "HP",
+                o2: "O2",
+                partsIcon: "📦",
+                ammoIcon: "💣",
+                meatIcon: "🥩",
+                map: "Map",
+                controls: "Controls",
+                weapons: "Weapons",
+                weapon: "Weapon",
+                log: "Action Log",
+                scan: "SCAN",
+                fire: "FIRE",
+                logLabel: "Action history",
+                lockedCard: "Locked card",
+                kill: "Kill",
+                hit: "Hit",
+                remainingHp: "Remaining HP",
+                weaponNames: ["Machete", "Taser", "Grenade", "Laser"],
+                loreText: "Year 2150. Humanity has depleted Earth's resources. You are Dr. Aris, a scientist sent 65 million years into the past to collect pieces of experimental technology left by a lost expedition. Your Time Machine broke on impact. Find the 5 parts, recover oxygen, and beware: you are not alone in the Cretaceous.",
+                creditsText: "<p><strong>Team:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Plot:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
+                win: "MISSION ACCOMPLISHED! You returned to the future!",
+                gameOver: "YOU BECAME DINOSAUR FOOD. GAME OVER.",
+                roarRex: "A DEAFENING ROAR ECHOES! The T-Rex woke up hungry!",
+                ankyloBounce: "Ankylosaurus tail-slammed you! You were knocked back!",
+                ankyloImune: "Taser ineffective! Ankylosaurus armor blocked the shock!",
+                triCharge: "Triceratops CHARGED! Brutal impact!",
+                paraVocal: "PARASAUROLOPHUS CALL! Nearby dinos were alerted!",
+                roarVelo: "You hear a distant roar... a Velociraptor has entered the area!",
+                partFound: "Here: Part collected!",
+                machineMissing: "Here: Time Machine (parts missing).",
+                o2Found: "Here: Oxygen recovered!",
+                bushBlock: "Dense bush blocks the way! Use Machete.",
+                noAmmo: "No grenades left.",
+                laserNoAmmo: "Laser recharging... wait.",
+                laserFire: "Laser fired!",
+                laserHit: "Laser hit",
+                laserMiss: "Laser: clear path.",
+                aimMode: "Aim mode: choose direction (arrow) or F for same cell.",
+                aimCancel: "Aim cancelled.",
+                scanned: "Scanning from",
+                nothingNear: "Nothing nearby.",
+                steps: "steps to the",
+                here: "Here",
+                eating: "is devouring a corpse! He will be distracted.",
+                fighting: "FIGHT! {a} and {b} are fighting over the corpse!",
+                fightWin: "{winner} won the fight. {loser} was eliminated!",
+                attack: "ALERT: Attack from",
+                rexRoar: "The T-Rex ROARED! The herd is fleeing!",
+                rexAttackDino: "T-Rex ATTACKED {target} in a frenzy!",
+                stampede: "A panicked dinosaur runs past you! -{dmg} HP.",
+                meatHarvest: 'Meat extracted from corpse! +15 HP.',
+                meatRaw:     'Raw meat stored. Get near a fire to cook it.',
+                meatCooked:  'Meat cooked at the fire! Auto-consumed when HP < 100.',
+                meatEaten:   'Meat consumed: +20 HP.',
+                meatFull:    'HP full. Meat saved for later.',
+                meatMaxed:   'Already carrying 3 portions. Drop or consume first.',
+                taserBush:   'Spark in vegetation! Bush caught fire.',
+                fireScared:  'Dinosaur fled from the fire!',
+                fireOut:     'Fire went out.',
+                names: { 'P': 'Part', '*': 'Air', '#': 'Bush', 'M': 'Machine', 'T': 'T-Rex', 'V': 'Velociraptor', 'X': 'Corpse', 'F': 'Fleeing Dinosaur', 'A': 'Ankylosaurus', '3': 'Triceratops', 'W': 'Parasaurolophus' }
+            }
+        };
+
+        let player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
+        const weapons = ['Machete', 'Taser', 'Granada', 'Laser'];
+        let laserAmmo = 5;      // tiros disponíveis
+        let laserCooldown = 0;  // turnos até ganhar +1 tiro
+        let scanAmmo = 3;       // usos de scan disponíveis
+        let scanCooldown = 0;   // turnos até ganhar +1 uso
+        let aimMode = false;    // aguardando seta após F
+        let map = [];
+        let dinos = [];
+        let corpses = [];
+        let fires = [];  // {x, y, turns} — fogueiras ativas
+        let rexRoarTimer = 0; // turnos até o próximo rugido do T-Rex
+        let audioCtx = null;
+        let ambientNodes = null; // nós do som ambiente
+        let breathingTimeout = null; // handle do loop de respiração ofegante
+        let helpReturnScreen = 'screen-menu';
+        let howToReturnScreen = 'screen-menu';
+        let legendReturnScreen = 'screen-help';
+
+        // --- Galeria / Colecionáveis ---
+        let unlockedCards = new Set();
+        try {
+            const saved = localStorage.getItem('dinoCrawlerCards');
+            if(saved) JSON.parse(saved).forEach(id => unlockedCards.add(id));
+        } catch(e) {}
+        let killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
+        let stunDone = false;
+
+        const CARDS = {
+            bestiary: [
+                {
+                    id: 'velociraptor',
+                    name: { pt: 'Velociraptor', en: 'Velociraptor' },
+                    art: `  __\n /  \\>\n( o  )\n \\__/|\n  | |\\\n  | | \\`,
+                    altText: { pt: 'Velociraptor em postura de ataque, com garra traseira erguida e boca aberta', en: 'Velociraptor in attack posture, rear claw raised and mouth open' },
+                    fact: { pt: 'O Velociraptor real tinha o tamanho de um peru — e era coberto de penas. O que Hollywood mostrou era, na verdade, um Deinonychus.', en: 'The real Velociraptor was turkey-sized — and feathered. What Hollywood showed was actually a Deinonychus.' },
+                    badge: { pt: '✦ Desbloqueado: 1° Kill', en: '✦ Unlocked: 1st Kill' }
+                },
+                {
+                    id: 'trex',
+                    name: { pt: 'Tiranossauro Rex', en: 'Tyrannosaurus Rex' },
+                    art: `  ___\n /O O\\\n|  ^  |\n \\___/\n  | |\n _| |_`,
+                    altText: { pt: 'T-Rex visto de frente, cabeça enorme e braços atrofiados', en: 'T-Rex seen from the front, huge head and tiny arms' },
+                    fact: { pt: 'A visão do T-Rex era mais aguçada do que a de uma águia. Ele não caçava pelo movimento — ele te viu antes de você perceber que ele existia.', en: "T-Rex vision was sharper than an eagle's. It didn't hunt by movement — it saw you before you knew it existed." },
+                    badge: { pt: '✦ Desbloqueado: Rex Abatido', en: '✦ Unlocked: Rex Slain' }
+                },
+                {
+                    id: 'herd',
+                    name: { pt: 'Dino de Manada', en: 'Herd Dinosaur' },
+                    art: `->-\\\n   /O\\\n  ( - )\n ->/ \\->\n  |   |`,
+                    altText: { pt: 'Dinossauro de manada em corrida, corpo inclinado para frente em alta velocidade', en: 'Herd dinosaur running, body leaning forward at full speed' },
+                    fact: { pt: 'Fósseis de Tenontosaurus cercado por vários Deinonychus sugerem que caça coordenada em grupo era real — e letal.', en: 'Fossils of Tenontosaurus surrounded by multiple Deinonychus suggest coordinated group hunting was real — and lethal.' },
+                    badge: { pt: '✦ Desbloqueado: 1° Kill de Manada', en: '✦ Unlocked: 1st Herd Kill' }
+                }
+            ],
+            achievements: [
+                {
+                    id: 'stun',
+                    name: { pt: 'Choque Certeiro', en: 'Precise Shock' },
+                    art: `  /|\\\n / | \\\n/~~*~~\\\n   |\n  /|\\`,
+                    altText: { pt: 'Taser faiscando com arco elétrico ao centro', en: 'Taser sparking with electric arc at center' },
+                    fact: { pt: 'O Taser cria um campo elétrico que interrompe os sinais nervosos musculares. Num dino de 500kg, isso exige coragem — ou loucura.', en: 'A Taser creates an electric field disrupting muscle nerve signals. On a 500kg dino, that takes courage — or madness.' },
+                    badge: { pt: '✦ Desbloqueado: 1° Stun com Taser', en: '✦ Unlocked: 1st Taser Stun' }
+                },
+                {
+                    id: 'ankylosaur',
+                    name: { pt: 'Anquilossauro', en: 'Ankylosaurus' },
+                    art: `  _____\n /o   o\\\n|  ---  |\n|_______| \n  | | |\n  o   o`,
+                    altText: { pt: 'Anquilossauro visto de cima, corpo blindado com placas ósseas e cauda em forma de clava', en: 'Ankylosaurus seen from above, armored body with bone plates and club-shaped tail' },
+                    fact: { pt: 'A cauda-clava do Anquilossauro podia quebrar ossos do T-Rex. A couraça era tão densa que até raios X têm dificuldade de penetrar fósseis inteiros.', en: "Ankylosaurus's club tail could break T-Rex bones. The armor was so dense that X-rays struggle to penetrate intact fossils." },
+                    badge: { pt: '✦ Desbloqueado: Anquilossauro Abatido', en: '✦ Unlocked: Ankylosaurus Slain' }
+                },
+                {
+                    id: 'triceratops',
+                    name: { pt: 'Triceratops', en: 'Triceratops' },
+                    art: `   ///\n  /O O\\\n |  ---\n  \\___/\n   | |`,
+                    altText: { pt: 'Triceratops em postura de carga, chifres apontados para frente e patas traseiras impulsionadas', en: 'Triceratops in charging posture, horns pointed forward and hind legs driving' },
+                    fact: { pt: 'O Triceratops era neutro — até você mexer com ele. Pesquisas recentes indicam que suas costas tinham uma franja de espinhos curtos, como um moicano ósseo.', en: 'Triceratops was neutral — until you provoked it. Recent research suggests its back had a fringe of short spines, like a bony mohawk.' },
+                    badge: { pt: '✦ Desbloqueado: Triceratops Abatido', en: '✦ Unlocked: Triceratops Slain' }
+                },
+                {
+                    id: 'parasaur',
+                    name: { pt: 'Parasaurolofo', en: 'Parasaurolophus' },
+                    art: `  (~~~)\n  /O  \\\n | === |\n  \\___/\n   | |`,
+                    altText: { pt: 'Parasaurolofo com crista tubular erguida, boca aberta em vocalização de alerta', en: 'Parasaurolophus with raised tubular crest, mouth open in alert call' },
+                    fact: { pt: 'A crista do Parasaurolofo era um tubo ósseo oco — funcionava como um instrumento de sopro, produzindo chamados graves que ecoavam por quilômetros.', en: "Parasaurolophus's crest was a hollow bone tube — it worked like a wind instrument, producing deep calls that echoed for kilometers." },
+                    badge: { pt: '✦ Desbloqueado: Parasaurolofo Abatido', en: '✦ Unlocked: Parasaurolophus Slain' }
+                },
+                {
+                    id: 'exterminator',
+                    name: { pt: 'Exterminador', en: 'Exterminator' },
+                    art: `X   X\n X X\n  X\n X X\nX   X`,
+                    altText: { pt: 'Pilha de ossos cruzados representando múltiplos abates', en: 'Crossed bones pile representing multiple kills' },
+                    fact: { pt: 'Velociraptor caçava em grupo. Matar 5 numa mesma expedição significa que você quebrou a hierarquia da matilha. O restante vai lembrar.', en: 'Velociraptor hunted in packs. Killing 5 in one run means you broke the pack hierarchy. The rest will remember.' },
+                    badge: { pt: '✦ Desbloqueado: 5 Velos Abatidos', en: '✦ Unlocked: 5 Velos Killed' }
+                },
+                {
+                    id: 'apex',
+                    name: { pt: 'Apex Hunter', en: 'Apex Hunter' },
+                    art: `  /\\\n /XX\\\n/ __ \\\n|    |\n \\  /`,
+                    altText: { pt: 'Caveira de dinossauro sobre fundo escuro, símbolo de predador máximo', en: 'Dinosaur skull on dark background, symbol of apex predator' },
+                    fact: { pt: 'No Cretáceo, nenhum humano deveria estar no topo da cadeia alimentar. Você mudou isso.', en: 'In the Cretaceous, no human should be at the top of the food chain. You changed that.' },
+                    badge: { pt: '✦ Desbloqueado: 10 Kills na Run', en: '✦ Unlocked: 10 Kills in Run' }
+                },
+                {
+                    id: 'escape',
+                    name: { pt: 'Dr. Aris: A Fuga', en: 'Dr. Aris: The Escape' },
+                    art: `[Dr.Aris]\n  (o_o)\n  /|\\\n  / \\\n~MAQUINA~`,
+                    altText: { pt: 'Dr. Aris de frente para a Máquina do Tempo, prestes a escapar do Cretáceo', en: 'Dr. Aris facing the Time Machine, about to escape the Cretaceous' },
+                    fact: { pt: '"Eu sobrevivi ao Cretáceo com uma mochila, um machete e muito oxigênio. E prometo que nunca mais vou reclamar do trânsito." — Dr. Aris', en: '"I survived the Cretaceous with a backpack, a machete, and a lot of oxygen. I promise I\'ll never complain about traffic again." — Dr. Aris' },
+                    badge: { pt: '✦ Desbloqueado: Escapou!', en: '✦ Unlocked: Escaped!' }
+                },
+                {
+                    id: 'gambler',
+                    name: { pt: 'O Apostador', en: 'The Gambler' },
+                    art: `  ???\n /T-R\\\n| REX |\n \\---/\n  ZAP`,
+                    altText: { pt: 'Silhueta do T-Rex com raio de taser apontado para ele, simbolizando uma aposta arriscada', en: 'T-Rex silhouette with taser bolt aimed at it, symbolizing a risky bet' },
+                    fact: { pt: 'A probabilidade de paralisar um T-Rex com um Taser é de 35%. Você sabia disso e atirou mesmo assim. Isso tem um nome — e não é coragem.', en: 'The odds of stunning a T-Rex with a Taser are 35%. You knew that and fired anyway. That has a name — and it\'s not courage.' },
+                    badge: { pt: '✦ Desbloqueado: Taser no T-Rex', en: '✦ Unlocked: Taser on T-Rex' }
+                },
+                {
+                    id: 'stubborn',
+                    name: { pt: 'Teimoso', en: 'Stubborn' },
+                    art: `  (o_o)\n  /|\\\n  / \\\n  [M]\n  ???`,
+                    altText: { pt: 'Dr. Aris parado em frente à máquina do tempo sem as peças, olhar confuso', en: 'Dr. Aris standing in front of the time machine without parts, confused look' },
+                    fact: { pt: 'A Máquina precisa de 5 peças para funcionar. Você chegou sem elas. Tecnicamente isso é uma visita. Tecnicamente.', en: 'The Machine needs 5 parts to work. You arrived without them. Technically that\'s a visit. Technically.' },
+                    badge: { pt: '✦ Desbloqueado: Máquina sem peças', en: '✦ Unlocked: Machine without parts' }
+                },
+                {
+                    id: 'countdown',
+                    name: { pt: 'Countdown', en: 'Countdown' },
+                    art: `  10...\n  5...\n  3...\n  1...\n  [GO]`,
+                    altText: { pt: 'Contagem regressiva em texto, chegando a zero — referência ao tema da Game Jam', en: 'Countdown text reaching zero — reference to the Game Jam theme' },
+                    fact: { pt: 'O tema da GMTK 2026 era Built to Scale. Você saiu com o O2 no limite — cada segundo contado. A Máquina ligou no último suspiro.', en: 'GMTK 2026\'s theme was Built to Scale. You escaped with O2 at the limit — every second counted. The Machine fired on the last breath.' },
+                    badge: { pt: '✦ Desbloqueado: Fugiu com O2 ≤ 10', en: '✦ Unlocked: Escaped with O2 ≤ 10' }
+                },
+                {
+                    id: 'lumberjack',
+                    name: { pt: 'Lenhador', en: 'Lumberjack' },
+                    art: `  ###\n  #|#\n  #|#\n  |||\n  |||`,
+                    altText: { pt: 'Arbusto sendo cortado ao meio por um golpe de machete', en: 'Bush being cut in half by a machete blow' },
+                    fact: { pt: 'Os arbustos do Cretáceo eram cycas e fetos gigantes — plantas que sobreviveram à extinção dos dinos. Você cortou uma. Parabéns.', en: 'The Cretaceous bushes were cycads and giant ferns — plants that survived the dino extinction. You cut one down. Congrats.' },
+                    badge: { pt: '✦ Desbloqueado: Arbusto Cortado', en: '✦ Unlocked: Bush Cut' }
+                },
+                {
+                    id: 'disturber',
+                    name: { pt: 'Perturbador', en: 'Disturber' },
+                    art: `  XXX\n X   X\n  ---\n  ???\n  ...`,
+                    altText: { pt: 'Cadáver de dinossauro sendo destruído, representado por X e traços', en: 'Dinosaur corpse being destroyed, represented by X marks and dashes' },
+                    fact: { pt: 'Os dinos são atraídos por cadáveres. Destruir um remove a isca — mas também apaga evidências. O que você está escondendo, Dr. Aris?', en: 'Dinos are attracted to corpses. Destroying one removes the bait — but also erases evidence. What are you hiding, Dr. Aris?' },
+                    badge: { pt: '✦ Desbloqueado: Cadáver Destruído', en: '✦ Unlocked: Corpse Destroyed' }
+                }
+            ]
+        };
+
+        function unlockCard(id) {
+            unlockedCards.add(id);
+            try { localStorage.setItem('dinoCrawlerCards', JSON.stringify([...unlockedCards])); } catch(e) {}
+            updateGalleryAvailability();
+        }
+
+        function renderCard(card, unlocked) {
+            const l = lang || 'pt';
+            const div = document.createElement('div');
+            div.className = 'gallery-card' + (unlocked ? '' : ' locked');
+            const artLines = card.art.replace(/\\n/g, '\n');
+            if(unlocked) {
+                div.setAttribute('aria-label', card.name[l] + '. ' + card.altText[l] + '. ' + card.fact[l]);
+                div.innerHTML =
+                    '<div class="card-name">' + card.name[l] + '</div>' +
+                    '<pre class="card-art" aria-hidden="true">' + artLines + '</pre>' +
+                    '<div class="card-fact">' + card.fact[l] + '</div>' +
+                    '<div class="card-badge">' + card.badge[l] + '</div>';
+            } else {
+                div.setAttribute('aria-label', i18n[lang].lockedCard);
+                div.innerHTML =
+                    '<div class="card-name">???</div>' +
+                    '<pre class="card-art" aria-hidden="true">  ???\n\n  ???\n\n  ???</pre>' +
+                    '<div class="card-fact">???</div>';
+            }
+            return div;
+        }
+
+        function openGallery() {
+            if (unlockedCards.size === 0) return;
+            renderGalleryTab('bestiary');
+            switchTab('bestiary');
+            showScreen('screen-gallery');
+        }
+
+        function switchTab(tab) {
+            document.getElementById('gallery-bestiary').style.display = tab === 'bestiary' ? 'flex' : 'none';
+            document.getElementById('gallery-achievements').style.display = tab === 'achievements' ? 'flex' : 'none';
+            document.getElementById('tab-bestiary').classList.toggle('active-tab', tab === 'bestiary');
+            document.getElementById('tab-achievements').classList.toggle('active-tab', tab === 'achievements');
+            renderGalleryTab(tab);
+        }
+
+        function renderGalleryTab(tab) {
+            const container = document.getElementById('gallery-' + tab);
+            container.innerHTML = '';
+            CARDS[tab].forEach(card => container.appendChild(renderCard(card, unlockedCards.has(card.id))));
+        }
+
+        function updateGalleryLang() {
+            const l = lang || 'pt';
+            const t = { pt: { gallery: 'Galeria', back: 'Voltar', title: 'Galeria', best: 'Bestiário', ach: 'Conquistas' }, en: { gallery: 'Gallery', back: 'Back', title: 'Gallery', best: 'Bestiary', ach: 'Achievements' } };
+            document.getElementById('btn-gallery').textContent = t[l].gallery;
+            document.getElementById('btn-gallery-back').textContent = t[l].back;
+            document.getElementById('gallery-title').textContent = t[l].title;
+            document.getElementById('tab-bestiary').textContent = t[l].best;
+            document.getElementById('tab-achievements').textContent = t[l].ach;
+        }
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+        }
+
+        function openHelp(returnScreen) {
+            helpReturnScreen = returnScreen || 'screen-menu';
+            showScreen('screen-help');
+        }
+
+        function closeHelp() {
+            showScreen(helpReturnScreen || 'screen-menu');
+        }
+
+        function openHowTo(returnScreen) {
+            howToReturnScreen = returnScreen || 'screen-menu';
+            showScreen('screen-how-to');
+        }
+
+        function closeHowTo() {
+            showScreen(howToReturnScreen || 'screen-menu');
+        }
+
+        function openMapLegend(returnScreen) {
+            legendReturnScreen = returnScreen || 'screen-help';
+            showScreen('screen-map-legend');
+        }
+
+        function closeMapLegend() {
+            showScreen(legendReturnScreen || 'screen-help');
+        }
+
+        function updateGalleryAvailability() {
+            const button = document.getElementById('btn-gallery');
+            if (!button) return;
+            const available = unlockedCards.size > 0;
+            button.hidden = !available;
+            button.disabled = !available;
+        }
+
+        function setLang(l) {
+            lang = l;
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = i18n[lang];
+            document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
+            document.getElementById('btn-start').textContent = t.start;
+            document.getElementById('btn-how-to').textContent = t.howTo;
+            document.getElementById('how-to-title').textContent = t.howTo;
+            document.getElementById('how-to-content').innerHTML = `<p>${t.howToText}</p>`;
+            document.getElementById('btn-how-to-back').textContent = t.back;
+            document.getElementById('help-title').textContent = t.help;
+            document.getElementById('help-intro').innerHTML = `<p>${t.helpIntro}</p>`;
+            document.getElementById('btn-help').textContent = t.help;
+            document.getElementById('btn-game-help').textContent = t.help;
+            document.getElementById('btn-help-how-to').textContent = t.howTo;
+            document.getElementById('btn-help-legend').textContent = t.mapLegend;
+            document.getElementById('btn-help-back').textContent = t.back;
+            document.getElementById('legend-title').textContent = t.mapLegend;
+            document.getElementById('legend-content').innerHTML = `<p>${t.legendText}</p>`;
+            document.getElementById('btn-legend-back').textContent = t.back;
+            document.getElementById('btn-lore').textContent = t.lore;
+            document.getElementById('btn-credits').textContent = t.credits;
+            document.getElementById('btn-back-lang').textContent = t.changeLang;
+            document.getElementById('lore-title').textContent = t.lore;
+            document.getElementById('lore-content').innerHTML = `<p>${t.loreText}</p>`;
+            document.getElementById('btn-lore-back').textContent = t.back;
+            document.getElementById('credits-title').textContent = t.credits;
+            document.getElementById('credits-content').innerHTML = t.creditsText;
+            document.getElementById('btn-credits-back').textContent = t.back;
+
+            // Textos fixos da interface de jogo
+            document.getElementById('status-title').textContent = t.status;
+            document.getElementById('map-title').textContent = t.map;
+            document.getElementById('controls-title').textContent = t.controls;
+            document.getElementById('weapons-title').textContent = t.weapons;
+            document.getElementById('log-title').textContent = t.log;
+            document.getElementById('hp-label').textContent = t.hp + ':';
+            document.getElementById('o2-label').textContent = t.o2 + ':';
+            document.getElementById('parts-label').textContent = t.partsIcon;
+            document.getElementById('ammo-label').textContent = t.ammoIcon;
+            document.getElementById('meat-label').textContent = t.meatIcon;
+            document.getElementById('btn-scan').innerHTML = `${t.scan} 🔋(<span id="scan-ammo">${scanAmmo}</span>)`;
+            document.getElementById('btn-fire').textContent = `${t.fire} (F)`;
+            document.getElementById('w-1').textContent = `1. ${t.weaponNames[0].toUpperCase()}`;
+            document.getElementById('w-2').textContent = `2. ${t.weaponNames[1].toUpperCase()}`;
+            document.getElementById('w-3').textContent = `3. ${t.weaponNames[2].toUpperCase()}`;
+            document.getElementById('w-4').innerHTML = `4. ${t.weaponNames[3].toUpperCase()} ⚡ (<span id="laser-ammo">${laserAmmo}</span>)`;
+            document.getElementById('log').setAttribute('aria-label', t.logLabel);
+
+            // Tradução dos controles de acessibilidade
+            document.getElementById('btn-up').textContent = lang === 'pt' ? 'NORTE (↑)' : 'NORTH (↑)';
+            document.getElementById('btn-down').textContent = lang === 'pt' ? 'SUL (↓)' : 'SOUTH (↓)';
+            document.getElementById('btn-left').textContent = lang === 'pt' ? 'OESTE (←)' : 'WEST (←)';
+            document.getElementById('btn-right').textContent = lang === 'pt' ? 'LESTE (→)' : 'EAST (→)';
+            updateGalleryLang();
+            updateGalleryAvailability();
+            showScreen('screen-menu');
+        }
+
+        function startGame() {
+            player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
+            killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
+            stunDone = false;
+            initMap();
+            showScreen('screen-game');
+            startAmbient();
+        }
+
+        function startAmbient() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (ambientNodes) return;
+
+            // Protótipo: ambiente natural + música retro de tensão.
+            valleyAmbience.volume = 0.30;
+            valleyMusic.volume = 0.12;
+            valleyAmbience.currentTime = 0;
+            valleyMusic.currentTime = 0;
+            const ambiencePlay = valleyAmbience.play();
+            const musicPlay = valleyMusic.play();
+            if (ambiencePlay && ambiencePlay.catch) ambiencePlay.catch(() => {});
+            if (musicPlay && musicPlay.catch) musicPlay.catch(() => {});
+            ambientNodes = { audio: valleyAmbience, music: valleyMusic };
+        }
+
+        function stopAmbient() {
+            if (!ambientNodes) return;
+            try { ambientNodes.audio.pause(); ambientNodes.audio.currentTime = 0; } catch(e) {}
+            try { ambientNodes.music.pause(); ambientNodes.music.currentTime = 0; } catch(e) {}
+            ambientNodes = null;
+            stopBreathing();
+        }
+
+
+        function playSound(freq, type = 'sine', volume = 0.3, duration = 0.2, pan = 0) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            const panner = audioCtx.createStereoPanner();
+
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            
+            panner.pan.setValueAtTime(pan, audioCtx.currentTime);
+
+            osc.connect(gain);
+            gain.connect(panner);
+            panner.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        // --- Feedback sonoro de O2 baixo ---
+
+        function stopBreathing() {
+            if(breathingTimeout) { clearTimeout(breathingTimeout); breathingTimeout = null; }
+        }
+
+        function playBreathPulse() {
+            // Uma inalação curta (sine subindo) + exalação (sine descendo)
+            if(!audioCtx) return;
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(220, t);
+            osc.frequency.linearRampToValueAtTime(180, t + 0.25);
+            osc.frequency.linearRampToValueAtTime(150, t + 0.55);
+            gain.gain.setValueAtTime(0.0, t);
+            gain.gain.linearRampToValueAtTime(0.18, t + 0.1);
+            gain.gain.linearRampToValueAtTime(0.12, t + 0.3);
+            gain.gain.linearRampToValueAtTime(0.0, t + 0.55);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + 0.6);
+        }
+
+        function scheduleBreathing() {
+            stopBreathing();
+            if(player.o2 > 10) return;
+            playBreathPulse();
+            // Intervalo diminui com o O2: de 2s (o2=10) até 0.9s (o2=1)
+            const interval = Math.max(900, 200 * player.o2);
+            breathingTimeout = setTimeout(() => {
+                if(player.o2 > 0 && player.hp > 0) scheduleBreathing();
+            }, interval);
+        }
+
+        // Distorção do sonar quando O2 ≤ 20: toca um chirp breve e instável
+        function playO2Warning() {
+            if(!audioCtx) return;
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            // Frequência oscila irregularmente — simula o sonar falhando
+            osc.frequency.setValueAtTime(880, t);
+            osc.frequency.linearRampToValueAtTime(620 + Math.random() * 200, t + 0.12);
+            osc.frequency.linearRampToValueAtTime(880, t + 0.22);
+            gain.gain.setValueAtTime(0.12, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + 0.25);
+        }
+
+        function initMap() {
+            map = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill('.'));
+            dinos = [];
+            corpses = [];
+            map[0][0] = 'M';
+            for(let i=0; i<5; i++) {
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
+                map[ry][rx] = 'P';
+            }
+            for(let i=0; i<5; i++) {
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
+                map[ry][rx] = '*';
+            }
+            for(let i=0; i<15; i++) {
+                let rx, ry;
+                do { rx = Math.floor(Math.random()*18)+1; ry = Math.floor(Math.random()*18)+1; } while(map[ry][rx] !== '.');
+                map[ry][rx] = '#';
+            }
+            // Spawn inicial: 1V + 1A + 1'3' + 1W
+            let rx, ry;
+            rx = Math.floor(Math.random()*15)+4; ry = Math.floor(Math.random()*15)+4;
+            if(map[ry][rx] === '.') dinos.push({x: rx, y: ry, type: 'V', hp: 30, stunned: 0, eatingTurns: 0});
+            do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+            dinos.push({x: rx, y: ry, type: 'A', hp: 80, stunned: 0, eatingTurns: 0, slowTick: 0, charged: false});
+            do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+            dinos.push({x: rx, y: ry, type: '3', hp: 60, stunned: 0, eatingTurns: 0, provoked: false});
+            do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
+            dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
+            laserAmmo = 5; laserCooldown = 0; aimMode = false; scanAmmo = 3; scanCooldown = 0; fires = [];
+            document.getElementById('laser-ammo').textContent = 5;
+            log.innerHTML = '';
+            logLines.length = 0;
+            logFooter.textContent = '';
+            draw();
+        }
+
+        function spawnTRex() {
+            addToLog(i18n[lang].roarRex);
+            playSound(60, 'sawtooth', 1.5, 0.5);
+            let corners = [[18, 18], [18, 0], [0, 18]];
+            let pick = corners[Math.floor(Math.random() * corners.length)];
+            dinos.push({x: pick[0], y: pick[1], type: 'T', hp: 120, eatingTurns: 0});
+            rexRoarTimer = 8 + Math.floor(Math.random() * 5); // primeiro rugido em 8~12 turnos
+            draw();
+        }
+
+        function triggerRexRoar() {
+            addToLog(i18n[lang].rexRoar);
+            // Rugido grave longo
+            playSound(45, 'sawtooth', 1.2, 0.8);
+            setTimeout(() => playSound(38, 'sawtooth', 0.8, 0.6), 300);
+
+            // Spawna 2~3 dinos em fuga em bordas aleatórias — pode ser qualquer herbívoro do vale
+            const count = 2 + Math.floor(Math.random() * 2);
+            for(let i = 0; i < count; i++) {
+                // Escolhe uma borda de entrada
+                const side = Math.floor(Math.random() * 4);
+                let sx, sy, dirX, dirY;
+                if(side === 0)      { sx = Math.floor(Math.random() * GRID_SIZE); sy = 0;  dirX = 0;  dirY = 1; }  // norte → sul
+                else if(side === 1) { sx = Math.floor(Math.random() * GRID_SIZE); sy = GRID_SIZE-1; dirX = 0; dirY = -1; } // sul → norte
+                else if(side === 2) { sx = 0; sy = Math.floor(Math.random() * GRID_SIZE); dirX = 1;  dirY = 0; }  // oeste → leste
+                else                { sx = GRID_SIZE-1; sy = Math.floor(Math.random() * GRID_SIZE); dirX = -1; dirY = 0; } // leste → oeste
+                const fleeTypes = ['F', 'A', '3', 'W'];
+                const ftype = fleeTypes[Math.floor(Math.random() * fleeTypes.length)];
+                const fhp = ftype === 'A' ? 80 : ftype === '3' ? 60 : ftype === 'W' ? 25 : 20;
+                dinos.push({ x: sx, y: sy, type: ftype, hp: fhp, stunned: 0, eatingTurns: 0, dirX, dirY, fleeing: true, slowTick: 0, provoked: false });
+            }
+
+            // T-Rex ataca dinos adjacentes (raiva — ataca tudo)
+            const rex = dinos.find(d => d.type === 'T');
+            if(rex) {
+                const adjacent = dinos.filter(d => d !== rex && Math.abs(d.x - rex.x) + Math.abs(d.y - rex.y) <= 1);
+                adjacent.forEach(target => {
+                    const dmg = 40;
+                    target.hp -= dmg;
+                    addToLog(i18n[lang].rexAttackDino.replace('{target}', i18n[lang].names[target.type]));
+                    playSound(90, 'sawtooth', 0.5, 0.3);
+                    if(target.hp <= 0) {
+                        corpses.push({ x: target.x, y: target.y });
+                        dinos.splice(dinos.indexOf(target), 1);
+                    }
+                });
+            }
+
+            rexRoarTimer = 8 + Math.floor(Math.random() * 6); // próximo rugido em 8~13 turnos
+        }
+
+        function spawnNewDino() {
+            let rx = Math.floor(Math.random() * GRID_SIZE);
+            let ry = Math.floor(Math.random() * GRID_SIZE);
+            const hasTRex = dinos.some(d => d.type === 'T');
+            const canSpawnTRex = player.parts >= 5 && !hasTRex;
+            
+            if(Math.abs(rx - player.x) + Math.abs(ry - player.y) > 10 && map[ry][rx] === '.' && (rx !== player.x || ry !== player.y) && (rx !== 0 || ry !== 0)) {
+                if(!dinos.some(d => d.x === rx && d.y === ry) && !corpses.some(c => c.x === rx && c.y === ry)) {
+                    // Impede spawn de dinos fantasmas em cima de cadáveres
+                    let type = (canSpawnTRex && Math.random() > 0.8) ? 'T' : 'V';
+                    if (type === 'T' && (!canSpawnTRex)) type = 'V';
+                    dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
+                    addToLog(type === 'T' ? i18n[lang].roarRex : i18n[lang].roarVelo);
+                    playSound(type === 'T' ? 55 : 220, 'sawtooth', 0.4, 0.6);
+                }
+            }
+        }
+
+        function draw() {
+            container.innerHTML = '';
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (x === player.x && y === player.y) {
+                        cell.textContent = '@';
+                        cell.classList.add('player');
+                    } else {
+                        const dino = dinos.find(d => d.x === x && d.y === y);
+                        const corpse = corpses.find(c => c.x === x && c.y === y);
+                        if (dino) {
+                            cell.textContent = dino.type;
+                            if (dino.type === 'A') cell.classList.add('ankylosaur');
+                            else if (dino.type === '3') cell.classList.add('triceratops');
+                            else if (dino.type === 'W') cell.classList.add('parasaur');
+                        }
+                        else if (fires.some(f=>f.x===x&&f.y===y)) { cell.textContent='~'; cell.classList.add('fire'); }
+                        else if (corpse) cell.textContent = 'X';
+                        else {
+                            cell.textContent = map[y][x];
+                            if (map[y][x] === 'P') cell.classList.add('part');
+                            if (map[y][x] === '*') cell.classList.add('air');
+                            if (map[y][x] === 'M') cell.style.color = '#ff00ff'; 
+                        }
+                    }
+                    container.appendChild(cell);
+                }
+            }
+            document.getElementById('hp').textContent = player.hp;
+            document.getElementById('o2').textContent = player.o2;
+            document.getElementById('parts').textContent = player.parts;
+            document.getElementById('ammo').textContent = player.ammo;
+            const meatEl = document.getElementById('meat'); if(meatEl) meatEl.textContent = player.meat;
+        }
+
+        function move(dx, dy) {
+            const nx = player.x + dx; const ny = player.y + dy;
+            if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                if(map[ny][nx] === '#') {
+                    addToLog(i18n[lang].bushBlock);
+                    srSay(lang === 'pt' ? 'Bloqueado: arbusto.' : 'Blocked: bush.');
+                    playSound(150, 'square', 0.2);
+                    return;
+                }
+                player.x = nx; player.y = ny;
+                player.o2--;
+                if(player.ammo < 8) player.ammo++;
+                // Recarga do laser: +1 tiro a cada 2 turnos de cooldown
+                if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; document.getElementById('laser-ammo').textContent = laserAmmo; } }
+                if(scanCooldown > 0) { scanCooldown--; if(scanCooldown === 0 && scanAmmo < 3) { scanAmmo++; document.getElementById('scan-ammo').textContent = scanAmmo; } }
+                // Fogueiras: decrementar e apagar
+                fires = fires.filter(f => {
+                    f.turns--;
+                    if(f.turns <= 0){ addToLog(i18n[lang].fireOut); srSay(i18n[lang].fireOut); playFireOut(); return false; }
+                    return true;
+                });
+                let logMsg = `${player.x}, ${player.y}.`;
+                let srParts = [];
+
+                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " O2!"; playSound(100, 'sawtooth'); }
+                // Feedback sonoro progressivo de O2 baixo
+                if(player.o2 <= 20 && player.o2 > 10) playO2Warning();
+                if(player.o2 <= 10 && player.o2 > 0) scheduleBreathing();
+
+                if(map[player.y][player.x] === 'P') {
+                    player.parts++; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].partFound;
+                    srParts.push(lang === 'pt' ? `Peça coletada! ${player.parts} de 5.` : `Part collected! ${player.parts} of 5.`);
+                    playSound(1200, 'sine', 0.4); if(player.parts === 5) spawnTRex();
+                }
+                if(map[player.y][player.x] === 'M') {
+                    if(player.parts >= 5) {
+                        unlockCard('escape');
+                        if(player.o2 <= 10) unlockCard('countdown');
+                        addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dr. Aris — A Fuga!' : 'Card unlocked: Dr. Aris — The Escape!'));
+                        if(player.o2 <= 10) addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Countdown!' : 'Card unlocked: Countdown!'));
+                        addToLog(i18n[lang].win); playSound(1500, 'triangle', 1.0, 0.4);
+                        srSay(lang === 'pt' ? 'Vitória! Máquina ativada.' : 'Victory! Machine activated.');
+                        stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
+                    } else {
+                        logMsg += " " + i18n[lang].machineMissing;
+                        srParts.push(lang === 'pt' ? `Máquina do tempo. Faltam ${5 - player.parts} peças.` : `Time machine. ${5 - player.parts} parts missing.`);
+                        playSound(523.25, 'sine', 0.5, 0.3);
+                        if(!unlockedCards.has('stubborn')) {
+                            unlockCard('stubborn');
+                            addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Teimoso!' : 'Card unlocked: Stubborn!'));
+                        }
+                    }
+                }
+                if(map[player.y][player.x] === '*') {
+                    player.o2 = Math.min(100, player.o2 + 50); logMsg += " " + i18n[lang].o2Found;
+                    srParts.push(lang === 'pt' ? 'Oxigênio recarregado.' : 'Oxygen recharged.');
+                    playSound(600, 'triangle', 0.5);
+                }
+                // Fogueira adjacente: cozinha carne crua e auto-consome se HP < 100
+                if(player.meat > 0) {
+                    const nearFire = fires.some(f => Math.abs(f.x - player.x) + Math.abs(f.y - player.y) <= 1);
+                    if(nearFire) {
+                        addToLog(i18n[lang].meatCooked); srParts.push(i18n[lang].meatCooked);
+                        playSound(440, 'triangle', 0.3, 0.4);
+                        // auto-consome enquanto tiver carne e HP < 100
+                        while(player.meat > 0 && player.hp < 100) {
+                            player.meat--;
+                            player.hp = Math.min(120, player.hp + 20);
+                            addToLog(i18n[lang].meatEaten); srParts.push(i18n[lang].meatEaten);
+                            playSound(600, 'sine', 0.3, 0.2);
+                        }
+                        if(player.hp >= 100) { addToLog(i18n[lang].meatFull); }
+                    }
+                }
+
+                // Alerta de HP/O2 crítico para leitor de tela
+                if(player.hp <= 30) srParts.push(lang === 'pt' ? `HP crítico: ${player.hp}.` : `Critical HP: ${player.hp}.`);
+                else if(player.o2 <= 10) srParts.push(lang === 'pt' ? `O2 crítico: ${player.o2}.` : `Critical O2: ${player.o2}.`);
+
+                // O que há nas células adjacentes (raio 1) para o leitor de tela
+                const adjNames = [];
+                const dinoNames = lang === 'pt' ? i18n.pt.names : i18n.en.names;
+                for(const [adx, ady] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+                    const ax = player.x + adx; const ay = player.y + ady;
+                    if(ax < 0 || ax >= GRID_SIZE || ay < 0 || ay >= GRID_SIZE) continue;
+                    const adjDino = dinos.find(d => d.x === ax && d.y === ay);
+                    if(adjDino) adjNames.push(dinoNames[adjDino.type] || adjDino.type);
+                    else if(map[ay][ax] === 'P') adjNames.push(lang === 'pt' ? 'peça' : 'part');
+                    else if(map[ay][ax] === 'M') adjNames.push(lang === 'pt' ? 'máquina do tempo' : 'time machine');
+                    else if(map[ay][ax] === '*') adjNames.push(lang === 'pt' ? 'O2' : 'O2 canister');
+                    else if(map[ay][ax] === '#') adjNames.push(lang === 'pt' ? 'arbusto' : 'bush');
+                    else if(fires.some(f => f.x === ax && f.y === ay)) adjNames.push(lang === 'pt' ? 'fogueira' : 'fire');
+                    else if(corpses.some(co => co.x === ax && co.y === ay)) adjNames.push(lang === 'pt' ? 'cadáver' : 'corpse');
+                }
+                if(adjNames.length > 0) srParts.push((lang === 'pt' ? 'Adjacente: ' : 'Adjacent: ') + adjNames.join(', ') + '.');
+
+                const dirLabel = (function() {
+                    if(dx === 0 && dy === -1) return lang === 'pt' ? 'Norte' : 'North';
+                    if(dx === 0 && dy ===  1) return lang === 'pt' ? 'Sul'   : 'South';
+                    if(dx === -1 && dy === 0) return lang === 'pt' ? 'Oeste' : 'West';
+                    if(dx ===  1 && dy === 0) return lang === 'pt' ? 'Leste' : 'East';
+                    return '';
+                })();
+                srSay([dirLabel].concat(srParts).filter(Boolean).join('. '));
+
+                addToLog(logMsg);
+                playEnvironmentSonar();
+                moveDinos();
+                let spawnChance = 0.02 + (player.parts * 0.008);
+                if(dinos.length < 6 && Math.random() < spawnChance) spawnNewDino();
+                draw();
+            }
+        }
+
+        function moveDinos() {
+            const px = player.x; const py = player.y;
+
+            // Tick do rugido do T-Rex
+            if(dinos.some(d => d.type === 'T')) {
+                rexRoarTimer--;
+                if(rexRoarTimer <= 0) triggerRexRoar();
+            }
+
+            // Remove dinos em fuga que saíram do mapa
+            for(let i = dinos.length - 1; i >= 0; i--) {
+                const d = dinos[i];
+                if(d.fleeing && (d.x < 0 || d.x >= GRID_SIZE || d.y < 0 || d.y >= GRID_SIZE)) {
+                    dinos.splice(i, 1);
+                }
+            }
+
+            dinos.forEach(d => {
+                if(d.stunned > 0) { d.stunned--; return; }
+
+                // Dino em fuga (qualquer tipo): corre em linha reta
+                if(d.fleeing) {
+                    d.x += d.dirX; d.y += d.dirY;
+                    if(d.x === px && d.y === py) {
+                        const dmg = d.type === 'A' ? 20 : d.type === '3' ? 15 : 8;
+                        player.hp -= dmg;
+                        addToLog(i18n[lang].stampede.replace('{dmg}', dmg)); srSay(i18n[lang].stampede.replace('{dmg}', dmg) + ' HP: ' + player.hp + '.');
+                        playSound(200, 'sawtooth', 0.5, 0.3);
+                        if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                    }
+                    return;
+                }
+
+                // --- Anquilossauro ---
+                if(d.type === 'A') {
+                    d.slowTick = (d.slowTick || 0) + 1;
+                    if(d.slowTick % 2 !== 0) return; // move 1 a cada 2 turnos
+                    const distA = Math.abs(px - d.x) + Math.abs(py - d.y);
+                    if(distA <= 1) {
+                        // Ataque de cauda: empurra o jogador 2 células
+                        const pushDx = Math.sign(px - d.x); const pushDy = Math.sign(py - d.y);
+                        player.x = Math.max(0, Math.min(GRID_SIZE-1, px + pushDx * 1));
+                        player.y = Math.max(0, Math.min(GRID_SIZE-1, py + pushDy * 1));
+                        player.hp -= 10;
+                        addToLog(i18n[lang].ankyloBounce); srSay(i18n[lang].ankyloBounce + ' HP: ' + player.hp + '.');
+                        playSound(80, 'sawtooth', 0.5, 0.4);
+                        if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                    } else if(distA <= 6) {
+                        let adx = px - d.x; let ady = py - d.y;
+                        if(Math.abs(adx) > Math.abs(ady)) d.x += adx > 0 ? 1 : -1; else d.y += ady > 0 ? 1 : -1;
+                    }
+                    d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
+                    return;
+                }
+
+                // --- Triceratops ---
+                if(d.type === '3') {
+                    if(d.provoked) {
+                        // Carrega direto em linha reta até o jogador
+                        const distT = Math.abs(px - d.x) + Math.abs(py - d.y);
+                        if(distT <= 1) {
+                            player.hp -= 20;
+                            addToLog(i18n[lang].triCharge); srSay(i18n[lang].triCharge + ' HP: ' + player.hp + '.');
+                            playSound(100, 'sawtooth', 0.6, 0.4);
+                            d.provoked = false;
+                            if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                        } else {
+                            // Move 2 células em direção ao player
+                            for(let m = 0; m < 2; m++) {
+                                let tdx = px - d.x; let tdy = py - d.y;
+                                if(Math.abs(tdx) > Math.abs(tdy)) d.x += tdx > 0 ? 1 : -1; else d.y += tdy > 0 ? 1 : -1;
+                                d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
+                            }
+                        }
+                    }
+                    // Neutro: fica parado
+                    return;
+                }
+
+                // --- Parasaurolofo ---
+                if(d.type === 'W') {
+                    const distW = Math.abs(px - d.x) + Math.abs(py - d.y);
+                    if(distW <= 4) {
+                        // Vocaliza e alerta dinos no raio 6
+                        addToLog(i18n[lang].paraVocal); srSay(i18n[lang].paraVocal);
+                        playSound(440, 'sine', 0.4, 0.6);
+                        dinos.forEach(other => {
+                            if(other !== d && other.type !== 'W' && other.type !== 'T') {
+                                const od = Math.abs(other.x - d.x) + Math.abs(other.y - d.y);
+                                if(od <= 6) other.chaseOverride = true;
+                            }
+                        });
+                        // Foge do jogador
+                        let wdx = d.x - px; let wdy = d.y - py;
+                        if(Math.abs(wdx) > Math.abs(wdy)) d.x += wdx > 0 ? 1 : -1; else d.y += wdy > 0 ? 1 : -1;
+                        d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
+                    }
+                    return;
+                }
+
+                if(d.eatingTurns > 0) {
+                    d.eatingTurns--;
+                    if(d.eatingTurns === 0) {
+                        const eaten = corpses.findIndex(c => c.x === d.x && c.y === d.y);
+                        if(eaten !== -1) corpses.splice(eaten, 1);
+                    }
+                    return;
+                }
+
+                // T-Rex ataca dinos adjacentes (V ou F) antes de perseguir player
+                if(d.type === 'T') {
+                    const prey = dinos.find(other => other !== d && Math.abs(other.x - d.x) + Math.abs(other.y - d.y) <= 1);
+                    if(prey) {
+                        const dmg = 40; prey.hp -= dmg;
+                        addToLog(i18n[lang].rexAttackDino.replace('{target}', i18n[lang].names[prey.type]));
+                        playSound(90, 'sawtooth', 0.5, 0.3);
+                        if(prey.hp <= 0) { corpses.push({ x: prey.x, y: prey.y }); dinos.splice(dinos.indexOf(prey), 1); }
+                        return;
+                    }
+                }
+
+                let corpseIdx = corpses.findIndex(c => Math.abs(c.x - d.x) <= 1 && Math.abs(c.y - d.y) <= 1);
+                if(corpseIdx !== -1) {
+                    d.eatingTurns = d.type === 'T' ? 3 : 5; const corpse = corpses[corpseIdx]; d.x = corpse.x; d.y = corpse.y;
+                    addToLog(`${i18n[lang].names[d.type]} ${i18n[lang].eating}`);
+                    playSound(100, 'square', 0.8, 0.3); return;
+                }
+                // Foge de fogueira adjacente
+                const nearFire = fires.some(f => Math.abs(f.x-d.x)<=2 && Math.abs(f.y-d.y)<=2);
+                if(nearFire) {
+                    addToLog(i18n[lang].fireScared); srSay(i18n[lang].fireScared);
+                    // Afasta do fogo: move na direção oposta
+                    const nearestFire = fires.reduce((a,b)=>{
+                        const da=Math.abs(a.x-d.x)+Math.abs(a.y-d.y);
+                        const db=Math.abs(b.x-d.x)+Math.abs(b.y-d.y);
+                        return da<db?a:b;
+                    });
+                    const fx=d.x-nearestFire.x, fy=d.y-nearestFire.y;
+                    const nx2=d.x+(fx!==0?Math.sign(fx):0), ny2=d.y+(fy!==0?Math.sign(fy):0);
+                    if(nx2>=0&&nx2<GRID_SIZE&&ny2>=0&&ny2<GRID_SIZE&&map[ny2][nx2]!=='#'&&!dinos.some(o=>o!==d&&o.x===nx2&&o.y===ny2)){
+                        d.x=nx2; d.y=ny2;
+                    }
+                    return;
+                }
+                let dx = px - d.x; let dy = py - d.y; let dist = Math.abs(dx) + Math.abs(dy);
+                let chaseDist = d.type === 'T' ? 25 : 10;
+                if(d.chaseOverride) { chaseDist = 25; d.chaseOverride = false; }
+                if(dist <= chaseDist && dist > 0) {
+                    const distBefore = dist;
+                    let moves = d.type === 'T' ? 2 : 1;
+                    for(let m=0; m < moves; m++) {
+                        let curDx = px - d.x; let curDy = py - d.y;
+                        if(Math.abs(curDx) > Math.abs(curDy)) d.x += curDx > 0 ? 1 : -1; else d.y += curDy > 0 ? 1 : -1;
+                        if(d.x === px && d.y === py) {
+                            let dmg = d.type === 'T' ? 25 : 8; player.hp -= dmg;
+                            addToLog(`${i18n[lang].attack} ${i18n[lang].names[d.type]}! -${dmg} HP.`);
+                            playSound(80, 'sawtooth', 0.5, 0.4); break;
+                        }
+                    }
+                    // Alerta sonoro: toca quando o dino avança na direção do player
+                    const distAfter = Math.abs(px - d.x) + Math.abs(py - d.y);
+                    if(distAfter < distBefore && distAfter > 0) {
+                        const pan = Math.max(-1, Math.min(1, (d.x - px) / 5));
+                        if(d.type === 'T') {
+                            // T-Rex: pulso grave audível a qualquer distância
+                            playSound(55, 'sawtooth', Math.max(0.08, 0.35 - distAfter * 0.01), 0.08, pan);
+                        } else if(distAfter <= 5) {
+                            // Velo: clique seco só quando perto (≤5) pra não saturar
+                            playSound(180, 'square', Math.max(0.05, 0.22 - distAfter * 0.03), 0.06, pan);
+                        }
+                    }
+                } else {
+                    let r = Math.random();
+                    if(r < 0.25) d.x++; else if(r < 0.5) d.x--; else if(r < 0.75) d.y++; else d.y--;
+                }
+                d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
+            });
+            if(player.hp <= 0) {
+                addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
+                stopAmbient(); setTimeout(() => showScreen('screen-menu'), 3000);
+            }
+
+            // Briga por cadáver: 2 dinos comendo na mesma célula se atacam
+            const eating = dinos.filter(d => d.eatingTurns > 0);
+            for(let i = 0; i < eating.length; i++) {
+                for(let j = i + 1; j < eating.length; j++) {
+                    const a = eating[i]; const b = eating[j];
+                    if(a.x === b.x && a.y === b.y) {
+                        const nameA = i18n[lang].names[a.type]; const nameB = i18n[lang].names[b.type];
+                        addToLog(i18n[lang].fighting.replace('{a}', nameA).replace('{b}', nameB));
+                        playSound(160, 'sawtooth', 0.6, 0.5);
+                        // T-Rex sempre vence; entre iguais é 50/50
+                        let winner, loser;
+                        if(a.type === 'T' && b.type !== 'T') { winner = a; loser = b; }
+                        else if(b.type === 'T' && a.type !== 'T') { winner = b; loser = a; }
+                        else { winner = Math.random() < 0.5 ? a : b; loser = winner === a ? b : a; }
+                        const nameW = i18n[lang].names[winner.type]; const nameL = i18n[lang].names[loser.type];
+                        addToLog(i18n[lang].fightWin.replace('{winner}', nameW).replace('{loser}', nameL));
+                        playSound(60, 'sawtooth', 0.8, 0.4);
+                        dinos.splice(dinos.indexOf(loser), 1);
+                        // Vencedor volta a comer — cadáver já está sendo consumido
+                        winner.eatingTurns = winner.type === 'T' ? 3 : 5;
+                    }
+                }
+            }
+        }
+
+        function scan() {
+            if(scanAmmo <= 0) {
+                const msg = lang === 'pt' ? 'Scanner sem bateria. Aguarde recarga.' : 'Scanner out of power. Wait for recharge.';
+                addToLog(msg); srSay(msg); return;
+            }
+            scanAmmo--;
+            scanCooldown = 2;
+            document.getElementById('scan-ammo').textContent = scanAmmo;
+            let found = [];
+            addToLog(`${i18n[lang].scanned} ${player.x}, ${player.y}...`);
+            for(let y=0; y<GRID_SIZE; y++) {
+                for(let x=0; x<GRID_SIZE; x++) {
+                    let cell = map[y][x];
+                    const dino = dinos.find(d => d.x === x && d.y === y);
+                    const corpse = corpses.find(c => c.x === x && c.y === y);
+                    if (dino) cell = dino.type; else if (corpse) cell = 'X';
+                    if(cell !== '.') {
+                        let dx = x - player.x; let dy = y - player.y; let dist = Math.abs(dx) + Math.abs(dy);
+                        if(dist >= 0 && dist < 6) {
+                            let dirY = dy > 0 ? (lang === 'pt' ? "S" : "S") : dy < 0 ? (lang === 'pt' ? "N" : "N") : "";
+                            let dirX = dx > 0 ? (lang === 'pt' ? "L" : "E") : dx < 0 ? (lang === 'pt' ? "O" : "W") : "";
+                            
+                            let loc;
+                            if (dist === 0) {
+                                loc = i18n[lang].here;
+                            } else {
+                                let parts = [];
+                                if (dy !== 0) parts.push(`${Math.abs(dy)}${dirY}`);
+                                if (dx !== 0) parts.push(`${Math.abs(dx)}${dirX}`);
+                                loc = parts.join(", ");
+                            }
+                            
+                            const names = i18n[lang].names;
+                            found.push(`${names[cell] || cell}: ${loc}`);
+                        }
+                    }
+                }
+            }
+            if (found.length) {
+                found.forEach(msg => addToLog(msg));
+                srSay(found.join('. '));
+            } else {
+                addToLog(i18n[lang].nothingNear);
+                srSay(i18n[lang].nothingNear);
+            }
+            playSound(600, 'sine'); draw();
+        }
+
+        function setWeapon(idx) {
+            player.weaponIdx = idx;
+            document.querySelectorAll('.weapon-btn').forEach((b, i) => {
+                b.classList.toggle('active-weapon', i === idx);
+            });
+            playSound(400, 'sine', 0.2);
+            setTimeout(() => srSay(`${i18n[lang].weapon}: ${i18n[lang].weaponNames[idx]}.`), 120);
+            moveDinos();
+        }
+
+        function fireDirectional(dx, dy) {
+            aimMode = false;
+            const weapon = weapons[player.weaponIdx];
+
+            // ── Mesma célula (F+F) ───────────────────────────────────────
+            if(dx === 0 && dy === 0) {
+                if(weapon === 'Machete') {
+                    // Cadáver na própria célula → extrai carne (medkit jurássico)
+                    const selfCorpseIdx = corpses.findIndex(c => c.x === player.x && c.y === player.y);
+                    if(selfCorpseIdx !== -1) {
+                        corpses.splice(selfCorpseIdx, 1);
+                        if(player.meat < 3) {
+                            player.meat++;
+                            addToLog(i18n[lang].meatRaw); srSay(i18n[lang].meatRaw);
+                        } else {
+                            addToLog(i18n[lang].meatMaxed); srSay(i18n[lang].meatMaxed);
+                        }
+                        addToLog(i18n[lang].meatHarvest);
+                        playSwordSlash(); updateStatus(); moveDinos(); draw(); return;
+                    }
+                    checkHit(player.x, player.y, 10); playSwordSlash();
+                } else if(weapon === 'Taser') {
+                    checkHit(player.x, player.y, 15);
+                    // Queima arbustos adjacentes
+                    let burnedBush = false;
+                    [{x:0,y:-1},{x:0,y:1},{x:-1,y:0},{x:1,y:0}].forEach(dir=>{
+                        const bx=player.x+dir.x, by=player.y+dir.y;
+                        if(bx>=0&&bx<GRID_SIZE&&by>=0&&by<GRID_SIZE&&map[by][bx]==='#'){
+                            map[by][bx]='.';
+                            fires.push({x:bx, y:by, turns:4});
+                            playFireCrackle();
+                            burnedBush = true;
+                        }
+                    });
+                    if(burnedBush){ addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush); }
+                    playTaserZap();
+                } else if(weapon === 'Granada') {
+                    // Granada F+F: exige direção
+                    addToLog(lang==='pt'?'Granada: escolha uma direção com F+seta.':'Grenade: aim with F+arrow.');
+                    srSay(lang==='pt'?'Granada precisa de direção.':'Grenade needs a direction.');
+                    return;
+                } else if(weapon === 'Laser') {
+                    if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
+                    laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                    const hit=checkHit(player.x,player.y,50);
+                    if(hit){addToLog(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');playLaserShot();setTimeout(playLaserImpact,180);}
+                    else{addToLog(i18n[lang].laserMiss);srSay(i18n[lang].laserMiss);playLaserShot();}
+                }
+                moveDinos(); draw(); return;
+            }
+
+            // ── Com direção (F + seta) ───────────────────────────────────
+            if(weapon === 'Machete') {
+                // Machete: 1 casa na direção
+                const nx=player.x+dx, ny=player.y+dy;
+                if(nx>=0&&nx<GRID_SIZE&&ny>=0&&ny<GRID_SIZE){
+                    const cell=map[ny][nx];
+                    const corpseIdx=corpses.findIndex(c=>c.x===nx&&c.y===ny);
+                    if(corpseIdx!==-1){
+                        corpses.splice(corpseIdx,1);
+                        if(player.meat < 3) {
+                            player.meat++;
+                            addToLog(i18n[lang].meatRaw); srSay(i18n[lang].meatRaw);
+                        } else {
+                            addToLog(i18n[lang].meatMaxed); srSay(i18n[lang].meatMaxed);
+                        }
+                        addToLog(i18n[lang].meatHarvest);
+                        playSound(150,'square',0.4,0.4); unlockCard('disturber');
+                    }
+                    if(cell==='#'){map[ny][nx]='.';addToLog(lang==='pt'?'Arbusto removido!':'Bush cleared!');srSay(lang==='pt'?'Arbusto removido!':'Bush cleared!');playSwordSlash();unlockCard('lumberjack');}
+                    checkHit(nx,ny,10);
+                }
+                playSwordSlash();
+            } else if(weapon === 'Taser') {
+                // Taser com direção: só queima arbusto adjacente naquela direção
+                const tnx=player.x+dx, tny=player.y+dy;
+                if(tnx>=0&&tnx<GRID_SIZE&&tny>=0&&tny<GRID_SIZE&&map[tny][tnx]==='#') {
+                    map[tny][tnx]='.';
+                    fires.push({x:tnx, y:tny, turns:4});
+                    addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush);
+                    playFireCrackle(); playTaserZap(); moveDinos(); draw(); return;
+                }
+                // Sem arbusto na direção: apenas corpo a corpo
+                addToLog(lang==='pt'?'Taser: apenas corpo a corpo (F+F).':'Taser: melee only (F+F).');
+                srSay(lang==='pt'?'Taser: apenas corpo a corpo.':'Taser: melee only.');
+                return;
+            } else if(weapon === 'Granada') {
+                // Granada: arremessa até 2 casas na direção, área 2x2 no ponto de impacto
+                if(player.ammo<=0){addToLog(i18n[lang].noAmmo);srSay(i18n[lang].noAmmo);return;}
+                player.ammo--;
+                const gx=player.x+dx*2, gy=player.y+dy*2;
+                let hits=0;
+                for(let oy=0;oy<=1;oy++) for(let ox=0;ox<=1;ox++){
+                    const tx=gx+ox, ty=gy+oy;
+                    if(tx>=0&&tx<GRID_SIZE&&ty>=0&&ty<GRID_SIZE) if(checkHit(tx,ty,25)) hits++;
+                }
+                const dirName=dx===0?(dy<0?(lang==='pt'?'Norte':'North'):(lang==='pt'?'Sul':'South')):(dx<0?(lang==='pt'?'Oeste':'West'):(lang==='pt'?'Leste':'East'));
+                const hitMsg = hits>0?(lang==='pt'?` ${hits} atingido(s)!`:` ${hits} hit(s)!`):'';
+                addToLog((lang==='pt'?`Granada → ${dirName}!`:`Grenade → ${dirName}!`)+hitMsg);
+                srSay((lang==='pt'?`Granada lançada para ${dirName}.`:`Grenade thrown ${dirName}.`)+(hits>0?(lang==='pt'?` ${hits} atingido.`:` ${hits} hit.`):''));
+                playSound(150,'sawtooth',0.8,0.6); setTimeout(()=>playSound(80,'sawtooth',0.5,0.8),120);
+            } else if(weapon === 'Laser') {
+                // Laser: linha reta até 8 casas, para no 1° dino atingido
+                if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
+                laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                let hit=false;
+                for(let step=1;step<=8;step++){
+                    const lx=player.x+dx*step, ly=player.y+dy*step;
+                    if(lx<0||lx>=GRID_SIZE||ly<0||ly>=GRID_SIZE) break;
+                    if(map[ly][lx]==='#') break; // arbusto bloqueia
+                    if(checkHit(lx,ly,50)){hit=true;break;}
+                }
+                const dirName=dx===0?(dy<0?(lang==='pt'?'Norte':'North'):(lang==='pt'?'Sul':'South')):(dx<0?(lang==='pt'?'Oeste':'West'):(lang==='pt'?'Leste':'East'));
+                if(hit){addToLog(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+dirName+'. '+i18n[lang].laserHit+'!');playLaserShot();setTimeout(playLaserImpact,180);}
+                else{addToLog(i18n[lang].laserMiss+' ('+dirName+')');srSay(i18n[lang].laserMiss);playLaserShot();}
+            }
+            moveDinos(); draw();
+        }
+
+        function checkHit(x, y, dmg) {
+            let hit = false;
+            for(let i = dinos.length - 1; i >= 0; i--) {
+                const d = dinos[i];
+                if(d.x === x && d.y === y) {
+                    d.hp -= dmg;
+                    const dName = i18n[lang].names[d.type];
+                    // Triceratops fica provoked ao levar hit
+                    if(d.type === '3' && d.hp > 0) d.provoked = true;
+                    if(weapons[player.weaponIdx] === 'Taser') {
+                        if(d.type === 'T') unlockCard('gambler');
+                        if(d.type === 'A') {
+                            // Anquilossauro é imune ao Taser
+                            playSound(200, 'square', 0.3, 0.3);
+                            addToLog(i18n[lang].ankyloImune);
+                            srSay(i18n[lang].ankyloImune);
+                        } else {
+                            const stunChance = d.type === 'T' ? 0.35 : d.type === '3' ? 0.65 : 0.65;
+                            if(Math.random() < stunChance) {
+                                d.stunned = 3;
+                                playSound(1200, 'sine', 0.2, 0.5);
+                                addToLog(lang === 'pt' ? `Stun: ${dName} paralisado!` : `Stun: ${dName} paralyzed!`);
+                                srSay(lang === 'pt' ? `Stun: ${dName} paralisado!` : `Stun: ${dName} paralyzed!`);
+                                if(!stunDone) { stunDone = true; unlockCard('stun'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Choque Certeiro!' : 'Card unlocked: Precise Shock!')); }
+                            } else {
+                                playSound(400, 'sine', 0.15, 0.3);
+                                addToLog(lang === 'pt' ? `Taser: ${dName} resistiu ao choque!` : `Taser: ${dName} resisted the shock!`);
+                                srSay(lang === 'pt' ? `Taser: ${dName} resistiu ao choque!` : `Taser: ${dName} resisted the shock!`);
+                            }
+                        }
+                    }
+                    if(d.hp <= 0) {
+                        addToLog(`${i18n[lang].kill}: ${dName}!`); srSay(`${i18n[lang].kill}: ${dName}!`); corpses.push({x: d.x, y: d.y});
+                        // Contagem de kills para galeria
+                        const dtype = d.type;
+                        killCount[dtype] = (killCount[dtype] || 0) + 1;
+                        killCount.total++;
+                        if(dtype === 'V' && killCount.V === 1) { unlockCard('velociraptor'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Velociraptor!' : 'Card unlocked: Velociraptor!')); }
+                        if(dtype === 'T') { unlockCard('trex'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Tiranossauro Rex!' : 'Card unlocked: Tyrannosaurus Rex!')); }
+                        if((dtype === 'F' || dtype === 'A' || dtype === '3' || dtype === 'W') && killCount[dtype] === 1) {
+                            if(dtype === 'F') { unlockCard('herd'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Dino de Manada!' : 'Card unlocked: Herd Dinosaur!')); }
+                            if(dtype === 'A') { unlockCard('ankylosaur'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Anquilossauro!' : 'Card unlocked: Ankylosaurus!')); }
+                            if(dtype === '3') { unlockCard('triceratops'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Triceratops!' : 'Card unlocked: Triceratops!')); }
+                            if(dtype === 'W') { unlockCard('parasaur'); addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Parasaurolofo!' : 'Card unlocked: Parasaurolophus!')); }
+                        }
+                        if(killCount.V >= 5) { unlockCard('exterminator'); }
+                        if(killCount.total >= 10) { unlockCard('apex'); }
+                        dinos.splice(i, 1);
+                    } else {
+                        addToLog(`${i18n[lang].hit}: ${dName}! (HP: ${d.hp})`);
+                        srSay(`${i18n[lang].hit}: ${dName}! ${i18n[lang].remainingHp}: ${d.hp}.`);
+                        if(!(weapons[player.weaponIdx] === 'Taser')) {
+                            let rdx = player.x - d.x; let rdy = player.y - d.y;
+                            if(Math.abs(rdx) > Math.abs(rdy)) d.x += rdx > 0 ? 1 : -1; else d.y += rdy > 0 ? 1 : -1;
+                        }
+                        playSound(120, 'sawtooth', 0.2, 0.3);
+                        // Contra-ataque imediato se não estiver stunned e não for Taser
+                        if(weapons[player.weaponIdx] !== 'Taser' && d.stunned <= 0) {
+                            const counterDmg = d.type === 'T' ? 25 : 5;
+                            player.hp -= counterDmg;
+                            addToLog(lang === 'pt' ? `${dName} contra-ataca! -${counterDmg} HP` : `${dName} counter-attacks! -${counterDmg} HP`); srSay(lang === 'pt' ? `${dName} contra-ataca! HP: ${player.hp}.` : `${dName} counter-attacks! HP: ${player.hp}.`);
+                            playSound(220, 'sawtooth', 0.4, 0.2);
+                            if(player.hp <= 0) { player.hp = 0; stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                        }
+                    }
+                    hit = true;
+                }
+            }
+            return hit;
+        }
+
+        function playSwordSlash() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Impacto seco: ruído branco filtrado com envelope agressivo
+            const bufSize = audioCtx.sampleRate * 0.18;
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1800;
+            filter.Q.value = 1.5;
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+
+            src.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            src.start();
+            src.stop(audioCtx.currentTime + 0.18);
+        }
+
+        function playTaserZap() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // Sweep elétrico: frequência desce rapidamente com harmônico
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(2400, t);
+            osc.frequency.exponentialRampToValueAtTime(180, t + 0.18);
+
+            const osc2 = audioCtx.createOscillator();
+            osc2.type = 'sawtooth';
+            osc2.frequency.setValueAtTime(3600, t);
+            osc2.frequency.exponentialRampToValueAtTime(260, t + 0.15);
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.25, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.22);
+
+            const gain2 = audioCtx.createGain();
+            gain2.gain.setValueAtTime(0.15, t);
+            gain2.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+
+            osc.connect(gain);   gain.connect(audioCtx.destination);
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+
+            osc.start(t);  osc.stop(t + 0.22);
+            osc2.start(t); osc2.stop(t + 0.22);
+        }
+
+        function playEnvironmentSonar() {
+            // Som de passo
+            playSound(80, 'sine', 0.12, 0.08);
+
+            const sonarItems = [];
+
+            // Varre raio 3 ao redor do jogador
+            for (let dy = -3; dy <= 3; dy++) {
+                for (let dx = -3; dx <= 3; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = player.x + dx; const ny = player.y + dy;
+                    if (nx < 0 || nx >= GRID_SIZE || ny < 0 || ny >= GRID_SIZE) continue;
+                    const dist = Math.abs(dx) + Math.abs(dy);
+                    let cell = map[ny][nx];
+                    const dino = dinos.find(d => d.x === nx && d.y === ny);
+                    const corpse = corpses.find(c => c.x === nx && c.y === ny);
+                    if (dino) cell = dino.type; else if (corpse) cell = 'X';
+
+                    let freq = 0; let type = 'sine'; let maxDist = 1;
+                    if (cell === 'P')         { freq = 880;    type = 'triangle'; maxDist = 1; }
+                    else if (cell === '*')    { freq = 600;    type = 'triangle'; maxDist = 1; }
+                    else if (cell === '#')    { freq = 150;    type = 'square';   maxDist = 1; }
+                    else if (cell === 'M')    { freq = 523.25; type = 'sine';     maxDist = 2; }
+                    else if (cell === 'X')    { freq = 200;    type = 'square';   maxDist = 2; }
+                    else if (cell === 'V')    { freq = 180;    type = 'sawtooth'; maxDist = 3; }
+                    else if (cell === 'T')    { freq = 80;     type = 'sawtooth'; maxDist = 3; }
+
+                    if (freq > 0 && dist <= maxDist) {
+                        const vol = 0.25 - (dist - 1) * 0.07;
+                        const pan = dx / 3;
+                        sonarItems.push({ freq, type, vol: Math.max(vol, 0.04), pan });
+                    }
+                }
+            }
+
+            // Toca cada item com delay para não sobrepor tudo
+            sonarItems.forEach((item, i) => {
+                setTimeout(() => playSound(item.freq, item.type, item.vol, 0.15, item.pan), i * 120);
+            });
+        }
+
+        function enterAimMode() {
+            aimMode = true;
+            srSay(i18n[lang].aimMode);
+            addToLog(i18n[lang].aimMode);
+        }
+
+        function playLaserShot() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(1800, t);
+            osc.frequency.exponentialRampToValueAtTime(400, t + 0.25);
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.4, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + 0.3);
+        }
+
+        function playLaserImpact() {
+            // Impacto do laser: "thud" elétrico — freq alta que cai, com burst de ruído
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            // Onda elétrica de impacto
+            const osc = audioCtx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(900, t);
+            osc.frequency.exponentialRampToValueAtTime(80, t + 0.18);
+            const oscGain = audioCtx.createGain();
+            oscGain.gain.setValueAtTime(0.5, t);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+            osc.connect(oscGain); oscGain.connect(audioCtx.destination);
+            osc.start(t); osc.stop(t + 0.2);
+            // Burst de ruído junto
+            const bufSize = Math.floor(audioCtx.sampleRate * 0.1);
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i/bufSize);
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.35, t + 0.02);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+            src.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+            src.start(t + 0.02); src.stop(t + 0.12);
+        }
+
+        function playFireCrackle(loud = true) {
+            // Crepitar de fogueira: ruído marrom filtrado com envelope de chama
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            const vol = loud ? 0.45 : 0.18;
+            const dur = loud ? 0.55 : 0.25;
+            // Ruído filtrado (frequência baixa = "calor")
+            const bufSize = Math.floor(audioCtx.sampleRate * dur);
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.value = 800;
+            filter.Q.value = 0.7;
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.linearRampToValueAtTime(vol * 0.7, t + dur * 0.4);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + dur);
+            // Segundo "estalo" seco
+            const buf2 = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.06), audioCtx.sampleRate);
+            const d2 = buf2.getChannelData(0);
+            for(let i = 0; i < d2.length; i++) d2[i] = (Math.random() * 2 - 1) * (1 - i/d2.length);
+            const src2 = audioCtx.createBufferSource();
+            src2.buffer = buf2;
+            const g2 = audioCtx.createGain();
+            g2.gain.setValueAtTime(vol * 0.6, t + 0.12);
+            g2.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+            src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            src2.connect(g2); g2.connect(audioCtx.destination);
+            src.start(t); src.stop(t + dur);
+            src2.start(t + 0.12); src2.stop(t + 0.18);
+        }
+
+        function playFireOut() {
+            // Brasa se apagando: ruído curto que cai de frequência, tipo "tssssh"
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const t = audioCtx.currentTime;
+            const bufSize = Math.floor(audioCtx.sampleRate * 0.3);
+            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+            const data = buf.getChannelData(0);
+            for(let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize);
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(2400, t);
+            filter.frequency.exponentialRampToValueAtTime(200, t + 0.3);
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.25, t);
+            gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            src.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            src.start(t); src.stop(t + 0.3);
+        }
+
+        function srSay(msg) {
+            const current = srSlots[srIdx];
+            const other = srSlots[1 - srIdx];
+            other.textContent = '';
+            current.textContent = msg;
+            srIdx = 1 - srIdx;
+        }
+
+        const logFooter = document.getElementById('log-footer');
+        const logLines = [];
+
+        function addToLog(msg) {
+            const entry = document.createElement('div');
+            entry.textContent = `> ${msg}`;
+            log.appendChild(entry);
+            if (log.childNodes.length > 60) log.removeChild(log.firstChild);
+            log.scrollTop = log.scrollHeight;
+            logLines.push(`> ${msg}`);
+            if (logLines.length > 4) logLines.shift();
+            logFooter.textContent = logLines.join('\n');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (document.getElementById('screen-game').classList.contains('active-screen')) {
+                if (aimMode) {
+                    e.preventDefault();
+                    if (e.key === 'f' || e.key === 'F') { fireDirectional(0, 0); return; }
+                    if (e.key === 'ArrowUp')    { fireDirectional(0, -1); return; }
+                    if (e.key === 'ArrowDown')  { fireDirectional(0,  1); return; }
+                    if (e.key === 'ArrowLeft')  { fireDirectional(-1, 0); return; }
+                    if (e.key === 'ArrowRight') { fireDirectional( 1, 0); return; }
+                    if (e.key === 'Escape') { aimMode = false; srSay(i18n[lang].aimCancel); return; }
+                    return;
+                }
+                if (e.key === 'ArrowUp') move(0, -1);
+                if (e.key === 'ArrowDown') move(0, 1);
+                if (e.key === 'ArrowLeft') move(-1, 0);
+                if (e.key === 'ArrowRight') move(1, 0);
+                if (e.key === 's') scan();
+                if (e.key === 'f') { aimMode = true; srSay(i18n[lang].aimMode); }
+                if (['1','2','3','4'].includes(e.key)) setWeapon(parseInt(e.key)-1);
+                if (e.key === 'o' || e.key === 'O') { const m=lang==='pt'?`O2: ${player.o2}.`:`O2: ${player.o2}.`; addToLog(m); srSay(m); }
+                if (e.key === 'h' || e.key === 'H') { const m=lang==='pt'?`HP: ${player.hp}.`:`HP: ${player.hp}.`; addToLog(m); srSay(m); }
+                if (e.key === 'p' || e.key === 'P') { const m=lang==='pt'?`Peças: ${player.parts} de 5.`:`Parts: ${player.parts} of 5.`; addToLog(m); srSay(m); }
+                if (e.key === 'c' || e.key === 'C') { const m=lang==='pt'?`Carne: ${player.meat} de 3.`:`Meat: ${player.meat} of 3.`; addToLog(m); srSay(m); }
+            }
+        });
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/DinoCrawler/sw.js')
+                    .catch(() => {});
+            });
+        }
+    </script>
+</body>
+</html>
