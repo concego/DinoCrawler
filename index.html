@@ -333,6 +333,9 @@
     </style>
 </head>
 <body>
+    <audio id="valley-ambience" src="audio/forest-ambience.mp3" loop preload="auto" aria-hidden="true"></audio>
+    <audio id="valley-music" src="audio/jungle-music.ogg" loop preload="auto" aria-hidden="true"></audio>
+    <audio id="rex-tension" src="audio/rex-tension.ogg" loop preload="auto" aria-hidden="true"></audio>
 
     <div id="ui-layer">
         <!-- Tela de Idioma -->
@@ -456,6 +459,9 @@
 
     <script>
         const container = document.getElementById('game-container');
+        const valleyAmbience = document.getElementById('valley-ambience');
+        const valleyMusic = document.getElementById('valley-music');
+        const rexTension = document.getElementById('rex-tension');
         const log = document.getElementById('log');
         const srSlots = [document.getElementById('sr-a'), document.getElementById('sr-b')];
         let srIdx = 0;
@@ -629,6 +635,7 @@
         let rexRoarTimer = 0; // turnos até o próximo rugido do T-Rex
         let audioCtx = null;
         let ambientNodes = null; // nós do som ambiente
+        let rexAwake = false;
         let breathingTimeout = null; // handle do loop de respiração ofegante
         let helpReturnScreen = 'screen-menu';
         let howToReturnScreen = 'screen-menu';
@@ -939,62 +946,39 @@
 
         function startAmbient() {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (ambientNodes) return; // já tocando
+            if (ambientNodes) return;
 
-            // Vento suave — ruído branco filtrado
-            const bufferSize = audioCtx.sampleRate * 2;
-            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+            // Protótipo: ambiente natural + música retro de tensão.
+            valleyAmbience.volume = 0.30;
+            valleyMusic.volume = 0.12;
+            valleyAmbience.currentTime = 0;
+            valleyMusic.currentTime = 0;
+            rexTension.currentTime = 0;
+            rexAwake = false;
+            const ambiencePlay = valleyAmbience.play();
+            const musicPlay = valleyMusic.play();
+            if (ambiencePlay && ambiencePlay.catch) ambiencePlay.catch(() => {});
+            if (musicPlay && musicPlay.catch) musicPlay.catch(() => {});
+            ambientNodes = { audio: valleyAmbience, music: valleyMusic, rex: rexTension };
+        }
 
-            const wind = audioCtx.createBufferSource();
-            wind.buffer = buffer;
-            wind.loop = true;
-
-            const windFilter = audioCtx.createBiquadFilter();
-            windFilter.type = 'bandpass';
-            windFilter.frequency.value = 400;
-            windFilter.Q.value = 0.3;
-
-            const windGain = audioCtx.createGain();
-            windGain.gain.value = 0.04;
-
-            wind.connect(windFilter);
-            windFilter.connect(windGain);
-            windGain.connect(audioCtx.destination);
-            wind.start();
-
-            // Eco de vale — oscilador grave pulsante
-            const echo = audioCtx.createOscillator();
-            echo.type = 'sine';
-            echo.frequency.value = 55;
-
-            const echoGain = audioCtx.createGain();
-            echoGain.gain.value = 0.0;
-
-            // Pulsa suavemente a cada ~4s simulando ressonância do vale
-            const lfo = audioCtx.createOscillator();
-            lfo.type = 'sine';
-            lfo.frequency.value = 0.25;
-            const lfoGain = audioCtx.createGain();
-            lfoGain.gain.value = 0.02;
-            lfo.connect(lfoGain);
-            lfoGain.connect(echoGain.gain);
-
-            echo.connect(echoGain);
-            echoGain.connect(audioCtx.destination);
-            echo.start();
-            lfo.start();
-
-            ambientNodes = { wind, echo, lfo };
+        function startRexTension() {
+            if (!ambientNodes || rexAwake) return;
+            rexAwake = true;
+            try { ambientNodes.music.pause(); ambientNodes.music.currentTime = 0; } catch(e) {}
+            rexTension.volume = 0.20;
+            rexTension.currentTime = 0;
+            const tensionPlay = rexTension.play();
+            if (tensionPlay && tensionPlay.catch) tensionPlay.catch(() => {});
         }
 
         function stopAmbient() {
             if (!ambientNodes) return;
-            try { ambientNodes.wind.stop(); } catch(e) {}
-            try { ambientNodes.echo.stop(); } catch(e) {}
-            try { ambientNodes.lfo.stop(); } catch(e) {}
+            try { ambientNodes.audio.pause(); ambientNodes.audio.currentTime = 0; } catch(e) {}
+            try { ambientNodes.music.pause(); ambientNodes.music.currentTime = 0; } catch(e) {}
+            try { ambientNodes.rex.pause(); ambientNodes.rex.currentTime = 0; } catch(e) {}
             ambientNodes = null;
+            rexAwake = false;
             stopBreathing();
         }
 
@@ -1113,6 +1097,7 @@
 
         function spawnTRex() {
             addToLog(i18n[lang].roarRex);
+            startRexTension();
             playSound(60, 'sawtooth', 1.5, 0.5);
             let corners = [[18, 18], [18, 0], [0, 18]];
             let pick = corners[Math.floor(Math.random() * corners.length)];
@@ -1122,6 +1107,7 @@
         }
 
         function triggerRexRoar() {
+            startRexTension();
             addToLog(i18n[lang].rexRoar);
             // Rugido grave longo
             playSound(45, 'sawtooth', 1.2, 0.8);
@@ -1176,6 +1162,7 @@
                     dinos.push({x: rx, y: ry, type: type, hp: type === 'T' ? 100 : 30, eatingTurns: 0});
                     addToLog(type === 'T' ? i18n[lang].roarRex : i18n[lang].roarVelo);
                     playSound(type === 'T' ? 55 : 220, 'sawtooth', 0.4, 0.6);
+                    if (type === 'T') startRexTension();
                 }
             }
         }
