@@ -1,4 +1,4 @@
-const CACHE = 'dinocrawler-v1';
+const CACHE = 'dinocrawler-v2';
 const ASSETS = [
   '/DinoCrawler/',
   '/DinoCrawler/index.html',
