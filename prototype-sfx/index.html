@@ -333,6 +333,7 @@
     </style>
 </head>
 <body>
+    <audio id="menu-music" src="../sound-test/audio/84-menu-metal-energetic.ogg" loop preload="auto" aria-hidden="true"></audio>
     <audio id="valley-ambience" src="audio/forest-ambience.mp3" loop preload="auto" aria-hidden="true"></audio>
     <audio id="valley-music" src="audio/jungle-music.ogg" loop preload="auto" aria-hidden="true"></audio>
     <audio id="rex-tension" src="audio/rex-tension.ogg" loop preload="auto" aria-hidden="true"></audio>
@@ -458,6 +459,7 @@
 
     <script>
         const container = document.getElementById('game-container');
+        const menuMusic = document.getElementById('menu-music');
         const valleyAmbience = document.getElementById('valley-ambience');
         const valleyMusic = document.getElementById('valley-music');
         const sfx = {
@@ -870,9 +872,21 @@
             document.getElementById('tab-achievements').textContent = t[l].ach;
         }
 
+        function startMenuMusic() {
+            menuMusic.volume = 0.16;
+            const promise = menuMusic.play();
+            if (promise && promise.catch) promise.catch(() => {});
+        }
+
+        function stopMenuMusic() {
+            try { menuMusic.pause(); menuMusic.currentTime = 0; } catch(e) {}
+        }
+
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
             document.getElementById(id).classList.add('active-screen');
+            if (id === 'screen-menu') startMenuMusic();
+            if (id === 'screen-game') stopMenuMusic();
         }
 
         function openHelp(returnScreen) {
@@ -1655,7 +1669,7 @@
                         if(bx>=0&&bx<GRID_SIZE&&by>=0&&by<GRID_SIZE&&map[by][bx]==='#'){
                             map[by][bx]='.';
                             fires.push({x:bx, y:by, turns:4});
-                            playSfx('bush', 0.55); playFireCrackle();
+                            playFireCrackle();
                             burnedBush = true;
                         }
                     });
@@ -1705,7 +1719,7 @@
                     map[tny][tnx]='.';
                     fires.push({x:tnx, y:tny, turns:4});
                     addToLog(i18n[lang].taserBush); srSay(i18n[lang].taserBush);
-                    playSfx('bush', 0.55); playFireCrackle(); playTaserZap(); moveDinos(); draw(); return;
+                    playFireCrackle(); playTaserZap(); moveDinos(); draw(); return;
                 }
                 // Sem arbusto na direção: apenas corpo a corpo
                 addToLog(lang==='pt'?'Taser: apenas corpo a corpo (F+F).':'Taser: melee only (F+F).');
