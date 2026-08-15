@@ -475,7 +475,8 @@
             equipLaser: new Audio('audio/14-laser-small-000.ogg'),
             laser: new Audio('audio/15-laser-large-000.ogg'),
             machineMissing: new Audio('audio/10-scan-glitch-001.ogg'),
-            machineOn: new Audio('audio/30-machine-space-low-000.ogg')
+            machineOn: new Audio('audio/30-machine-space-low-000.ogg'),
+            fire: new Audio('audio/fire-crackle.ogg')
         };
         Object.values(sfx).forEach(audio => { audio.preload = 'auto'; });
 
@@ -1959,7 +1960,9 @@
         }
 
         function playFireCrackle(loud = true) {
-            // Crepitar de fogueira: ruído marrom filtrado com envelope de chama
+            // Candidato 51 (CC0): usar o efeito real e manter o Web Audio como fallback.
+            if (playSfx('fire', loud ? 0.65 : 0.25, loud ? 0.8 : 0.35)) return;
+            // Fallback: crepitar sintetizado de fogueira.
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const t = audioCtx.currentTime;
             const vol = loud ? 0.45 : 0.18;
