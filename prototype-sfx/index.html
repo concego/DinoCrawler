@@ -1333,7 +1333,7 @@
                     else if(fires.some(f => f.x === ax && f.y === ay)) adjNames.push(lang === 'pt' ? 'fogueira' : 'fire');
                     else if(corpses.some(co => co.x === ax && co.y === ay)) adjNames.push(lang === 'pt' ? 'cadáver' : 'corpse');
                 }
-                if(adjNames.length > 0) srParts.push((lang === 'pt' ? 'Adjacente: ' : 'Adjacent: ') + adjNames.join(', ') + '.');
+                if(adjNames.length > 0) srParts.push((lang === 'pt' ? 'Adjacente: ' : 'Nearby: ') + adjNames.join(', ') + '.');
 
                 const dirLabel = (function() {
                     if(dx === 0 && dy === -1) return lang === 'pt' ? 'Norte' : 'North';
@@ -1960,7 +1960,7 @@
 
         function playFireCrackle(loud = true) {
             // Candidato 51 (CC0): usar o efeito real e manter o Web Audio como fallback.
-            if (playSfx('fire', loud ? 0.65 : 0.25, loud ? 0.8 : 0.35)) return;
+            if (playSfx('fire', loud ? 1.0 : 0.45, loud ? 0.8 : 0.35)) return;
             // Fallback: crepitar sintetizado de fogueira.
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const t = audioCtx.currentTime;
