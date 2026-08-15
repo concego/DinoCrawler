@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dino Crawler — Sound Test</title>
+<style>
+ body{background:#121212;color:#00ff00;font-family:Courier New,monospace;max-width:720px;margin:0 auto;padding:24px;line-height:1.5}
+ h1{color:#ff4444} h2{color:#ffcc00;border-bottom:1px solid #444;padding-bottom:6px}
+ p{color:#ddd}.group{border:1px solid #444;padding:12px;margin:16px 0;background:#080808}
+ button{display:block;width:100%;margin:7px 0;padding:12px;background:#222;color:#00ff00;border:1px solid #00ff00;font:inherit;text-align:left;cursor:pointer}
+ button:hover,button:focus{background:#004400;outline:2px solid #ffcc00;outline-offset:2px}
+ #status{color:#fff;min-height:1.5em;margin:16px 0}
+</style>
+</head>
+<body>
+<h1>Dino Crawler — Sound Test</h1>
+<p>Escolha um número para ouvir o candidato. Você pode me responder apenas com os números que funcionam.</p>
+<p>Os sons estão em estado bruto, sem a mixagem final de volume.</p>
+<button id="stop">00 — Parar som</button>
+<div id="status" role="status" aria-live="polite">Nenhum som tocando.</div>
+<section class="group"><h2>Interface</h2>
+<button data-file="01-ui-click-001.ogg">01 — UI click 001</button>
+<button data-file="02-ui-click-002.ogg">02 — UI click 002</button>
+<button data-file="03-ui-select-001.ogg">03 — UI select 001</button>
+<button data-file="04-ui-select-002.ogg">04 — UI select 002</button>
+<button data-file="05-ui-confirmation-001.ogg">05 — UI confirmation 001</button>
+<button data-file="06-ui-open-001.ogg">06 — UI open 001</button>
+<button data-file="07-ui-question-001.ogg">07 — UI question 001</button>
+</section>
+<section class="group"><h2>SCAN</h2>
+<button data-file="08-scan-computer-000.ogg">08 — SCAN computer noise 000</button>
+<button data-file="09-scan-computer-001.ogg">09 — SCAN computer noise 001</button>
+<button data-file="10-scan-glitch-001.ogg">10 — SCAN glitch 001</button>
+<button data-file="11-scan-switch-001.ogg">11 — SCAN switch 001</button>
+</section>
+<section class="group"><h2>Armas</h2>
+<button data-file="12-laser-retro-000.ogg">12 — Laser retro 000</button>
+<button data-file="13-laser-retro-001.ogg">13 — Laser retro 001</button>
+<button data-file="14-laser-small-000.ogg">14 — Laser small 000</button>
+<button data-file="15-laser-large-000.ogg">15 — Laser large 000</button>
+<button data-file="16-grenade-crunch-000.ogg">16 — Grenade crunch 000</button>
+<button data-file="17-grenade-crunch-001.ogg">17 — Grenade crunch 001</button>
+<button data-file="18-explosion-low-000.ogg">18 — Explosion low frequency 000</button>
+<button data-file="19-taser-forcefield-000.ogg">19 — Taser force field 000</button>
+<button data-file="20-taser-forcefield-001.ogg">20 — Taser force field 001</button>
+</section>
+<section class="group"><h2>Impacto e movimento</h2>
+<button data-file="21-machete-wood-000.ogg">21 — Machete wood 000</button>
+<button data-file="22-machete-wood-001.ogg">22 — Machete wood 001</button>
+<button data-file="23-machete-metal-000.ogg">23 — Machete metal 000</button>
+<button data-file="24-machete-mining-000.ogg">24 — Machete mining 000</button>
+<button data-file="25-damage-soft-000.ogg">25 — Damage soft 000</button>
+<button data-file="26-damage-punch-000.ogg">26 — Damage punch 000</button>
+<button data-file="27-footstep-grass-000.ogg">27 — Footstep grass 000</button>
+<button data-file="28-footstep-grass-001.ogg">28 — Footstep grass 001</button>
+</section>
+<section class="group"><h2>Máquina do Tempo</h2>
+<button data-file="29-machine-engine-000.ogg">29 — Machine engine 000</button>
+<button data-file="30-machine-space-low-000.ogg">30 — Machine space low 000</button>
+</section>
+<script>
+let current=null;
+const status=document.getElementById('status');
+function playSample(button){
+ if(current){current.pause();current.currentTime=0;}
+ current=new Audio('audio/'+button.dataset.file);
+ current.volume=0.8;
+ current.play().catch(()=>{});
+ status.textContent='Tocando '+button.textContent+'.';
+}
+document.querySelectorAll('[data-file]').forEach(button=>button.addEventListener('click',()=>playSample(button)));
+document.getElementById('stop').addEventListener('click',()=>{if(current){current.pause();current.currentTime=0;}status.textContent='Som parado.';});
+</script>
+</body>
+</html>
