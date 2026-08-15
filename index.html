@@ -32,7 +32,7 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            max-width: 600px;
+            max-width: 1200px;
         }
 
         .screen {
@@ -47,6 +47,37 @@
 
         .active-screen {
             display: block;
+        }
+
+        .game-screen {
+            width: calc(100% - 24px);
+            max-width: 1160px;
+            box-sizing: border-box;
+            border: none;
+            padding: 16px;
+            text-align: left;
+        }
+        .game-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+            gap: 24px;
+            align-items: start;
+        }
+        .game-main {
+            min-width: 0;
+            text-align: center;
+        }
+        .game-log-panel {
+            min-width: 0;
+            border: 1px solid #444;
+            background: #080808;
+            padding: 12px;
+            position: sticky;
+            top: 12px;
+        }
+        .game-log-panel h2 {
+            margin-top: 0;
+            text-align: left;
         }
 
         h1 { font-size: 2em; margin-bottom: 20px; color: #ff0000; }
@@ -91,12 +122,40 @@
         .parasaur { color: #ff9966; }
         
         #hud, #controls {
-            width: 90vw;
+            width: 100%;
             max-width: 500px;
-            margin-top: 10px;
+            margin: 10px auto 0;
             display: flex;
             justify-content: space-between;
             font-size: 1.2em;
+        }
+        #hud {
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            justify-content: center;
+        }
+        #controls {
+            align-items: center;
+            gap: 16px;
+        }
+        .action-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+        #weapon-selector {
+            width: 100%;
+            max-width: 500px;
+            margin: 10px auto 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+        }
+        #weapon-selector .weapon-btn {
+            flex: 1 1 45%;
+            min-width: 135px;
         }
 
         #log {
@@ -108,20 +167,19 @@
         }
 
         #log-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
             width: 100%;
-            background: rgba(0,0,0,0.88);
-            border-top: 1px solid #444;
-            padding: 6px 12px;
+            box-sizing: border-box;
+            min-height: 9em;
+            max-height: 35vh;
+            overflow-y: auto;
+            background: #000;
+            border: 1px solid #444;
+            padding: 8px;
             font-size: 0.95em;
             color: #ccc;
             text-align: left;
-            z-index: 999;
-            pointer-events: none;
             line-height: 1.5;
-            white-space: pre;
+            white-space: pre-wrap;
         }
 
         #d-pad {
@@ -235,6 +293,43 @@
             color: #00ffff;
             margin-top: 4px;
         }
+
+        @media (max-width: 820px) {
+            .game-layout {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .game-log-panel {
+                position: static;
+            }
+            #log-footer {
+                max-height: 24vh;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .game-screen {
+                width: 100%;
+                padding: 10px 6px;
+            }
+            #controls {
+                gap: 8px;
+            }
+            .move-btn {
+                min-width: 64px;
+                padding: 8px 4px;
+                font-size: 0.72em;
+            }
+            .action-btn {
+                padding: 10px 6px;
+                font-size: 0.85em;
+            }
+            #weapon-selector .weapon-btn {
+                min-width: 0;
+                padding: 10px 5px;
+                font-size: 0.82em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -310,49 +405,54 @@
         </div>
 
         <!-- Tela de Jogo -->
-        <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none; padding-bottom: 90px;">
-            <h2 id="status-title">Status</h2>
-            <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda</button>
-            <div id="hud">
-                <span><span id="hp-label">HP:</span> <span id="hp">120</span></span>
-                <span><span id="o2-label">O2:</span> <span id="o2">100</span></span>
-                <span><span id="parts-label">📦:</span> <span id="parts">0</span>/5</span>
-                <span><span id="ammo-label">💣:</span> <span id="ammo">8</span></span>
-                <span><span id="meat-label">🥩:</span> <span id="meat">0</span>/3</span>
+        <div id="screen-game" class="screen game-screen">
+            <div class="game-layout">
+                <main class="game-main">
+                    <h2 id="status-title">Status</h2>
+                    <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda</button>
+                    <div id="hud">
+                        <span><span id="hp-label">HP:</span> <span id="hp">120</span></span>
+                        <span><span id="o2-label">O2:</span> <span id="o2">100</span></span>
+                        <span><span id="parts-label">📦:</span> <span id="parts">0</span>/5</span>
+                        <span><span id="ammo-label">💣:</span> <span id="ammo">8</span></span>
+                        <span><span id="meat-label">🥩:</span> <span id="meat">0</span>/3</span>
+                    </div>
+
+                    <h2 id="map-title">Mapa</h2>
+                    <div id="game-container" aria-hidden="true"></div>
+                    <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><span id="sr-a" aria-live="assertive" aria-atomic="true"></span><span id="sr-b" aria-live="assertive" aria-atomic="true"></span></div>
+
+                    <h2 id="controls-title">Controles</h2>
+                    <div id="controls">
+                        <div id="d-pad">
+                            <button id="btn-up" class="move-btn" onclick="aimMode?fireDirectional(0,-1):move(0,-1)">NORTE (↑)</button>
+                            <button id="btn-left" class="move-btn" onclick="aimMode?fireDirectional(-1,0):move(-1,0)">OESTE (←)</button>
+                            <button id="btn-right" class="move-btn" onclick="aimMode?fireDirectional(1,0):move(1,0)">LESTE (→)</button>
+                            <button id="btn-down" class="move-btn" onclick="aimMode?fireDirectional(0,1):move(0,1)">SUL (↓)</button>
+                        </div>
+                        <div class="action-controls">
+                            <button id="btn-scan" class="action-btn" onclick="scan()">SCAN 🔋(<span id="scan-ammo">3</span>)</button>
+                            <button id="btn-fire" class="action-btn" onclick="aimMode?fireDirectional(0,0):enterAimMode()" style="background:#ff0000; color:#fff;">FIRE (F)</button>
+                        </div>
+                    </div>
+
+                    <h2 id="weapons-title">Armas</h2>
+                    <div id="weapon-selector">
+                        <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
+                        <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
+                        <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
+                        <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
+                    </div>
+                </main>
+
+                <aside class="game-log-panel">
+                    <h2 id="log-title">Log</h2>
+                    <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0"></div>
+                    <div id="log-footer" aria-hidden="true"></div>
+                </aside>
             </div>
-
-            <h2 id="map-title">Mapa</h2>
-            <div id="game-container" aria-hidden="true"></div>
-            <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><span id="sr-a" aria-live="assertive" aria-atomic="true"></span><span id="sr-b" aria-live="assertive" aria-atomic="true"></span></div>
-
-            <h2 id="controls-title">Controles</h2>
-            <div id="controls">
-                <div id="d-pad">
-                    <button id="btn-up" class="move-btn" onclick="aimMode?fireDirectional(0,-1):move(0,-1)">NORTE (↑)</button>
-                    <button id="btn-left" class="move-btn" onclick="aimMode?fireDirectional(-1,0):move(-1,0)">OESTE (←)</button>
-                    <button id="btn-right" class="move-btn" onclick="aimMode?fireDirectional(1,0):move(1,0)">LESTE (→)</button>
-                    <button id="btn-down" class="move-btn" onclick="aimMode?fireDirectional(0,1):move(0,1)">SUL (↓)</button>
-                </div>
-                <div style="display:flex; flex-direction:column; gap:5px;">
-                    <button id="btn-scan" class="action-btn" onclick="scan()">SCAN 🔋(<span id="scan-ammo">3</span>)</button>
-                    <button id="btn-fire" class="action-btn" onclick="aimMode?fireDirectional(0,0):enterAimMode()" style="background:#ff0000; color:#fff;">FIRE (F)</button>
-                </div>
-            </div>
-
-            <h2 id="weapons-title">Armas</h2>
-            <div id="weapon-selector">
-                <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
-                <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
-                <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
-                <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
-            </div>
-
-            <h2 id="log-title">Log</h2>
-            <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0"></div>
         </div>
     </div>
-
-    <div id="log-footer" aria-hidden="true"></div>
 
     <script>
         const container = document.getElementById('game-container');
