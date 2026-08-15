@@ -294,20 +294,20 @@
 
         <!-- Tela de Jogo -->
         <div id="screen-game" class="screen" style="border:none; width:100%; max-width: none; padding-bottom: 90px;">
-            <h2>Status</h2>
+            <h2 id="status-title">Status</h2>
             <div id="hud">
-                <span>HP: <span id="hp">100</span></span>
-                <span>O2: <span id="o2">50</span></span>
-                <span>📦: <span id="parts">0</span>/5</span>
-                <span>💣: <span id="ammo">5</span></span>
-                <span>🥩: <span id="meat">0</span>/3</span>
+                <span><span id="hp-label">HP:</span> <span id="hp">120</span></span>
+                <span><span id="o2-label">O2:</span> <span id="o2">100</span></span>
+                <span><span id="parts-label">📦:</span> <span id="parts">0</span>/5</span>
+                <span><span id="ammo-label">💣:</span> <span id="ammo">8</span></span>
+                <span><span id="meat-label">🥩:</span> <span id="meat">0</span>/3</span>
             </div>
 
-            <h2>Mapa</h2>
+            <h2 id="map-title">Mapa</h2>
             <div id="game-container" aria-hidden="true"></div>
             <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><span id="sr-a" aria-live="assertive" aria-atomic="true"></span><span id="sr-b" aria-live="assertive" aria-atomic="true"></span></div>
 
-            <h2>Controles</h2>
+            <h2 id="controls-title">Controles</h2>
             <div id="controls">
                 <div id="d-pad">
                     <button id="btn-up" class="move-btn" onclick="aimMode?fireDirectional(0,-1):move(0,-1)">NORTE (↑)</button>
@@ -321,16 +321,15 @@
                 </div>
             </div>
 
-            <h2>Armas</h2>
+            <h2 id="weapons-title">Armas</h2>
             <div id="weapon-selector">
                 <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
                 <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
                 <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
                 <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
-                <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
             </div>
 
-            <h2>Log</h2>
+            <h2 id="log-title">Log</h2>
             <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0"></div>
         </div>
     </div>
@@ -353,8 +352,27 @@
                 back: "Voltar",
                 changeLang: "Mudar Idioma",
                 howTo: "Como Jogar",
-                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Setas / botões D-Pad. Cada passo consome O2. Bolsões (*) recargam +50 O2 permanentemente.<br><br><strong>Arsenal:</strong><br>1. Machete: Corpo a corpo, limpa arbustos (#).<br>2. Taser: Dano + chance de paralisar 3 turnos. Anquilossauro (A) é imune.<br>3. Granada: F + seta → arremessa 2 casas, explode em área 3×3. Munição: 8.<br>4. Laser: F + seta → linha reta até 8 casas, para no 1° dino. Recarrega sozinho.<br><br><strong>Sobrevivência:</strong><br>• Cadáveres (X): extraia carne crua com Machete.<br>• Fogueira (^): Taser em arbusto (#) cria fogo. Dinos fogem. Carne crua vira cozinhada (+20 HP).<br>• Carne: consumida automaticamente quando HP &lt; 100. Máximo: 3 porções.<br><br><strong>Atalhos (sem consumir turno):</strong><br>O = O2 | H = HP | P = Peças | C = Carne | S = SCAN | 1/2/3/4 = arma | F+seta = atacar<br><br><strong>Dinossauros:</strong> V Velociraptor · T T-Rex · A Anquilossauro · 3 Triceratops · W Parasaurolofo<br>Dinos são atraídos por cadáveres — use como isca!",
+                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Setas / botões D-Pad. Cada passo consome O2. Bolsões (*) recargam +50 O2 permanentemente.<br><br><strong>Arsenal:</strong><br>1. Machete: Corpo a corpo, limpa arbustos (#).<br>2. Taser: Dano + chance de paralisar 3 turnos. Anquilossauro (A) é imune.<br>3. Granada: F + seta → arremessa 2 casas, explode em área 2×2. Munição: 8.<br>4. Laser: F + seta → linha reta até 8 casas, para no 1° dino. Recarrega sozinho.<br><br><strong>Sobrevivência:</strong><br>• Cadáveres (X): extraia carne crua com Machete.<br>• Fogueira (~): Taser em arbusto (#) cria fogo. Dinos fogem. Carne crua vira cozinhada (+20 HP).<br>• Carne: consumida automaticamente quando HP &lt; 100. Máximo: 3 porções.<br><br><strong>Atalhos (sem consumir turno):</strong><br>O = O2 | H = HP | P = Peças | C = Carne | S = SCAN | 1/2/3/4 = arma | F+seta = atacar<br><br><strong>Dinossauros:</strong> V Velociraptor · T T-Rex · A Anquilossauro · 3 Triceratops · W Parasaurolofo<br>Dinos são atraídos por cadáveres — use como isca!",
                 feedback: "Feedback",
+                status: "Status",
+                hp: "HP",
+                o2: "O2",
+                partsIcon: "📦",
+                ammoIcon: "💣",
+                meatIcon: "🥩",
+                map: "Mapa",
+                controls: "Controles",
+                weapons: "Armas",
+                weapon: "Arma",
+                log: "Log",
+                scan: "SCAN",
+                fire: "DISPARAR",
+                logLabel: "Histórico de ações",
+                lockedCard: "Carta bloqueada",
+                kill: "Abate",
+                hit: "Acerto",
+                remainingHp: "HP restante",
+                weaponNames: ["Machete", "Taser", "Granada", "Laser"],
                 loreText: "Ano 2150. A humanidade esgotou os recursos da Terra. Você é o Dr. Aris, um cientista enviado 65 milhões de anos ao passado para coletar peças de uma tecnologia experimental deixada por uma expedição perdida. Sua Máquina do Tempo quebrou no impacto. Encontre as 5 peças, recupere oxigênio e tome cuidado: você não está sozinho no Cretáceo.",
                 creditsText: "<p><strong>Equipe:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Enredo:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
                 win: "MISSÃO CUMPRIDA! Você voltou para o futuro!",
@@ -405,8 +423,27 @@
                 back: "Back",
                 changeLang: "Change Language",
                 howTo: "How to Play",
-                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Arrows / D-Pad buttons. Each step consumes O2. Air pockets (*) recharge +50 O2 permanently.<br><br><strong>Arsenal:</strong><br>1. Machete: Melee, clears bushes (#).<br>2. Taser: Damage + stun chance for 3 turns. Ankylosaurus (A) is immune.<br>3. Grenade: F + arrow → throws 2 tiles, explodes in 3×3 area. Ammo: 8.<br>4. Laser: F + arrow → straight line up to 8 tiles, stops at 1st dino. Self-recharges.<br><br><strong>Survival:</strong><br>• Corpses (X): harvest raw meat with Machete.<br>• Fire (^): Taser a bush (#) to start a fire. Dinos flee. Raw meat becomes cooked (+20 HP).<br>• Meat: auto-consumed when HP &lt; 100. Max: 3 portions.<br><br><strong>Shortcuts (no turn cost):</strong><br>O = O2 | H = HP | P = Parts | C = Meat | S = SCAN | 1/2/3/4 = weapon | F+arrow = attack<br><br><strong>Dinosaurs:</strong> V Velociraptor · T T-Rex · A Ankylosaurus · 3 Triceratops · W Parasaurolophus<br>Dinos are attracted to corpses — use them as bait!",
+                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Arrows / D-Pad buttons. Each step consumes O2. Air pockets (*) recharge +50 O2 permanently.<br><br><strong>Arsenal:</strong><br>1. Machete: Melee, clears bushes (#).<br>2. Taser: Damage + stun chance for 3 turns. Ankylosaurus (A) is immune.<br>3. Grenade: F + arrow → throws 2 tiles, explodes in a 2×2 area. Ammo: 8.<br>4. Laser: F + arrow → straight line up to 8 tiles, stops at 1st dino. Self-recharges.<br><br><strong>Survival:</strong><br>• Corpses (X): harvest raw meat with Machete.<br>• Fire (~): Taser a bush (#) to start a fire. Dinos flee. Raw meat becomes cooked (+20 HP).<br>• Meat: auto-consumed when HP &lt; 100. Max: 3 portions.<br><br><strong>Shortcuts (no turn cost):</strong><br>O = O2 | H = HP | P = Parts | C = Meat | S = SCAN | 1/2/3/4 = weapon | F+arrow = attack<br><br><strong>Dinosaurs:</strong> V Velociraptor · T T-Rex · A Ankylosaurus · 3 Triceratops · W Parasaurolophus<br>Dinos are attracted to corpses — use them as bait!",
                 feedback: "Feedback",
+                status: "Status",
+                hp: "HP",
+                o2: "O2",
+                partsIcon: "📦",
+                ammoIcon: "💣",
+                meatIcon: "🥩",
+                map: "Map",
+                controls: "Controls",
+                weapons: "Weapons",
+                weapon: "Weapon",
+                log: "Action Log",
+                scan: "SCAN",
+                fire: "FIRE",
+                logLabel: "Action history",
+                lockedCard: "Locked card",
+                kill: "Kill",
+                hit: "Hit",
+                remainingHp: "Remaining HP",
+                weaponNames: ["Machete", "Taser", "Grenade", "Laser"],
                 loreText: "Year 2150. Humanity has depleted Earth's resources. You are Dr. Aris, a scientist sent 65 million years into the past to collect pieces of experimental technology left by a lost expedition. Your Time Machine broke on impact. Find the 5 parts, recover oxygen, and beware: you are not alone in the Cretaceous.",
                 creditsText: "<p><strong>Team:</strong> Eu Concego Jogar</p><p><strong>Dev:</strong> Anderson Carvalho</p><p><strong>Plot:</strong> Adri Lima</p><p><strong>Email:</strong> euconcego@gmail.com</p>",
                 win: "MISSION ACCOMPLISHED! You returned to the future!",
@@ -622,7 +659,7 @@
                     '<div class="card-fact">' + card.fact[l] + '</div>' +
                     '<div class="card-badge">' + card.badge[l] + '</div>';
             } else {
-                div.setAttribute('aria-label', 'Card bloqueado');
+                div.setAttribute('aria-label', i18n[lang].lockedCard);
                 div.innerHTML =
                     '<div class="card-name">???</div>' +
                     '<pre class="card-art" aria-hidden="true">  ???\n\n  ???\n\n  ???</pre>' +
@@ -666,6 +703,7 @@
             lang = l;
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const t = i18n[lang];
+            document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
             document.getElementById('btn-start').textContent = t.start;
             document.getElementById('btn-how-to').textContent = t.howTo;
             document.getElementById('how-to-title').textContent = t.howTo;
@@ -680,6 +718,25 @@
             document.getElementById('credits-title').textContent = t.credits;
             document.getElementById('credits-content').innerHTML = t.creditsText;
             document.getElementById('btn-credits-back').textContent = t.back;
+
+            // Textos fixos da interface de jogo
+            document.getElementById('status-title').textContent = t.status;
+            document.getElementById('map-title').textContent = t.map;
+            document.getElementById('controls-title').textContent = t.controls;
+            document.getElementById('weapons-title').textContent = t.weapons;
+            document.getElementById('log-title').textContent = t.log;
+            document.getElementById('hp-label').textContent = t.hp + ':';
+            document.getElementById('o2-label').textContent = t.o2 + ':';
+            document.getElementById('parts-label').textContent = t.partsIcon;
+            document.getElementById('ammo-label').textContent = t.ammoIcon;
+            document.getElementById('meat-label').textContent = t.meatIcon;
+            document.getElementById('btn-scan').innerHTML = `${t.scan} 🔋(<span id="scan-ammo">${scanAmmo}</span>)`;
+            document.getElementById('btn-fire').textContent = `${t.fire} (F)`;
+            document.getElementById('w-1').textContent = `1. ${t.weaponNames[0].toUpperCase()}`;
+            document.getElementById('w-2').textContent = `2. ${t.weaponNames[1].toUpperCase()}`;
+            document.getElementById('w-3').textContent = `3. ${t.weaponNames[2].toUpperCase()}`;
+            document.getElementById('w-4').innerHTML = `4. ${t.weaponNames[3].toUpperCase()} ⚡ (<span id="laser-ammo">${laserAmmo}</span>)`;
+            document.getElementById('log').setAttribute('aria-label', t.logLabel);
 
             // Tradução dos controles de acessibilidade
             document.getElementById('btn-up').textContent = lang === 'pt' ? 'NORTE (↑)' : 'NORTH (↑)';
@@ -1223,7 +1280,7 @@
                 // Foge de fogueira adjacente
                 const nearFire = fires.some(f => Math.abs(f.x-d.x)<=2 && Math.abs(f.y-d.y)<=2);
                 if(nearFire) {
-                    addToLog(i18n[lang].fireScares); srSay(i18n[lang].fireScares);
+                    addToLog(i18n[lang].fireScared); srSay(i18n[lang].fireScared);
                     // Afasta do fogo: move na direção oposta
                     const nearestFire = fires.reduce((a,b)=>{
                         const da=Math.abs(a.x-d.x)+Math.abs(a.y-d.y);
@@ -1354,7 +1411,7 @@
                 b.classList.toggle('active-weapon', i === idx);
             });
             playSound(400, 'sine', 0.2);
-            setTimeout(() => srSay(lang === 'pt' ? `Arma: ${weapons[idx]}.` : `Weapon: ${weapons[idx]}.`), 120);
+            setTimeout(() => srSay(`${i18n[lang].weapon}: ${i18n[lang].weaponNames[idx]}.`), 120);
             moveDinos();
         }
 
@@ -1445,12 +1502,12 @@
                 srSay(lang==='pt'?'Taser: apenas corpo a corpo.':'Taser: melee only.');
                 return;
             } else if(weapon === 'Granada') {
-                // Granada: arremessa até 2 casas na direção, área 3x3 no ponto de impacto
+                // Granada: arremessa até 2 casas na direção, área 2x2 no ponto de impacto
                 if(player.ammo<=0){addToLog(i18n[lang].noAmmo);srSay(i18n[lang].noAmmo);return;}
                 player.ammo--;
                 const gx=player.x+dx*2, gy=player.y+dy*2;
                 let hits=0;
-                for(let oy=-1;oy<=1;oy++) for(let ox=-1;ox<=1;ox++){
+                for(let oy=0;oy<=1;oy++) for(let ox=0;ox<=1;ox++){
                     const tx=gx+ox, ty=gy+oy;
                     if(tx>=0&&tx<GRID_SIZE&&ty>=0&&ty<GRID_SIZE) if(checkHit(tx,ty,25)) hits++;
                 }
@@ -1509,7 +1566,7 @@
                         }
                     }
                     if(d.hp <= 0) {
-                        addToLog(`Kill: ${dName}!`); srSay(`Kill: ${dName}!`); corpses.push({x: d.x, y: d.y});
+                        addToLog(`${i18n[lang].kill}: ${dName}!`); srSay(`${i18n[lang].kill}: ${dName}!`); corpses.push({x: d.x, y: d.y});
                         // Contagem de kills para galeria
                         const dtype = d.type;
                         killCount[dtype] = (killCount[dtype] || 0) + 1;
@@ -1526,8 +1583,8 @@
                         if(killCount.total >= 10) { unlockCard('apex'); }
                         dinos.splice(i, 1);
                     } else {
-                        addToLog(`Hit: ${dName}! (HP: ${d.hp})`);
-                        srSay(lang === 'pt' ? `Acerto: ${dName}! HP restante: ${d.hp}.` : `Hit: ${dName}! Remaining HP: ${d.hp}.`);
+                        addToLog(`${i18n[lang].hit}: ${dName}! (HP: ${d.hp})`);
+                        srSay(`${i18n[lang].hit}: ${dName}! ${i18n[lang].remainingHp}: ${d.hp}.`);
                         if(!(weapons[player.weaponIdx] === 'Taser')) {
                             let rdx = player.x - d.x; let rdy = player.y - d.y;
                             if(Math.abs(rdx) > Math.abs(rdy)) d.x += rdx > 0 ? 1 : -1; else d.y += rdy > 0 ? 1 : -1;
