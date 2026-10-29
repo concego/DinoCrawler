@@ -1466,7 +1466,7 @@
                     if(dx ===  1 && dy === 0) return lang === 'pt' ? 'Leste' : 'East';
                     return '';
                 })();
-                const positionAnnouncement = lang === 'pt' ? `Posição: ${player.x}, ${player.y}.` : `Position: ${player.x}, ${player.y}.`;
+                const positionAnnouncement = `${player.x}, ${player.y}.`;
                 srSay([positionAnnouncement].concat(srParts).filter(Boolean).join('. '));
 
                 if (logMsg) addToLog(logMsg);
