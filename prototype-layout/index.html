@@ -1068,6 +1068,20 @@
         }
 
         function startGame() {
+            try { return startGameImpl(); }
+            catch (err) {
+                console.error('Dino Crawler start failed:', err);
+                let panel = document.getElementById('start-error');
+                if (!panel) {
+                    panel = document.createElement('p'); panel.id='start-error'; panel.setAttribute('role','alert'); panel.style.color='#ff4444';
+                    document.getElementById('screen-menu').appendChild(panel);
+                }
+                panel.textContent = `Falha ao iniciar: ${err && err.message ? err.message : err}`;
+                showScreen('screen-menu');
+            }
+        }
+
+        function startGameImpl() {
             playSfx('confirm', 0.55);
             gameEnded = false;
             turnsPlayed = 0;
