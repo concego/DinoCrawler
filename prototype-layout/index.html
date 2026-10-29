@@ -460,33 +460,33 @@
         <div id="screen-game" class="screen game-screen">
             <div class="game-layout">
                 <main class="game-main">
-                    <h2 id="status-title">---[ STATUS ]---</h2>
+                    <h2 id="status-title"><span aria-hidden="true">---[ </span><span id="status-title-label">Status</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="hud">
                         <span><span id="hp-label">HP:</span> <span id="hp">120</span></span>
                         <span><span id="o2-label">O2:</span> <span id="o2">100</span></span>
-                        <span><span id="parts-label">PEÇAS [P]:</span> <span id="parts">0</span>/5</span>
-                        <span><span id="ammo-label">GRANADAS [o]:</span> <span id="ammo">8</span></span>
-                        <span><span id="meat-label">ISCAS [&amp;]:</span> <span id="meat">0</span>/3</span>
+                        <span><span id="parts-label">PEÇAS:</span> <span id="parts">0</span>/5</span>
+                        <span><span id="ammo-label">GRANADAS:</span> <span id="ammo">8</span></span>
+                        <span><span id="meat-label">ISCAS:</span> <span id="meat">0</span>/3</span>
                         <span><span id="position-label">POSIÇÃO:</span> <span id="position">1, 1</span></span>
                     </div>
-                    <h2 id="map-title">---[ MAPA ]---</h2>
+                    <h2 id="map-title"><span aria-hidden="true">---[ </span><span id="map-title-label">Mapa</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="game-container" aria-hidden="true"></div>
                     <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><span id="sr-a" aria-live="assertive" aria-atomic="true"></span><span id="sr-b" aria-live="assertive" aria-atomic="true"></span></div>
                 </main>
 
                 <aside class="game-log-panel">
                     <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda (T)</button>
-                    <h2 id="log-title">---[ LOG ]---</h2>
+                    <h2 id="log-title"><span aria-hidden="true">---[ </span><span id="log-title-label">Log</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="log-footer" aria-live="off"></div>
                     <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"></div>
-                    <h2 id="weapons-title">---[ ARMAS ]---</h2>
+                    <h2 id="weapons-title"><span aria-hidden="true">---[ </span><span id="weapons-title-label">Armas</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="weapon-selector">
                         <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">[1. MACHETE *]</button>
                         <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">[2. TASER]</button>
                         <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">[3. GRANADA o]</button>
                         <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">[4. LASER (5)]</button>
                     </div>
-                    <h2 id="controls-title">---[ CONTROLES ]---</h2>
+                    <h2 id="controls-title"><span aria-hidden="true">---[ </span><span id="controls-title-label">Controles</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="controls">
                         <div id="d-pad">
                             <button id="btn-up" class="move-btn" onclick="aimMode?fireDirectional(0,-1):move(0,-1)">NORTE (↑)</button>
@@ -503,7 +503,7 @@
             </div>
         </div>
         <div id="screen-end" class="screen game-end-screen" role="dialog" aria-modal="true" aria-labelledby="end-title">
-            <h1 id="end-title">Fuga Concluída!</h1>
+            <h1 id="end-title" tabindex="-1">Fuga Concluída!</h1>
             <p id="end-message" role="status" aria-live="assertive"></p>
             <div id="end-summary"></div>
             <button class="menu-btn" id="btn-end-menu" onclick="playSfx('back',0.75); showScreen('screen-menu')">Voltar ao Menu Principal</button>
@@ -574,8 +574,8 @@
                 status: "Status",
                 hp: "HP",
                 o2: "O2",
-                partsIcon: "PEÇAS [P]:",
-                ammoIcon: "GRANADAS [o]:",
+                partsIcon: "PEÇAS:",
+                ammoIcon: "GRANADAS:",
                 meatIcon: "ISCAS [&]:",
                 map: "Mapa",
                 controls: "Controles",
@@ -649,8 +649,8 @@
                 status: "Status",
                 hp: "HP",
                 o2: "O2",
-                partsIcon: "PARTS [P]:",
-                ammoIcon: "GRENADES [o]:",
+                partsIcon: "PARTS:",
+                ammoIcon: "GRENADES:",
                 meatIcon: "BAIT [&]:",
                 map: "Map",
                 controls: "Controls",
@@ -1015,11 +1015,11 @@
             document.getElementById('btn-credits-back').textContent = t.back;
 
             // Textos fixos da interface de jogo
-            document.getElementById('status-title').textContent = lang === 'pt' ? '---[ STATUS ]---' : '---[ STATUS ]---';
-            document.getElementById('map-title').textContent = lang === 'pt' ? '---[ MAPA ]---' : '---[ MAP ]---';
-            document.getElementById('controls-title').textContent = lang === 'pt' ? '---[ CONTROLES ]---' : '---[ CONTROLS ]---';
-            document.getElementById('weapons-title').textContent = lang === 'pt' ? '---[ ARMAS ]---' : '---[ WEAPONS ]---';
-            document.getElementById('log-title').textContent = lang === 'pt' ? '---[ LOG ]---' : '---[ ACTION LOG ]---';
+            document.getElementById('status-title-label').textContent = lang === 'pt' ? 'Status' : 'Status';
+            document.getElementById('map-title-label').textContent = lang === 'pt' ? 'Mapa' : 'Map';
+            document.getElementById('controls-title-label').textContent = lang === 'pt' ? 'Controles' : 'Controls';
+            document.getElementById('weapons-title-label').textContent = lang === 'pt' ? 'Armas' : 'Weapons';
+            document.getElementById('log-title-label').textContent = lang === 'pt' ? 'Log' : 'Action Log';
             document.getElementById('hp-label').textContent = t.hp + ':';
             document.getElementById('position-label').textContent = lang === 'pt' ? 'POSIÇÃO:' : 'POSITION:';
             document.getElementById('o2-label').textContent = t.o2 + ':';
@@ -1453,7 +1453,8 @@
                     if(dx ===  1 && dy === 0) return lang === 'pt' ? 'Leste' : 'East';
                     return '';
                 })();
-                srSay([dirLabel].concat(srParts).filter(Boolean).join('. '));
+                const positionAnnouncement = lang === 'pt' ? `Posição: ${player.x}, ${player.y}.` : `Position: ${player.x}, ${player.y}.`;
+                srSay([positionAnnouncement, dirLabel].concat(srParts).filter(Boolean).join('. '));
 
                 if (logMsg) addToLog(logMsg);
                 playEnvironmentSonar();
@@ -1722,15 +1723,18 @@
 
         function updateWeaponButtons() {
             const labels = lang === 'pt'
-              ? ['MACHETE','TASER','GRANADA o','LASER']
-              : ['MACHETE','TASER','GRENADE o','LASER'];
+              ? ['MACHETE','TASER','GRANADA','LASER']
+              : ['MACHETE','TASER','GRENADE','LASER'];
             labels.forEach((name,i)=>{
                 const b=document.getElementById(`w-${i+1}`);
                 if(!b) return;
-                const star = player.weaponIdx===i ? ' *' : '';
-                b.innerHTML = `[${i+1}. ${name}${i===3 ? ` (<span id="laser-ammo">${laserAmmo}</span>)` : ''}${star}]`;
-                b.classList.toggle('active-weapon', player.weaponIdx===i);
-                b.setAttribute('aria-pressed', player.weaponIdx===i ? 'true' : 'false');
+                const equipped = player.weaponIdx===i;
+                const state = equipped ? (lang === 'pt' ? ' (EQUIPADA)' : ' (EQUIPPED)') : '';
+                const ammunition = i===2 ? `: ${player.ammo}` : i===3 ? `: ${laserAmmo}` : '';
+                b.textContent = `${i+1}. ${name}${ammunition}${state}`;
+                b.classList.toggle('active-weapon', equipped);
+                b.setAttribute('aria-pressed', equipped ? 'true' : 'false');
+                b.setAttribute('aria-label', `${name}${ammunition}${state}`);
             });
         }
 
