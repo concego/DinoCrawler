@@ -1238,7 +1238,6 @@
             dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
             laserAmmo = 5; laserCooldown = 0; aimMode = false; scanAmmo = 3; scanCooldown = 0; fires = [];
             gameEnded = false;
-            document.getElementById('laser-ammo').textContent = 5;
             updateWeaponButtons();
             log.innerHTML = '';
             logLines.length = 0;
@@ -1377,7 +1376,7 @@
                 player.o2--;
                 if(player.ammo < 8) player.ammo++;
                 // Recarga do laser: +1 tiro a cada 2 turnos de cooldown
-                if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; document.getElementById('laser-ammo').textContent = laserAmmo; } }
+                if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; updateWeaponButtons(); } }
                 if(scanCooldown > 0) { scanCooldown--; if(scanCooldown === 0 && scanAmmo < 3) { scanAmmo++; document.getElementById('scan-ammo').textContent = scanAmmo; } }
                 // Fogueiras: decrementar e apagar
                 fires = fires.filter(f => {
@@ -1808,7 +1807,7 @@
                     return;
                 } else if(weapon === 'Laser') {
                     if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
-                    laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                    laserAmmo--; laserCooldown=2; updateWeaponButtons();
                     const hit=checkHit(player.x,player.y,50);
                     if(hit){addToLog(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');playLaserShot();setTimeout(playLaserImpact,180);}
                     else{addToLog(i18n[lang].laserMiss);srSay(i18n[lang].laserMiss);playLaserShot();}
@@ -1869,7 +1868,7 @@
             } else if(weapon === 'Laser') {
                 // Laser: linha reta até 8 casas, para no 1° dino atingido
                 if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
-                laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                laserAmmo--; laserCooldown=2; updateWeaponButtons();
                 let hit=false;
                 for(let step=1;step<=8;step++){
                     const lx=player.x+dx*step, ly=player.y+dy*step;
