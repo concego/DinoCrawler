@@ -1467,7 +1467,7 @@
                     return '';
                 })();
                 const positionAnnouncement = lang === 'pt' ? `Posição: ${player.x}, ${player.y}.` : `Position: ${player.x}, ${player.y}.`;
-                srSay([positionAnnouncement, dirLabel].concat(srParts).filter(Boolean).join('. '));
+                srSay(positionAnnouncement);
 
                 if (logMsg) addToLog(logMsg);
                 playEnvironmentSonar();
