@@ -1064,7 +1064,6 @@
             document.getElementById('btn-end-menu').textContent = lang === 'pt' ? 'Voltar ao Menu Principal' : 'Return to Main Menu';
             playSfx(victory ? 'machineOn' : 'confirm', 0.8);
             showScreen('screen-end');
-            document.getElementById('btn-end-menu').focus();
             srSay(`${title.textContent}. ${summary.textContent}`);
         }
 
@@ -1351,7 +1350,6 @@
         }
 
         function move(dx, dy) {
-            if (gameEnded) return;
             const nx = player.x + dx; const ny = player.y + dy;
             if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
                 if(map[ny][nx] === '#') {
