@@ -51,33 +51,83 @@
 
         .game-screen {
             width: calc(100% - 24px);
-            max-width: 1160px;
+            max-width: 1500px;
+            height: calc(100vh - 24px);
+            max-height: calc(100dvh - 24px);
             box-sizing: border-box;
             border: none;
-            padding: 16px;
+            padding: 10px 14px;
             text-align: left;
+            overflow: hidden;
         }
         .game-layout {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
-            gap: 24px;
-            align-items: start;
+            grid-template-columns: minmax(340px, 1.05fr) minmax(360px, 0.95fr);
+            gap: 16px;
+            align-items: stretch;
+            height: 100%;
+            min-height: 0;
         }
         .game-main {
             min-width: 0;
+            min-height: 0;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .game-log-panel {
             min-width: 0;
-            border: 1px solid #444;
-            background: #080808;
-            padding: 12px;
-            position: sticky;
-            top: 12px;
+            min-height: 0;
+            border: 1px solid #00aa00;
+            background: #050805;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow: auto;
         }
-        .game-log-panel h2 {
-            margin-top: 0;
-            text-align: left;
+        .game-log-panel h2 { margin: 0; text-align: left; }
+
+        .game-main h2, .game-log-panel h2 {
+            color: #00dd00;
+            font-size: 0.9em;
+            letter-spacing: .05em;
+            margin: 4px 0;
+            font-weight: normal;
+        }
+        .game-main > h2 { width: 100%; }
+        #hud {
+            justify-content: center;
+            font-size: clamp(.78rem, 1.25vw, 1rem);
+            gap: 4px 12px;
+            margin: 0 auto 2px;
+        }
+        #hud span { white-space: nowrap; }
+        #hp.critical, #o2.critical { color: #ff3333; font-weight: bold; }
+        #hp.warning, #o2.warning { color: #ffcc00; font-weight: bold; }
+        .game-log-panel .menu-btn { padding: 8px; margin: 0; font-size: .95em; }
+        #btn-game-help { position: sticky; top: 0; z-index: 3; }
+        #weapon-selector { margin: 0; gap: 5px; }
+        #weapon-selector .weapon-btn { flex: 1 1 calc(50% - 5px); min-width: 0; padding: 9px 5px; font-size: .85em; }
+        #controls-title { margin-top: 2px; }
+        #controls { margin: 0; font-size: .95em; }
+        #d-pad { gap: 3px; }
+        .move-btn { min-width: 62px; padding: 7px 4px; }
+        .action-controls { gap: 4px; }
+        .action-btn { padding: 8px 5px; font-size: .86em; }
+        #log-footer { min-height: 5em; max-height: none; overflow-y: auto; flex: 1 1 28%; }
+        .game-end-screen { width:min(560px, calc(100% - 24px)); border:2px solid #00ff00; background:#000; padding:22px; text-align:center; }
+        #end-summary { border:1px solid #00aa00; padding:12px; margin:14px 0; color:#00ff00; line-height:1.7; }
+        #end-title.victory { color:#ffcc00; }
+        #end-title.defeat { color:#ff3333; }
+        .active-weapon { background:#00ff00 !important; color:#000 !important; font-weight:bold; }
+        @media (min-width: 821px) and (min-height: 651px) {
+            body { height:100vh; overflow:hidden; }
+            #ui-layer { min-height:100vh; }
+            .game-screen { height:calc(100dvh - 16px); max-height:calc(100dvh - 16px); }
+            .game-layout { grid-template-columns:minmax(320px, min(55vw, 650px)) minmax(340px, 1fr); }
+            #game-container { width:min(90%, calc(100dvh - 165px)); max-width: min(65vh, 600px); }
         }
 
         h1 { font-size: 2em; margin-bottom: 20px; color: #ff0000; }
@@ -97,19 +147,22 @@
         #game-container {
             display: grid;
             grid-template-columns: repeat(20, 1fr);
-            gap: 1px;
-            background-color: #333;
-            border: 4px solid #555;
-            width: 90vw;
-            max-width: 500px;
+            gap: 0;
+            background-color: #000;
+            border: 2px double #00aa00;
+            width: min(90vw, calc(100vh - 185px));
+            max-width: min(62vh, 600px);
             aspect-ratio: 1/1;
+            flex: 0 1 auto;
+            min-height: 0;
         }
         .cell {
             background-color: #000;
+            border: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2em;
+            font-size: clamp(10px, 2.5vh, 20px);
             font-weight: bold;
         }
         .player { color: #fff; text-shadow: 0 0 5px #fff; }
@@ -123,11 +176,11 @@
         
         #hud, #controls {
             width: 100%;
-            max-width: 500px;
-            margin: 10px auto 0;
+            max-width: 100%;
+            margin: 4px auto 0;
             display: flex;
             justify-content: space-between;
-            font-size: 1.2em;
+            font-size: 1em;
         }
         #hud {
             flex-wrap: wrap;
@@ -146,8 +199,8 @@
         }
         #weapon-selector {
             width: 100%;
-            max-width: 500px;
-            margin: 10px auto 0;
+            max-width: 100%;
+            margin: 4px auto 0;
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
@@ -169,8 +222,9 @@
         #log-footer {
             width: 100%;
             box-sizing: border-box;
-            min-height: 9em;
-            max-height: 35vh;
+            min-height: 5em;
+            max-height: 30vh;
+            flex: 1 1 auto;
             overflow-y: auto;
             background: #000;
             border: 1px solid #444;
@@ -178,7 +232,7 @@
             font-size: 0.95em;
             color: #ccc;
             text-align: left;
-            line-height: 1.5;
+            line-height: 1.3;
             white-space: pre-wrap;
         }
 
@@ -294,17 +348,12 @@
             margin-top: 4px;
         }
 
-        @media (max-width: 820px) {
-            .game-layout {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            .game-log-panel {
-                position: static;
-            }
-            #log-footer {
-                max-height: 24vh;
-            }
+        @media (max-width: 820px), (max-height: 600px) and (min-width: 821px) {
+            .game-screen { height: auto; max-height: none; overflow: visible; }
+            .game-layout { grid-template-columns: 1fr; height: auto; }
+            .game-log-panel { position: static; }
+            #game-container { width: min(90vw, calc(100dvh - 180px)); max-width: 500px; }
+            #log-footer { max-height: 24vh; }
         }
 
         @media (max-width: 520px) {
@@ -411,21 +460,33 @@
         <div id="screen-game" class="screen game-screen">
             <div class="game-layout">
                 <main class="game-main">
-                    <h2 id="status-title">Status</h2>
-                    <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda</button>
+                    <h2 id="status-title"><span aria-hidden="true">---[ </span><span id="status-title-label">Status</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="hud">
                         <span><span id="hp-label">HP:</span> <span id="hp">120</span></span>
                         <span><span id="o2-label">O2:</span> <span id="o2">100</span></span>
-                        <span><span id="parts-label">📦:</span> <span id="parts">0</span>/5</span>
-                        <span><span id="ammo-label">💣:</span> <span id="ammo">8</span></span>
-                        <span><span id="meat-label">🥩:</span> <span id="meat">0</span>/3</span>
+                        <span><span id="parts-label">PEÇAS:</span> <span id="parts">0</span>/5</span>
+                        <span><span id="ammo-label">GRANADAS:</span> <span id="ammo">8</span></span>
+                        <span><span id="meat-label">ISCAS:</span> <span id="meat">0</span>/3</span>
+                        <span><span id="position-label">POSIÇÃO:</span> <span id="position">1, 1</span></span>
                     </div>
-
-                    <h2 id="map-title">Mapa</h2>
+                    <h2 id="map-title"><span aria-hidden="true">---[ </span><span id="map-title-label">Mapa</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="game-container" aria-hidden="true"></div>
                     <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><span id="sr-a" aria-live="assertive" aria-atomic="true"></span><span id="sr-b" aria-live="assertive" aria-atomic="true"></span></div>
+                </main>
 
-                    <h2 id="controls-title">Controles</h2>
+                <aside class="game-log-panel">
+                    <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda (T)</button>
+                    <h2 id="log-title"><span aria-hidden="true">---[ </span><span id="log-title-label">Log</span><span aria-hidden="true"> ]---</span></h2>
+                    <div id="log-footer" aria-live="off"></div>
+                    <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"></div>
+                    <h2 id="weapons-title"><span aria-hidden="true">---[ </span><span id="weapons-title-label">Armas</span><span aria-hidden="true"> ]---</span></h2>
+                    <div id="weapon-selector">
+                        <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">[1. MACHETE *]</button>
+                        <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">[2. TASER]</button>
+                        <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">[3. GRANADA o]</button>
+                        <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">[4. LASER (5)]</button>
+                    </div>
+                    <h2 id="controls-title"><span aria-hidden="true">---[ </span><span id="controls-title-label">Controles</span><span aria-hidden="true"> ]---</span></h2>
                     <div id="controls">
                         <div id="d-pad">
                             <button id="btn-up" class="move-btn" onclick="aimMode?fireDirectional(0,-1):move(0,-1)">NORTE (↑)</button>
@@ -434,26 +495,18 @@
                             <button id="btn-down" class="move-btn" onclick="aimMode?fireDirectional(0,1):move(0,1)">SUL (↓)</button>
                         </div>
                         <div class="action-controls">
-                            <button id="btn-scan" class="action-btn" onclick="scan()">SCAN 🔋(<span id="scan-ammo">3</span>)</button>
-                            <button id="btn-fire" class="action-btn" onclick="aimMode?fireDirectional(0,0):enterAimMode()" style="background:#ff0000; color:#fff;">FIRE (F)</button>
+                            <button id="btn-scan" class="action-btn" onclick="scan()">SCAN [S] (<span id="scan-ammo">3</span>)</button>
+                            <button id="btn-fire" class="action-btn" onclick="aimMode?fireDirectional(0,0):enterAimMode()">DISPARAR (F)</button>
                         </div>
                     </div>
-
-                    <h2 id="weapons-title">Armas</h2>
-                    <div id="weapon-selector">
-                        <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">1. MACHETE</button>
-                        <button id="w-2" class="weapon-btn" onclick="setWeapon(1)">2. TASER</button>
-                        <button id="w-3" class="weapon-btn" onclick="setWeapon(2)">3. GRANADA</button>
-                        <button id="w-4" class="weapon-btn" onclick="setWeapon(3)">4. LASER ⚡ (<span id="laser-ammo">5</span>)</button>
-                    </div>
-                </main>
-
-                <aside class="game-log-panel">
-                    <h2 id="log-title">Log</h2>
-                    <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0"></div>
-                    <div id="log-footer" aria-hidden="true"></div>
                 </aside>
             </div>
+        </div>
+        <div id="screen-end" class="screen game-end-screen" role="dialog" aria-modal="true" aria-labelledby="end-title">
+            <h1 id="end-title" tabindex="-1">Fuga Concluída!</h1>
+            <p id="end-message" role="status" aria-live="assertive"></p>
+            <div id="end-summary"></div>
+            <button class="menu-btn" id="btn-end-menu" onclick="playSfx('back',0.75); showScreen('screen-menu')">Voltar ao Menu Principal</button>
         </div>
     </div>
 
@@ -512,24 +565,24 @@
                 back: "Voltar",
                 changeLang: "Mudar Idioma",
                 howTo: "Como Jogar",
-                help: "Ajuda e Legenda",
+                help: "Ajuda e Legenda (T)",
                 helpIntro: "Consulte as instruções completas ou descubra o significado de cada símbolo do mapa. Durante a partida, abrir esta ajuda não consome um turno.",
                 mapLegend: "Legenda do Mapa",
                 legendText: "<strong>Legenda:</strong><br><br>@ Você, Dr. Aris<br>. Espaço livre<br>P Peça da Máquina do Tempo<br>M Máquina do Tempo<br>* Bolsão de oxigênio (+50 O2)<br># Arbusto denso<br>~ Fogueira<br>X Cadáver<br>V Velociraptor<br>T T-Rex<br>A Anquilossauro<br>3 Triceratops<br>W Parasaurolofo<br>F Dinossauro em fuga",
-                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Setas / botões D-Pad. Cada passo consome O2. Bolsões (*) recargam +50 O2 permanentemente.<br><br><strong>Arsenal:</strong><br>1. Machete: Corpo a corpo, limpa arbustos (#).<br>2. Taser: Dano + chance de paralisar 3 turnos. Anquilossauro (A) é imune.<br>3. Granada: F + seta → arremessa 2 casas, explode em área 2×2. Munição: 8.<br>4. Laser: F + seta → linha reta até 8 casas, para no 1° dino. Recarrega sozinho.<br><br><strong>Sobrevivência:</strong><br>• Cadáveres (X): extraia carne crua com Machete.<br>• Fogueira (~): Taser em arbusto (#) cria fogo. Dinos fogem. Carne crua vira cozinhada (+20 HP).<br>• Carne: consumida automaticamente quando HP &lt; 100. Máximo: 3 porções.<br><br><strong>Atalhos (sem consumir turno):</strong><br>O = O2 | H = HP | P = Peças | C = Carne | S = SCAN | 1/2/3/4 = arma | F+seta = atacar<br><br><strong>Dinossauros:</strong> V Velociraptor · T T-Rex · A Anquilossauro · 3 Triceratops · W Parasaurolofo<br>Dinos são atraídos por cadáveres — use como isca!",
+                howToText: "<strong>Objetivo:</strong> Colete 5 peças (P) e volte para a Máquina do Tempo (M) em (0,0).<br><br><strong>Movimento:</strong> Setas / botões D-Pad. Cada passo consome O2. Bolsões (*) recargam +50 O2 permanentemente.<br><br><strong>Arsenal:</strong><br>1. Machete: Corpo a corpo, limpa arbustos (#).<br>2. Taser: Dano + chance de paralisar 3 turnos. Anquilossauro (A) é imune.<br>3. Granada: F + seta → arremessa 2 casas, explode em área 2×2. Munição: 8.<br>4. Laser: F + seta → linha reta até 8 casas, para no 1° dino. Recarrega sozinho.<br><br><strong>Sobrevivência:</strong><br>• Cadáveres (X): extraia carne crua com Machete.<br>• Fogueira (~): Taser em arbusto (#) cria fogo. Dinos fogem. Carne crua vira cozinhada (+20 HP).<br>• Carne: consumida automaticamente quando HP &lt; 100. Máximo: 3 porções.<br><br><strong>Atalhos (sem consumir turno):</strong><br>O = O2 | H = HP | T = Ajuda | P = Peças | C = Iscas | S = SCAN | 1/2/3/4 = arma | F+seta = atacar<br><br><strong>Dinossauros:</strong> V Velociraptor · T T-Rex · A Anquilossauro · 3 Triceratops · W Parasaurolofo<br>Dinos são atraídos por cadáveres — use como isca!",
                 feedback: "Feedback",
                 status: "Status",
                 hp: "HP",
                 o2: "O2",
-                partsIcon: "📦",
-                ammoIcon: "💣",
-                meatIcon: "🥩",
+                partsIcon: "PEÇAS:",
+                ammoIcon: "GRANADAS:",
+                meatIcon: "ISCAS [&]:",
                 map: "Mapa",
                 controls: "Controles",
                 weapons: "Armas",
                 weapon: "Arma",
                 log: "Log",
-                scan: "SCAN",
+                scan: "SCAN [S]",
                 fire: "DISPARAR",
                 logLabel: "Histórico de ações",
                 lockedCard: "Carta bloqueada",
@@ -587,24 +640,24 @@
                 back: "Back",
                 changeLang: "Change Language",
                 howTo: "How to Play",
-                help: "Help & Map Key",
+                help: "Help & Map Key (T)",
                 helpIntro: "Read the full instructions or check what each map symbol means. During a run, opening this help does not consume a turn.",
                 mapLegend: "Map Key",
                 legendText: "<strong>Map key:</strong><br><br>@ You, Dr. Aris<br>. Open ground<br>P Time Machine part<br>M Time Machine<br>* Oxygen pocket (+50 O2)<br># Dense bush<br>~ Campfire<br>X Corpse<br>V Velociraptor<br>T T-Rex<br>A Ankylosaurus<br>3 Triceratops<br>W Parasaurolophus<br>F Fleeing dinosaur",
-                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Arrows / D-Pad buttons. Each step consumes O2. Air pockets (*) recharge +50 O2 permanently.<br><br><strong>Arsenal:</strong><br>1. Machete: Melee, clears bushes (#).<br>2. Taser: Damage + stun chance for 3 turns. Ankylosaurus (A) is immune.<br>3. Grenade: F + arrow → throws 2 tiles, explodes in a 2×2 area. Ammo: 8.<br>4. Laser: F + arrow → straight line up to 8 tiles, stops at 1st dino. Self-recharges.<br><br><strong>Survival:</strong><br>• Corpses (X): harvest raw meat with Machete.<br>• Fire (~): Taser a bush (#) to start a fire. Dinos flee. Raw meat becomes cooked (+20 HP).<br>• Meat: auto-consumed when HP &lt; 100. Max: 3 portions.<br><br><strong>Shortcuts (no turn cost):</strong><br>O = O2 | H = HP | P = Parts | C = Meat | S = SCAN | 1/2/3/4 = weapon | F+arrow = attack<br><br><strong>Dinosaurs:</strong> V Velociraptor · T T-Rex · A Ankylosaurus · 3 Triceratops · W Parasaurolophus<br>Dinos are attracted to corpses — use them as bait!",
+                howToText: "<strong>Objective:</strong> Collect 5 parts (P) and return to the Time Machine (M) at (0,0).<br><br><strong>Movement:</strong> Arrows / D-Pad buttons. Each step consumes O2. Air pockets (*) recharge +50 O2 permanently.<br><br><strong>Arsenal:</strong><br>1. Machete: Melee, clears bushes (#).<br>2. Taser: Damage + stun chance for 3 turns. Ankylosaurus (A) is immune.<br>3. Grenade: F + arrow → throws 2 tiles, explodes in a 2×2 area. Ammo: 8.<br>4. Laser: F + arrow → straight line up to 8 tiles, stops at 1st dino. Self-recharges.<br><br><strong>Survival:</strong><br>• Corpses (X): harvest raw meat with Machete.<br>• Fire (~): Taser a bush (#) to start a fire. Dinos flee. Raw meat becomes cooked (+20 HP).<br>• Meat: auto-consumed when HP &lt; 100. Max: 3 portions.<br><br><strong>Shortcuts (no turn cost):</strong><br>O = O2 | H = HP | T = Help | P = Parts | C = Bait | S = SCAN | 1/2/3/4 = weapon | F+arrow = attack<br><br><strong>Dinosaurs:</strong> V Velociraptor · T T-Rex · A Ankylosaurus · 3 Triceratops · W Parasaurolophus<br>Dinos are attracted to corpses — use them as bait!",
                 feedback: "Feedback",
                 status: "Status",
                 hp: "HP",
                 o2: "O2",
-                partsIcon: "📦",
-                ammoIcon: "💣",
-                meatIcon: "🥩",
+                partsIcon: "PARTS:",
+                ammoIcon: "GRENADES:",
+                meatIcon: "BAIT [&]:",
                 map: "Map",
                 controls: "Controls",
                 weapons: "Weapons",
                 weapon: "Weapon",
                 log: "Action Log",
-                scan: "SCAN",
+                scan: "SCAN [S]",
                 fire: "FIRE",
                 logLabel: "Action history",
                 lockedCard: "Locked card",
@@ -658,6 +711,8 @@
         };
 
         let player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
+        let turnsPlayed = 0;
+        let gameEnded = false;
         const weapons = ['Machete', 'Taser', 'Granada', 'Laser'];
         let laserAmmo = 5;      // tiros disponíveis
         let laserCooldown = 0;  // turnos até ganhar +1 tiro
@@ -960,23 +1015,26 @@
             document.getElementById('btn-credits-back').textContent = t.back;
 
             // Textos fixos da interface de jogo
-            document.getElementById('status-title').textContent = t.status;
-            document.getElementById('map-title').textContent = t.map;
-            document.getElementById('controls-title').textContent = t.controls;
-            document.getElementById('weapons-title').textContent = t.weapons;
-            document.getElementById('log-title').textContent = t.log;
+            document.getElementById('status-title-label').textContent = lang === 'pt' ? 'Status' : 'Status';
+            document.getElementById('map-title-label').textContent = lang === 'pt' ? 'Mapa' : 'Map';
+            document.getElementById('controls-title-label').textContent = lang === 'pt' ? 'Controles' : 'Controls';
+            document.getElementById('weapons-title-label').textContent = lang === 'pt' ? 'Armas' : 'Weapons';
+            document.getElementById('log-title-label').textContent = lang === 'pt' ? 'Log' : 'Action Log';
             document.getElementById('hp-label').textContent = t.hp + ':';
+            document.getElementById('position-label').textContent = lang === 'pt' ? 'POSIÇÃO:' : 'POSITION:';
             document.getElementById('o2-label').textContent = t.o2 + ':';
             document.getElementById('parts-label').textContent = t.partsIcon;
             document.getElementById('ammo-label').textContent = t.ammoIcon;
             document.getElementById('meat-label').textContent = t.meatIcon;
-            document.getElementById('btn-scan').innerHTML = `${t.scan} 🔋(<span id="scan-ammo">${scanAmmo}</span>)`;
+            document.getElementById('end-title').textContent = lang === 'pt' ? 'Fuga Concluída!' : 'Escape Complete!';
+            document.getElementById('btn-scan').innerHTML = `${t.scan} (<span id="scan-ammo">${scanAmmo}</span>)`;
             document.getElementById('btn-fire').textContent = `${t.fire} (F)`;
-            document.getElementById('w-1').textContent = `1. ${t.weaponNames[0].toUpperCase()}`;
-            document.getElementById('w-2').textContent = `2. ${t.weaponNames[1].toUpperCase()}`;
-            document.getElementById('w-3').textContent = `3. ${t.weaponNames[2].toUpperCase()}`;
-            document.getElementById('w-4').innerHTML = `4. ${t.weaponNames[3].toUpperCase()} ⚡ (<span id="laser-ammo">${laserAmmo}</span>)`;
+            updateWeaponButtons();
             document.getElementById('log').setAttribute('aria-label', t.logLabel);
+            document.getElementById('btn-game-help').textContent = lang === 'pt' ? 'Ajuda e Legenda (T)' : 'Help & Map Key (T)';
+            document.getElementById('btn-fire').textContent = `${t.fire} (F)`;
+            updateWeaponButtons();
+            document.getElementById('btn-end-menu').textContent = lang === 'pt' ? 'Voltar ao Menu Principal' : 'Return to Main Menu';
 
             // Tradução dos controles de acessibilidade
             document.getElementById('btn-up').textContent = lang === 'pt' ? 'NORTE (↑)' : 'NORTH (↑)';
@@ -988,8 +1046,45 @@
             showScreen('screen-menu');
         }
 
+        function finishGame(victory) {
+            if (gameEnded) return;
+            gameEnded = true;
+            stopAmbient();
+            stopBreathing();
+            aimMode = false;
+            const title = document.getElementById('end-title');
+            const message = document.getElementById('end-message');
+            const summary = document.getElementById('end-summary');
+            title.className = victory ? 'victory' : 'defeat';
+            title.textContent = victory ? (lang === 'pt' ? 'Fuga Concluída!' : 'Escape Complete!') : (lang === 'pt' ? 'Você não sobreviveu...' : 'You did not survive...');
+            message.textContent = victory ? i18n[lang].win : i18n[lang].gameOver;
+            summary.innerHTML = lang === 'pt'
+              ? `<div>Turnos: ${turnsPlayed}</div><div>Peças coletadas: ${player.parts}/5</div><div>HP restante: ${Math.max(0,player.hp)}</div>`
+              : `<div>Turns: ${turnsPlayed}</div><div>Parts collected: ${player.parts}/5</div><div>HP remaining: ${Math.max(0,player.hp)}</div>`;
+            document.getElementById('btn-end-menu').textContent = lang === 'pt' ? 'Voltar ao Menu Principal' : 'Return to Main Menu';
+            playSfx(victory ? 'machineOn' : 'confirm', 0.8);
+            showScreen('screen-end');
+            srSay(`${title.textContent}. ${summary.textContent}`);
+        }
+
         function startGame() {
+            try { return startGameImpl(); }
+            catch (err) {
+                console.error('Dino Crawler start failed:', err);
+                let panel = document.getElementById('start-error');
+                if (!panel) {
+                    panel = document.createElement('p'); panel.id='start-error'; panel.setAttribute('role','alert'); panel.style.color='#ff4444';
+                    document.getElementById('screen-menu').appendChild(panel);
+                }
+                panel.textContent = `Falha ao iniciar: ${err && err.message ? err.message : err}`;
+                showScreen('screen-menu');
+            }
+        }
+
+        function startGameImpl() {
             playSfx('confirm', 0.55);
+            gameEnded = false;
+            turnsPlayed = 0;
             player = { x: 1, y: 1, hp: 120, o2: 100, parts: 0, weaponIdx: 0, ammo: 8, meat: 0 };
             killCount = { V: 0, T: 0, F: 0, A: 0, '3': 0, W: 0, total: 0 };
             stunDone = false;
@@ -1142,7 +1237,8 @@
             do { rx = Math.floor(Math.random()*16)+2; ry = Math.floor(Math.random()*16)+2; } while(map[ry][rx] !== '.');
             dinos.push({x: rx, y: ry, type: 'W', hp: 25, stunned: 0, eatingTurns: 0});
             laserAmmo = 5; laserCooldown = 0; aimMode = false; scanAmmo = 3; scanCooldown = 0; fires = [];
-            document.getElementById('laser-ammo').textContent = 5;
+            gameEnded = false;
+            updateWeaponButtons();
             log.innerHTML = '';
             logLines.length = 0;
             logFooter.textContent = '';
@@ -1255,7 +1351,15 @@
             document.getElementById('o2').textContent = player.o2;
             document.getElementById('parts').textContent = player.parts;
             document.getElementById('ammo').textContent = player.ammo;
+            updateWeaponButtons();
             const meatEl = document.getElementById('meat'); if(meatEl) meatEl.textContent = player.meat;
+            const pos = document.getElementById('position');
+            if (pos) pos.textContent = `${player.x}, ${player.y}`;
+            const hp = document.getElementById('hp'), o2 = document.getElementById('o2');
+            hp.classList.toggle('critical', player.hp < 30);
+            hp.classList.toggle('warning', player.hp >= 30 && player.hp < 50);
+            o2.classList.toggle('critical', player.o2 < 30);
+            o2.classList.toggle('warning', player.o2 >= 30 && player.o2 < 50);
         }
 
         function move(dx, dy) {
@@ -1268,10 +1372,11 @@
                     return;
                 }
                 player.x = nx; player.y = ny;
+                turnsPlayed++;
                 player.o2--;
                 if(player.ammo < 8) player.ammo++;
                 // Recarga do laser: +1 tiro a cada 2 turnos de cooldown
-                if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; document.getElementById('laser-ammo').textContent = laserAmmo; } }
+                if(laserCooldown > 0) { laserCooldown--; if(laserCooldown === 0 && laserAmmo < 5) { laserAmmo++; updateWeaponButtons(); } }
                 if(scanCooldown > 0) { scanCooldown--; if(scanCooldown === 0 && scanAmmo < 3) { scanAmmo++; document.getElementById('scan-ammo').textContent = scanAmmo; } }
                 // Fogueiras: decrementar e apagar
                 fires = fires.filter(f => {
@@ -1279,16 +1384,16 @@
                     if(f.turns <= 0){ addToLog(i18n[lang].fireOut); srSay(i18n[lang].fireOut); playFireOut(); return false; }
                     return true;
                 });
-                let logMsg = `${player.x}, ${player.y}.`;
+                let logMsg = "";
                 let srParts = [];
 
-                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += " O2!"; playSound(100, 'sawtooth'); }
+                if(player.o2 <= 0) { player.hp -= 5; player.o2 = 0; logMsg += (logMsg ? " " : "") + "O2!"; playSound(100, 'sawtooth'); }
                 // Feedback sonoro progressivo de O2 baixo
                 if(player.o2 <= 20 && player.o2 > 10) playO2Warning();
                 if(player.o2 <= 10 && player.o2 > 0) scheduleBreathing();
 
                 if(map[player.y][player.x] === 'P') {
-                    player.parts++; map[player.y][player.x] = '.'; logMsg += " " + i18n[lang].partFound;
+                    player.parts++; map[player.y][player.x] = '.'; logMsg += (logMsg ? " " : "") + i18n[lang].partFound;
                     srParts.push(lang === 'pt' ? `Peça coletada! ${player.parts} de 5.` : `Part collected! ${player.parts} of 5.`);
                     playSound(1200, 'sine', 0.4); if(player.parts === 5) spawnTRex();
                 }
@@ -1300,9 +1405,9 @@
                         if(player.o2 <= 10) addToLog('★ ' + (lang === 'pt' ? 'Card desbloqueado: Countdown!' : 'Card unlocked: Countdown!'));
                         addToLog(i18n[lang].win); if (!playSfx('machineOn', 0.8)) playSound(1500, 'triangle', 1.0, 0.4);
                         srSay(lang === 'pt' ? 'Vitória! Máquina ativada.' : 'Victory! Machine activated.');
-                        stopAmbient(); setTimeout(() => showScreen('screen-menu'), 4000); return;
+                        finishGame(true); return;
                     } else {
-                        logMsg += " " + i18n[lang].machineMissing;
+                        logMsg += (logMsg ? " " : "") + i18n[lang].machineMissing;
                         srParts.push(lang === 'pt' ? `Máquina do tempo. Faltam ${5 - player.parts} peças.` : `Time machine. ${5 - player.parts} parts missing.`);
                         if (!playSfx('machineMissing', 0.55, 0.5)) playSound(523.25, 'sine', 0.5, 0.3);
                         if(!unlockedCards.has('stubborn')) {
@@ -1312,7 +1417,7 @@
                     }
                 }
                 if(map[player.y][player.x] === '*') {
-                    player.o2 = Math.min(100, player.o2 + 50); logMsg += " " + i18n[lang].o2Found;
+                    player.o2 = Math.min(100, player.o2 + 50); logMsg += (logMsg ? " " : "") + i18n[lang].o2Found;
                     srParts.push(lang === 'pt' ? 'Oxigênio recarregado.' : 'Oxygen recharged.');
                     playSound(600, 'triangle', 0.5);
                 }
@@ -1361,9 +1466,10 @@
                     if(dx ===  1 && dy === 0) return lang === 'pt' ? 'Leste' : 'East';
                     return '';
                 })();
-                srSay([dirLabel].concat(srParts).filter(Boolean).join('. '));
+                const positionAnnouncement = `${player.x}, ${player.y}.`;
+                srSay([positionAnnouncement].concat(srParts).filter(Boolean).join('. '));
 
-                addToLog(logMsg);
+                if (logMsg) addToLog(logMsg);
                 playEnvironmentSonar();
                 moveDinos();
                 let spawnChance = 0.02 + (player.parts * 0.008);
@@ -1400,7 +1506,7 @@
                         player.hp -= dmg;
                         addToLog(i18n[lang].stampede.replace('{dmg}', dmg)); srSay(i18n[lang].stampede.replace('{dmg}', dmg) + ' HP: ' + player.hp + '.');
                         playSound(200, 'sawtooth', 0.5, 0.3);
-                        if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                        if(player.hp <= 0) { player.hp = 0; addToLog(i18n[lang].gameOver); finishGame(false); }
                     }
                     return;
                 }
@@ -1418,7 +1524,7 @@
                         player.hp -= 10;
                         addToLog(i18n[lang].ankyloBounce); srSay(i18n[lang].ankyloBounce + ' HP: ' + player.hp + '.');
                         playSound(80, 'sawtooth', 0.5, 0.4);
-                        if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                        if(player.hp <= 0) { player.hp = 0; addToLog(i18n[lang].gameOver); finishGame(false); }
                     } else if(distA <= 6) {
                         let adx = px - d.x; let ady = py - d.y;
                         if(Math.abs(adx) > Math.abs(ady)) d.x += adx > 0 ? 1 : -1; else d.y += ady > 0 ? 1 : -1;
@@ -1437,7 +1543,7 @@
                             addToLog(i18n[lang].triCharge); srSay(i18n[lang].triCharge + ' HP: ' + player.hp + '.');
                             playSound(100, 'sawtooth', 0.6, 0.4);
                             d.provoked = false;
-                            if(player.hp <= 0) { stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                            if(player.hp <= 0) { player.hp = 0; addToLog(i18n[lang].gameOver); finishGame(false); }
                         } else {
                             // Move 2 células em direção ao player
                             for(let m = 0; m < 2; m++) {
@@ -1549,9 +1655,9 @@
                 }
                 d.x = Math.max(0, Math.min(GRID_SIZE-1, d.x)); d.y = Math.max(0, Math.min(GRID_SIZE-1, d.y));
             });
-            if(player.hp <= 0) {
-                addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
-                stopAmbient(); setTimeout(() => showScreen('screen-menu'), 3000);
+            if(player.hp <= 0 && !gameEnded) {
+                player.hp = 0; addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); playSound(50, 'sawtooth', 2.0, 0.5);
+                finishGame(false);
             }
 
             // Briga por cadáver: 2 dinos comendo na mesma célula se atacam
@@ -1628,11 +1734,28 @@
             playSound(600, 'sine'); draw();
         }
 
-        function setWeapon(idx) {
-            player.weaponIdx = idx;
-            document.querySelectorAll('.weapon-btn').forEach((b, i) => {
-                b.classList.toggle('active-weapon', i === idx);
+        function updateWeaponButtons() {
+            const labels = lang === 'pt'
+              ? ['MACHETE','TASER','GRANADA','LASER']
+              : ['MACHETE','TASER','GRENADE','LASER'];
+            labels.forEach((name,i)=>{
+                const b=document.getElementById(`w-${i+1}`);
+                if(!b) return;
+                const equipped = player.weaponIdx===i;
+                const state = equipped ? (lang === 'pt' ? ' (EQUIPADA)' : ' (EQUIPPED)') : '';
+                const ammunition = i===2 ? `: ${player.ammo}` : i===3 ? `: ${laserAmmo}` : '';
+                b.textContent = `${i+1}. ${name}${ammunition}${state}`;
+                b.classList.toggle('active-weapon', equipped);
+                b.setAttribute('aria-pressed', equipped ? 'true' : 'false');
+                b.setAttribute('aria-label', `${name}${ammunition}${state}`);
             });
+        }
+
+        function setWeapon(idx) {
+            if (gameEnded) return;
+            turnsPlayed++;
+            player.weaponIdx = idx;
+            updateWeaponButtons();
             const equipNames = ['equipMachete', 'equipTaser', 'equipGrenade', 'equipLaser'];
             if (!playSfx(equipNames[idx], 0.5)) playSound(400, 'sine', 0.2);
             setTimeout(() => srSay(`${i18n[lang].weapon}: ${i18n[lang].weaponNames[idx]}.`), 120);
@@ -1640,6 +1763,8 @@
         }
 
         function fireDirectional(dx, dy) {
+            if (gameEnded) return;
+            turnsPlayed++;
             aimMode = false;
             const weapon = weapons[player.weaponIdx];
 
@@ -1682,7 +1807,7 @@
                     return;
                 } else if(weapon === 'Laser') {
                     if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
-                    laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                    laserAmmo--; laserCooldown=2; updateWeaponButtons();
                     const hit=checkHit(player.x,player.y,50);
                     if(hit){addToLog(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');srSay(i18n[lang].laserFire+' '+i18n[lang].laserHit+'!');playLaserShot();setTimeout(playLaserImpact,180);}
                     else{addToLog(i18n[lang].laserMiss);srSay(i18n[lang].laserMiss);playLaserShot();}
@@ -1743,7 +1868,7 @@
             } else if(weapon === 'Laser') {
                 // Laser: linha reta até 8 casas, para no 1° dino atingido
                 if(laserAmmo<=0){addToLog(i18n[lang].laserNoAmmo);srSay(i18n[lang].laserNoAmmo);return;}
-                laserAmmo--; laserCooldown=2; document.getElementById('laser-ammo').textContent=laserAmmo;
+                laserAmmo--; laserCooldown=2; updateWeaponButtons();
                 let hit=false;
                 for(let step=1;step<=8;step++){
                     const lx=player.x+dx*step, ly=player.y+dy*step;
@@ -1820,7 +1945,7 @@
                             player.hp -= counterDmg;
                             addToLog(lang === 'pt' ? `${dName} contra-ataca! -${counterDmg} HP` : `${dName} counter-attacks! -${counterDmg} HP`); srSay(lang === 'pt' ? `${dName} contra-ataca! HP: ${player.hp}.` : `${dName} counter-attacks! HP: ${player.hp}.`);
                             playSound(220, 'sawtooth', 0.4, 0.2);
-                            if(player.hp <= 0) { player.hp = 0; stopAmbient(); stopBreathing(); addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); setTimeout(() => showScreen('screen-menu'), 3000); }
+                            if(player.hp <= 0) { player.hp = 0; addToLog(i18n[lang].gameOver); srSay(i18n[lang].gameOver); finishGame(false); }
                         }
                     }
                     hit = true;
@@ -2048,6 +2173,7 @@
         const logLines = [];
 
         function addToLog(msg) {
+            if (!msg || /^\s*\d+\s*,\s*\d+\.?\s*$/.test(String(msg))) return;
             const entry = document.createElement('div');
             entry.textContent = `> ${msg}`;
             log.appendChild(entry);
@@ -2074,7 +2200,8 @@
                 if (e.key === 'ArrowDown') move(0, 1);
                 if (e.key === 'ArrowLeft') move(-1, 0);
                 if (e.key === 'ArrowRight') move(1, 0);
-                if (e.key === 's') scan();
+                if (e.key === 't' || e.key === 'T') { e.preventDefault(); openHelp('screen-game'); return; }
+                if (e.key === 's' || e.key === 'S') scan();
                 if (e.key === 'f') { aimMode = true; srSay(i18n[lang].aimMode); }
                 if (['1','2','3','4'].includes(e.key)) setWeapon(parseInt(e.key)-1);
                 if (e.key === 'o' || e.key === 'O') { const m=lang==='pt'?`O2: ${player.o2}.`:`O2: ${player.o2}.`; addToLog(m); srSay(m); }
@@ -2085,11 +2212,8 @@
         });
     </script>
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/DinoCrawler/sw.js')
-                    .catch(() => {});
-            });
+        if ('serviceWorker' in navigator && location.pathname === '/DinoCrawler/') {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/DinoCrawler/sw.js').catch(() => {}); });
         }
     </script>
 </body>
