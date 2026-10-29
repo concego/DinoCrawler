@@ -478,6 +478,7 @@
                     <button class="menu-btn" onclick="openHelp('screen-game')" id="btn-game-help">Ajuda e Legenda (T)</button>
                     <h2 id="log-title">---[ LOG ]---</h2>
                     <div id="log-footer" aria-live="off"></div>
+                    <div id="log" role="log" aria-label="Histórico de ações" aria-live="off" tabindex="0" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden"></div>
                     <h2 id="weapons-title">---[ ARMAS ]---</h2>
                     <div id="weapon-selector">
                         <button id="w-1" class="weapon-btn active-weapon" onclick="setWeapon(0)">[1. MACHETE *]</button>
@@ -1721,12 +1722,13 @@
 
         function updateWeaponButtons() {
             const labels = lang === 'pt'
-              ? [`[1. MACHETE${player.weaponIdx===0?' *':''}]`,`[2. TASER${player.weaponIdx===1?' *':''}]`,`[3. GRANADA o${player.weaponIdx===2?' *':''}]`,`[4. LASER (${laserAmmo})${player.weaponIdx===3?' *':''}]`]
-              : [`[1. MACHETE${player.weaponIdx===0?' *':''}]`,`[2. TASER${player.weaponIdx===1?' *':''}]`,`[3. GRENADE o${player.weaponIdx===2?' *':''}]`,`[4. LASER (${laserAmmo})${player.weaponIdx===3?' *':''}]`];
-            labels.forEach((text,i)=>{
+              ? ['MACHETE','TASER','GRANADA o','LASER']
+              : ['MACHETE','TASER','GRENADE o','LASER'];
+            labels.forEach((name,i)=>{
                 const b=document.getElementById(`w-${i+1}`);
                 if(!b) return;
-                b.textContent=text;
+                const star = player.weaponIdx===i ? ' *' : '';
+                b.innerHTML = `[${i+1}. ${name}${i===3 ? ` (<span id="laser-ammo">${laserAmmo}</span>)` : ''}${star}]`;
                 b.classList.toggle('active-weapon', player.weaponIdx===i);
                 b.setAttribute('aria-pressed', player.weaponIdx===i ? 'true' : 'false');
             });
