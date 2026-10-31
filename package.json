@@ -1,0 +1,17 @@
+{
+  "name": "dino-crawler",
+  "version": "1.8.0",
+  "description": "Dino Crawler — acessible retro roguelike",
+  "main": "main.js",
+  "author": "Eu Concego Jogar",
+  "license": "UNLICENSED",
+  "devDependencies": { "electron": "45.2.1", "electron-builder": "26.0.12" },
+  "scripts": { "dist:win": "electron-builder --win portable --x64" },
+  "build": {
+    "appId": "com.euconcegojogar.dinocrawler",
+    "productName": "Dino Crawler",
+    "directories": { "output": "dist" },
+    "files": ["main.js", "index.html", "audio/**/*", "package.json"],
+    "win": { "target": [{ "target": "portable", "arch": ["x64"] }], "signAndEditExecutable": false }
+  }
+}
