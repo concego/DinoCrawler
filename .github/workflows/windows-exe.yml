@@ -21,3 +21,9 @@ jobs:
           path: dist/*.exe
           if-no-files-found: error
           retention-days: 30
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.8.0
+          files: dist/*.exe
+          append_body: true
+          body: "\n\n### Windows portable executable\nThe portable Windows x64 executable is attached below. It is unsigned; Windows may show an unknown publisher warning."
