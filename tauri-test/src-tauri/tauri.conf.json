@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Dino Crawler Tauri Test",
+  "version": "1.8.0",
+  "identifier": "com.euconcegojogar.dinocrawler.tauritest",
+  "build": {
+    "frontendDist": "../frontend"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Dino Crawler \u2014 Tauri comparison test",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 650,
+        "maximized": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "icon": [
+      "icons/icon192.png"
+    ],
+    "shortDescription": "Tauri test wrapper for Dino Crawler v1.8.0",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "languages": [
+          "English",
+          "PortugueseBR"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+name: Build Tauri Windows comparison installer
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: Tauri test branch
+        required: true
+        default: build/tauri-v1.8.0
+        type: string
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install NSIS
+        run: choco install nsis --no-progress -y
+      - name: Install Tauri CLI
+        run: npm install
+        working-directory: tauri-test
+      - name: Build unsigned installer
+        run: npm run tauri -- build --bundles nsis
+        working-directory: tauri-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dino-Crawler-v1.8.0-Tauri-Windows-test
+          path: tauri-test/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 30

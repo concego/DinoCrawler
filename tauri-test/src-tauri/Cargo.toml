@@ -1,0 +1,13 @@
+[package]
+name = "dino-crawler-tauri-test"
+version = "1.8.0"
+description = "Tauri comparison build of Dino Crawler 1.8.0"
+authors = ["Eu Concego Jogar"]
+edition = "2021"
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+[dependencies]
+tauri = { version = "2", features = [] }
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
