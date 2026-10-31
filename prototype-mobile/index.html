@@ -401,35 +401,35 @@
             .game-layout { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); gap:3px; height:100%; min-height:0; }
             .game-main { min-height:0; justify-content:flex-start; }
             .game-main h2, .game-log-panel h2 { font-size:.72em; margin:1px 0; line-height:1.15; }
-            #hud { gap:2px 8px; margin:0 auto; font-size:clamp(.66rem,2.7vw,.82rem); line-height:1.2; }
+            #hud { gap:3px 8px; margin:0 auto; font-size:clamp(.78rem,3vw,.92rem); line-height:1.25; }
             #game-container { width:min(86vw, 34dvh); max-width:none; max-height:34dvh; flex:0 0 auto; }
             .cell { font-size:clamp(8px, 1.35dvh, 12px); }
             .game-log-panel { display:flex; min-height:0; overflow:hidden; gap:2px; padding:3px 5px; }
-            #btn-game-help { position:static; flex:0 0 auto; padding:5px 8px; font-size:.78em; }
-            #log-footer { min-height:2.5em; max-height:2.5em; flex:0 0 2.5em; overflow:hidden; padding:3px 5px; font-size:.72em; line-height:1.15; }
+            #btn-game-help { position:static; flex:0 0 auto; min-height:40px; padding:7px 10px; font-size:.88em; }
+            #log-footer { min-height:2.6em; max-height:2.6em; flex:0 0 2.6em; overflow:hidden; padding:4px 6px; font-size:.82em; line-height:1.2; }
             #weapon-selector { gap:3px; margin:0; flex:0 0 auto; }
-            #weapon-selector .weapon-btn { flex:1 1 calc(50% - 3px); padding:4px 3px; font-size:.72em; line-height:1.15; }
+            #weapon-selector .weapon-btn { flex:1 1 calc(50% - 3px); min-height:44px; padding:7px 5px; font-size:.82em; line-height:1.15; }
             #controls-title { margin:1px 0; }
             #controls { flex:1 1 auto; min-height:0; justify-content:space-evenly; gap:5px; margin:0; }
             #d-pad { grid-template-columns:repeat(3,minmax(0,1fr)); gap:2px; }
-            .move-btn { min-width:0; min-height:40px; padding:4px 2px; font-size:clamp(.56rem,2.1vw,.7rem); }
+            .move-btn { min-width:0; min-height:44px; padding:6px 3px; font-size:clamp(.72rem,2.7vw,.84rem); }
             .action-controls { flex:0 1 38%; gap:3px; }
-            .action-btn { min-height:35px; padding:5px 3px; font-size:.68em; }
+            .action-btn { min-height:44px; padding:7px 5px; font-size:.78em; }
         }
         @media (max-width: 380px) and (orientation: portrait) {
             .game-screen { padding:3px 4px; }
-            #hud { gap:1px 5px; font-size:.64rem; }
+            #hud { gap:2px 5px; font-size:.72rem; }
             #game-container { width:min(84vw, 32dvh); max-height:32dvh; }
             .game-log-panel { padding:2px 3px; }
-            #btn-game-help { padding:4px; }
-            .move-btn { min-height:36px; }
-            .action-btn { font-size:.62em; }
+            #btn-game-help { padding:6px 4px; }
+            .move-btn { min-height:42px; font-size:.72rem; }
+            .action-btn { font-size:.72em; }
         }
         @media (max-height: 720px) and (max-width: 700px) and (orientation: portrait) {
-            #game-container { width:min(82vw, 30dvh); max-height:30dvh; }
+            #game-container { width:min(82vw, 29dvh); max-height:29dvh; }
             .cell { font-size:clamp(7px, 1.2dvh, 10px); }
-            #log-footer { min-height:2.2em; max-height:2.2em; flex-basis:2.2em; }
-            .move-btn { min-height:26px; }
+            #log-footer { min-height:2.4em; max-height:2.4em; flex-basis:2.4em; }
+            .move-btn { min-height:42px; }
         }
     </style>
 </head>
