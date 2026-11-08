@@ -9,7 +9,7 @@
   "app": {
     "windows": [
       {
-        "title": "Dino Crawler \u2014 Tauri comparison test",
+        "title": "Dino Crawler — Tauri comparison test",
         "width": 1440,
         "height": 900,
         "minWidth": 900,
@@ -36,6 +36,8 @@
           "PortugueseBR"
         ]
       }
-    }
+    },
+    "licenseFile": "LICENSE-EULA.txt",
+    "license": "LicenseRef-Dino-Crawler-Personal-Use"
   }
 }
