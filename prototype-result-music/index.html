@@ -11,8 +11,8 @@
     <meta property="og:description" content="Roguelike ASCII acessível — GMTK Game Jam 2026. Colete 5 peças e escape do Cretáceo.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://concego.github.io/DinoCrawler/">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon192.png">
+    <link rel="manifest" href="../manifest.json">
+    <link rel="apple-touch-icon" href="../icon192.png">
     <style>
         body {
             background-color: #121212;
@@ -382,10 +382,10 @@
     </style>
 </head>
 <body>
-    <audio id="menu-music" src="audio/menu-metal-energetic.ogg" loop preload="auto" aria-hidden="true"></audio>
-    <audio id="valley-ambience" src="audio/forest-ambience.mp3" loop preload="auto" aria-hidden="true"></audio>
-    <audio id="valley-music" src="audio/jungle-music.ogg" loop preload="auto" aria-hidden="true"></audio>
-    <audio id="rex-tension" src="audio/rex-tension.ogg" loop preload="auto" aria-hidden="true"></audio>
+    <audio id="menu-music" src="../audio/menu-metal-energetic.ogg" loop preload="auto" aria-hidden="true"></audio>
+    <audio id="valley-ambience" src="../audio/forest-ambience.mp3" loop preload="auto" aria-hidden="true"></audio>
+    <audio id="valley-music" src="../audio/jungle-music.ogg" loop preload="auto" aria-hidden="true"></audio>
+    <audio id="rex-tension" src="../audio/rex-tension.ogg" loop preload="auto" aria-hidden="true"></audio>
     <audio id="victory-results-music" src="audio/success-results.wav" loop preload="auto" aria-hidden="true"></audio>
     <audio id="defeat-results-music" src="audio/failure-results.wav" loop preload="auto" aria-hidden="true"></audio>
 
@@ -518,24 +518,24 @@
         const valleyAmbience = document.getElementById('valley-ambience');
         const valleyMusic = document.getElementById('valley-music');
         const sfx = {
-            cursor: new Audio('audio/02-ui-click-002.ogg'),
-            confirm: new Audio('audio/05-ui-confirmation-001.ogg'),
-            open: new Audio('audio/06-ui-open-001.ogg'),
-            scan: new Audio('audio/09-scan-computer-001.ogg'),
-            scanEquip: new Audio('audio/11-scan-switch-001.ogg'),
-            equipTaser: new Audio('audio/01-ui-click-001.ogg'),
-            taser: new Audio('audio/20-taser-forcefield-001.ogg'),
-            equipMachete: new Audio('audio/23-machete-metal-000.ogg'),
-            machete: new Audio('audio/24-machete-mining-000.ogg'),
-            equipGrenade: new Audio('audio/35-equip-switch-002.ogg'),
-            grenade: new Audio('audio/16-grenade-crunch-000.ogg'),
-            equipLaser: new Audio('audio/14-laser-small-000.ogg'),
-            laser: new Audio('audio/15-laser-large-000.ogg'),
-            machineMissing: new Audio('audio/10-scan-glitch-001.ogg'),
-            machineOn: new Audio('audio/30-machine-space-low-000.ogg'),
-            fire: new Audio('audio/fire-crackle.ogg'),
-            bush: new Audio('audio/bush-rustle-02.flac'),
-            back: new Audio('audio/menu-back-slide-electronic-00.mp3')
+            cursor: new Audio('../audio/02-ui-click-002.ogg'),
+            confirm: new Audio('../audio/05-ui-confirmation-001.ogg'),
+            open: new Audio('../audio/06-ui-open-001.ogg'),
+            scan: new Audio('../audio/09-scan-computer-001.ogg'),
+            scanEquip: new Audio('../audio/11-scan-switch-001.ogg'),
+            equipTaser: new Audio('../audio/01-ui-click-001.ogg'),
+            taser: new Audio('../audio/20-taser-forcefield-001.ogg'),
+            equipMachete: new Audio('../audio/23-machete-metal-000.ogg'),
+            machete: new Audio('../audio/24-machete-mining-000.ogg'),
+            equipGrenade: new Audio('../audio/35-equip-switch-002.ogg'),
+            grenade: new Audio('../audio/16-grenade-crunch-000.ogg'),
+            equipLaser: new Audio('../audio/14-laser-small-000.ogg'),
+            laser: new Audio('../audio/15-laser-large-000.ogg'),
+            machineMissing: new Audio('../audio/10-scan-glitch-001.ogg'),
+            machineOn: new Audio('../audio/30-machine-space-low-000.ogg'),
+            fire: new Audio('../audio/fire-crackle.ogg'),
+            bush: new Audio('../audio/bush-rustle-02.flac'),
+            back: new Audio('../audio/menu-back-slide-electronic-00.mp3')
         };
         Object.values(sfx).forEach(audio => { audio.preload = 'auto'; });
 
