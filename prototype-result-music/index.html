@@ -401,6 +401,8 @@
         <div id="screen-menu" class="screen">
             <h1 id="menu-title">DINO CRAWLER</h1>
             <button class="menu-btn" onclick="startGame();" id="btn-start">Iniciar Jogo</button>
+            <button class="menu-btn" onclick="testResultMusic(true)" id="btn-test-win">Teste: resultado de vitória</button>
+            <button class="menu-btn" onclick="testResultMusic(false)" id="btn-test-loss">Teste: resultado de derrota</button>
             <button class="menu-btn" onclick="openHelp('screen-menu')" id="btn-help">Ajuda e Legenda</button>
             <button class="menu-btn" onclick="playSfx('open', 0.45); showScreen('screen-lore')" id="btn-lore">Lore (História)</button>
             <button class="menu-btn" onclick="playSfx('open', 0.45); openGallery()" id="btn-gallery">Galeria</button>
@@ -1009,6 +1011,8 @@
             const t = i18n[lang];
             document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
             document.getElementById('btn-start').textContent = t.start;
+            document.getElementById('btn-test-win').textContent = lang === 'pt' ? 'Teste: resultado de vitória' : 'Test: victory result';
+            document.getElementById('btn-test-loss').textContent = lang === 'pt' ? 'Teste: resultado de derrota' : 'Test: defeat result';
             document.getElementById('how-to-title').textContent = t.howTo;
             document.getElementById('how-to-content').innerHTML = `<p>${t.howToText}</p>`;
             document.getElementById('btn-how-to-back').textContent = t.back;
@@ -1062,6 +1066,16 @@
             updateGalleryLang();
             updateGalleryAvailability();
             showScreen('screen-menu');
+        }
+
+        // Atalhos de demonstração exclusivos deste protótipo.
+        function testResultMusic(victory) {
+            stopMenuMusic();
+            gameEnded = false;
+            turnsPlayed = victory ? 70 : 35;
+            player.parts = victory ? 5 : 2;
+            player.hp = victory ? 78 : 0;
+            finishGame(victory);
         }
 
         function finishGame(victory) {
