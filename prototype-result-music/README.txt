@@ -1,0 +1,1 @@
+Dino Crawler result music prototype. Two original 15-second looping 8-bit arcade-style cues generated for victory and defeat result screens. Built from the official v1.8.0 HTML; not promoted to official Pages or Windows/Android releases.
