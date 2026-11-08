@@ -1,1 +1,0 @@
-Second original result-music prototype for Dino Crawler. More atmospheric, darker, and less retro/chiptune than the initial version. 24-second loop. Separate from official game builds; user should validate the music.
