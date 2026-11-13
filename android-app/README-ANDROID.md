@@ -1,6 +1,6 @@
 # Dino Crawler Android — Capacitor preparation
 
-Separate Capacitor Android project in branch `android`, based on approved mobile snapshot `v1.8.0-mobile` (tag commit `a7c1b243db549f878b2b78424a50f7307dff929e`). Does not change Windows, GitHub Pages, or releases. Web source is in `web/`; Vite bundles the plugin bridge and the existing game assets to `www/` before Capacitor sync. Generated `www/`, `android/`, and `node_modules/` are ignored by Git. Gameplay logic is preserved except local asset routes, removal of web-only PWA service worker links, and the accessible monetization UI/bridge.
+Separate Capacitor Android project in branch `android`, based on approved mobile snapshot `v1.8.0-mobile` (tag commit `a7c1b243db549f878b2b78424a50f7307dff929e`). Does not change Windows, GitHub Pages, or releases. Web source is in `web/`; Vite bundles the plugin bridge and copies game audio from `web/public/audio/` to package-root `www/audio/` before Capacitor sync. Generated `www/`, `android/`, and `node_modules/` are ignored by Git. Gameplay logic is preserved except local asset routes, removal of web-only PWA service worker links, and the accessible monetization UI/bridge.
 
 ## Native monetization wiring (implemented, not device-tested)
 
