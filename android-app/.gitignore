@@ -1,0 +1,9 @@
+# Capacitor generated web build, native project, installed packages, local signing credentials.
+node_modules/
+www/
+android/
+.env
+.env.*
+*.jks
+*.keystore
+keystore.properties

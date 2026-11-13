@@ -1,9 +1,10 @@
-name: Android AAB (unsigned build)
+name: Android AAB (unsigned Capacitor build)
 on:
   workflow_dispatch:
   push:
     branches: [android]
-    paths: ["android-app/**"]
+    paths:
+      - "android-app/**"
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -12,30 +13,40 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
       - uses: android-actions/setup-android@v3
       - name: Install Android SDK components
-        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;28.2.13676358"
-      - name: Configure Android environment
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - name: Install Capacitor packages
+        working-directory: android-app
+        run: npm ci
+      - name: Check and build prepared web package
+        working-directory: android-app
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
-          echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
-      - name: Check static package preparation
+          npm run check
+          npm run build:web
+      - name: Create Android project
         working-directory: android-app
-        run: python3 scripts/verify-static.py
-      - name: Install frontend dependencies
+        run: npx cap add android
+      - name: Configure demo app ID and test interstitial for CI
         working-directory: android-app
-        run: npm install
-      - name: Initialize Tauri Android project
+        run: |
+          npm run android:configure
+          echo "VITE_USE_TEST_ADS=true" >> "$GITHUB_ENV"
+          echo "VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-3940256099942544/1033173712" >> "$GITHUB_ENV"
+      - name: Sync native plugins
         working-directory: android-app
-        run: npx tauri android init
-      - name: Build Android App Bundle
-        working-directory: android-app
-        run: npm run android:aab
-      - name: Upload AAB artifact (not signed for Play upload)
+        run: npx cap sync android
+      - name: Build unsigned AAB
+        working-directory: android-app/android
+        run: ./gradlew bundleRelease
+      - name: Upload unsigned AAB (not submitted to Play)
         uses: actions/upload-artifact@v4
         with:
           name: dino-crawler-android-aab-unsigned
-          path: android-app/src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab
+          path: android-app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 14

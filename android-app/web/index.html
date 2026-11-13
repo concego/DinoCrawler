@@ -10,9 +10,6 @@
     <meta property="og:title" content="Dino Crawler">
     <meta property="og:description" content="Roguelike ASCII acessível — GMTK Game Jam 2026. Colete 5 peças e escape do Cretáceo.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="">
-    <link rel="manifest" >
-    <link rel="apple-touch-icon" >
     <style>
         body {
             background-color: #121212;
@@ -143,6 +140,7 @@
             font-family: inherit;
         }
         .menu-btn:hover { background: #004400; }
+        .menu-btn[hidden] { display: none !important; }
 
         #game-container {
             display: grid;
@@ -456,6 +454,10 @@
             <button class="menu-btn" onclick="playSfx('open', 0.45); openGallery()" id="btn-gallery">Galeria</button>
             <button class="menu-btn" onclick="playSfx('open', 0.45); showScreen('screen-credits')" id="btn-credits">Créditos</button>
             <button class="menu-btn" onclick="playSfx('back', 0.75); showScreen('screen-lang')" id="btn-back-lang">Mudar Idioma</button>
+            <button class="menu-btn" id="btn-remove-ads" type="button" hidden></button>
+            <button class="menu-btn" id="btn-restore-purchases" type="button" hidden></button>
+            <button class="menu-btn" id="btn-privacy-options" type="button" hidden></button>
+            <p id="purchase-status" role="status" aria-live="polite"></p>
         </div>
 
         <!-- Tela de Ajuda -->
@@ -990,9 +992,16 @@
         }
 
         function showScreen(id) {
+            const leavingResultsForMenu = id === 'screen-menu' && document.getElementById('screen-end')?.classList.contains('active-screen');
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
             document.getElementById(id).classList.add('active-screen');
-            if (id === 'screen-menu') startMenuMusic();
+            if (id === 'screen-menu') {
+                window.DinoMonetization?.initialize?.();
+                if (leavingResultsForMenu && window.DinoMonetization?.showInterstitialAfterResultsExit) {
+                    stopMenuMusic();
+                    window.DinoMonetization.showInterstitialAfterResultsExit().finally(startMenuMusic);
+                } else startMenuMusic();
+            }
             if (id === 'screen-game') stopMenuMusic();
         }
 
@@ -2263,5 +2272,7 @@
             }
         });
     </script>
+    <script type="module" src="./src/bootstrap.js"></script>
+
 </body>
 </html>
