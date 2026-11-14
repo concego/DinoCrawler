@@ -10,7 +10,7 @@ if(!html.includes('btn-remove-ads')||!html.includes('btn-restore-purchases')) th
 if(!html.includes('role="status" aria-live="polite"')) throw new Error('Purchase status is not announced to screen readers');
 if(!html.includes('showInterstitialAfterResultsExit')) throw new Error('Interstitial handoff missing');
 if(!config.includes("webDir: 'www'")) throw new Error('Capacitor webDir must be www');
-if(!config.includes('androidpending')) throw new Error('Temporary app ID marker missing');
+if(!config.includes("appId: 'com.euconcegojogar.dinocrawler'")) throw new Error('Permanent Android application ID is not configured');
 for(const m of html.matchAll(/new Audio\(['"]audio\/([^'"]+)['"]\)/g)) if(!fs.existsSync(path.join('web/public/audio',m[1]))) throw new Error(`Missing audio ${m[1]}`);
 if(!module.includes("VITE_USE_TEST_ADS !== 'false'")||!module.includes('isTesting: USE_TEST_ADS')) throw new Error('Ads must remain test-only until configured');
 if(!module.includes("purchaseState === 'PURCHASED'") || !module.includes('isAcknowledged === true')) throw new Error('Purchase confirmation does not validate completed acknowledged transaction');

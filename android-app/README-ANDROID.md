@@ -10,7 +10,7 @@ Separate Capacitor Android project in branch `android`, based on approved mobile
 
 ## Required before real build/publication
 
-- The package ID in `capacitor.config.ts` is a temporary placeholder `com.euconcegojogar.dinocrawler.androidpending`. Choose the permanent ID before native project initialization/first release; confirm availability in Play Console.
+- The permanent app ID chosen by Anderson is `com.euconcegojogar.dinocrawler`; keep this exact ID in Capacitor and the Play Console listing. Before first release, verify it is not already assigned to another app under the intended Play developer account.
 - AdMob demo IDs are the default. Before release, supply your own registered AdMob app ID and interstitial unit. Consent messages must be configured in AdMob and privacy policy/Data safety reviewed. The workflow deliberately uses Google demo IDs only.
 - Create one-time non-consumable product `remove_ads` (or update code to exact chosen ID), set target list price $2 and configure local prices in Play Console.
 - Test purchases require a signed upload in internal testing plus license tester account; app isn't uploaded by this workflow. Never commit keystore or passwords. You sign AAB locally and upload manually.
@@ -18,7 +18,7 @@ Separate Capacitor Android project in branch `android`, based on approved mobile
 
 ## Build outline (PowerShell)
 
-Install Node 22.12+, JDK 21, Android SDK/command-line tools, platform-tools and Android SDK/build-tools 36. From this folder run `npm ci`, `npm run check`, choose the permanent app ID, then `npm run android:add`; run `npm run android:configure` (uses Google demo App ID unless `ADMOB_APP_ID` is supplied), and `npm run android:sync`. For local debug use `npm run android:open` or `npx cap run android`. On Windows, Gradle can be invoked from PowerShell without opening Android Studio: `cd android; .\gradlew.bat bundleRelease`. The npm `android:build:aab` script also builds web assets, syncs plugins, then invokes the wrapper. Release signing must be configured locally; CI uses no key and only stores an unsigned AAB artifact. No workflow uploads to Play Console.
+Install Node 22.12+, JDK 21, Android SDK/command-line tools, platform-tools and Android SDK/build-tools 36. From this folder run `npm ci`, `npm run check`, then `npm run android:add`; run `npm run android:configure` (uses Google demo App ID unless `ADMOB_APP_ID` is supplied), and `npm run android:sync`. For local debug use `npm run android:open` or `npx cap run android`. On Windows, Gradle can be invoked from PowerShell without opening Android Studio: `cd android; .\gradlew.bat bundleRelease`. The npm `android:build:aab` script also builds web assets, syncs plugins, then invokes the wrapper. Release signing must be configured locally; CI uses no key and only stores an unsigned AAB artifact. No workflow uploads to Play Console.
 
 
 The AdMob plugin is MIT licensed. The purchases plugin is MPL-2.0; retain required notices when distributing the app.
@@ -28,4 +28,4 @@ The AdMob plugin is MIT licensed. The purchases plugin is MPL-2.0; retain requir
 Direct Capacitor/plugin versions are pinned in `package.json`. `package-lock.json` pins the validated npm dependency graph; use `npm ci` for reproducible installation.
 
 
-For a developer-machine release build, first set your permanent app ID in `capacitor.config.ts`, then configure your AdMob manifest ID using `$env:ADMOB_APP_ID="your-app-id"; npm run android:configure`. When you are ready to use live ads, additionally set `$env:VITE_USE_TEST_ADS="false"` and `$env:VITE_ADMOB_INTERSTITIAL_ID="your-unit-id"` before running `npm run android:build:aab`. Do not commit the IDs as secrets if they are not intended to be public; test identifiers remain the default in source and CI. The Play Console product must be created with the exact `remove_ads` identifier and target price.
+For a developer-machine release build, configure your AdMob manifest ID using `$env:ADMOB_APP_ID="your-app-id"; npm run android:configure`. When you are ready to use live ads, additionally set `$env:VITE_USE_TEST_ADS="false"` and `$env:VITE_ADMOB_INTERSTITIAL_ID="your-unit-id"` before running `npm run android:build:aab`. Do not commit the IDs as secrets if they are not intended to be public; test identifiers remain the default in source and CI. The Play Console product must be created with the exact `remove_ads` identifier and target price.
