@@ -5,7 +5,7 @@ const manifest=path.join(appDir,'AndroidManifest.xml');
 if(!fs.existsSync(manifest)) throw new Error('Android project missing. Run npx cap add android first.');
 const testAppId='ca-app-pub-3940256099942544~3347511713';
 const appId=process.env.ADMOB_APP_ID || testAppId;
-if(!/^[0-9]{16}~[0-9]{10}$/.test(appId)) throw new Error('ADMOB_APP_ID format is invalid.');
+if(!/^ca-app-pub-[0-9]{16}~[0-9]{10}$/.test(appId)) throw new Error('ADMOB_APP_ID must be in Google AdMob app ID format ca-app-pub-<16 digits>~<10 digits>.');
 const resDir=path.join(appDir,'res/values');fs.mkdirSync(resDir,{recursive:true});
 const strings=path.join(resDir,'strings.xml');let xml=fs.existsSync(strings)?fs.readFileSync(strings,'utf8'):'<resources>\n</resources>\n';
 const resource=`<string name="admob_app_id">${appId}</string>`;
