@@ -33,12 +33,13 @@ jobs:
       - name: Create Android project
         working-directory: android-app
         run: npx cap add android
-      - name: Configure demo app ID and test interstitial for CI
+      - name: Configure official demo AdMob app ID and test ads
         working-directory: android-app
-        run: |
-          npm run android:configure
-          echo "VITE_USE_TEST_ADS=true" >> "$GITHUB_ENV"
-          echo "VITE_ADMOB_INTERSTITIAL_ID=ca-app-pub-3940256099942544/1033173712" >> "$GITHUB_ENV"
+        env:
+          ADMOB_APP_ID: ca-app-pub-3940256099942544~3347511713
+          VITE_USE_TEST_ADS: "true"
+          VITE_ADMOB_INTERSTITIAL_ID: ca-app-pub-3940256099942544/1033173712
+        run: npm run android:configure
       - name: Sync native plugins
         working-directory: android-app
         run: npx cap sync android
